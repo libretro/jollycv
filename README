@@ -1,0 +1,80 @@
+JollyCV
+-------
+JollyCV is an emulator for the ColecoVision.
+
+JollyCV is the first emulator written specifically for The Jolly Good API. It
+is focused on the educational aspects of emulation. The comments in the source
+code are verbose, yet easy to follow. The ColecoVision is the perfect console
+to use for educational purposes, because it is very simple and uses generic,
+off-the-shelf chips with widely available documentation and datasheets.
+
+Compiling
+---------
+Make sure you have The Jolly Good API's header files installed. If you did
+not install them, you will be required to include their path in CFLAGS.
+
+Linux:
+  make
+
+macOS:
+  make
+
+BSD:
+  gmake
+
+Windows (MSYS2):
+  make
+
+The build will be output to "jollycv/". This directory may be used as is
+locally by copying it to your local "cores" directory, or may be installed
+system-wide using the "install" target specified in the Makefile.
+
+Input Devices
+-------------
+JollyCV currently supports the following input devices:
+
+ColecoVision Paddle
+
+Settings
+--------
+palette = 0 
+0 = TeaTime, 1 = SYoung
+
+rsqual = 3
+N = Resampler Quality (0-10)
+
+region = 0
+0 = NTSC, 1 = PAL
+
+Known Problems
+--------------
+This emulator is still very new, so it is not perfect. Compatibility is
+extremely high, but the following software is presently not usable:
+
+Lord of the Dungeon (USA) (Beta) - Likely needs SRAM support implemented
+
+Other software may require input devices that are not currently emulated.
+
+Porting
+-------
+JollyCV was written in standards compliant ISO C99 and should be extremely
+portable. Though it was written for The Jolly Good API, it was done in a
+manner that allows it to be used easily in multi-emulator frameworks or
+standalone binaries for many potential platforms. If a new port is created,
+a clear indication that it is not an official port should be made, either
+by changing the name of the project or appending to it. Please be an
+honest person and respect the licenses that apply to the software.
+
+Copyright
+---------
+JollyCV
+  Copyright (c) 2020, Rupert Carmichael (MPL-2.0)
+  See LICENSE
+
+Speex Resampler
+  Copyright (c) 2003, 2007, 2008 Xiph.org Foundation (BSD-3-Clause)
+  See source files in core/resample/ for detailed information
+
+Z80 CPU Core
+  Copyright (c) 2019 Nicolas Allemand (MIT)
+  See core/z80/LICENSE
