@@ -234,8 +234,11 @@ size_t jcv_psg_exec(void) {
                as the magic number for PCM samples, but no documentation
                mentions this being a special value. Further research required.
             */
-            if ((psg.frequency[i] != 1) && (psg.frequency[i] != 16))
-                psg.sign ^= 1 << i; // Flip the sign bit for this channel
+            if ((psg.frequency[i] == 1) || (psg.frequency[i] == 16))
+                continue; // Do not flip the sign bit
+            
+            // Flip the sign bit for this channel
+            psg.sign ^= 1 << i;
             
             // Put the waveform on the proper side of zero
             if (psg.sign & (1 << i))
