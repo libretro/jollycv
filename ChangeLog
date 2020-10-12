@@ -1,3 +1,9 @@
+Version 0.1.0
+-------------
+ - Emulation of the Super Game Module
+ - Bugfix in SN76489AN emulation code
+ - Scalable JollyCV logo icon added to the repository
+
 Version 0.0.0
 -------------
  - First public release
