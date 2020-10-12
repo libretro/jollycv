@@ -283,3 +283,11 @@ size_t jcv_sgmpsg_exec(void) {
     psgbuf[bufpos++] = vol;
     return 1;
 }
+
+void jcv_sgmpsg_state_load(cv_sgmpsg_t *st_sgmpsg) {
+    psg = *st_sgmpsg;
+}
+
+void jcv_sgmpsg_state_save(cv_sgmpsg_t *st_sgmpsg) {
+    *st_sgmpsg = psg;
+}

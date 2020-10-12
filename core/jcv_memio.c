@@ -23,6 +23,7 @@
 typedef struct _cv_state_t {
     cv_sys_t cvsys;
     cv_psg_t psg;
+    cv_sgmpsg_t sgmpsg;
     cv_vdp_t vdp;
     cv_z80st_t z80st;
     uint32_t rompage[4];
@@ -39,8 +40,6 @@ static uint32_t rompage[4]; // Offsets to the start of 8K ROM pages
 static uint8_t megacart = 0; // Mark whether the cart is a Mega Cart or not
 static uint8_t sgm_upper = 0; // Enable upper 24K SGM RAM
 static uint8_t sgm_lower = 0; // Enable lower 8K SGM RAM - replaces BIOS mapping
-
-static uint8_t sgmram[SIZE_32K];
 
 static cv_sys_t cvsys; // ColecoVision System Context
 static cv_state_t cvstate; // System State containing all components
@@ -132,13 +131,13 @@ void jcv_io_wr(uint8_t port, uint8_t data) {
 // Read a byte of memory
 uint8_t jcv_mem_rd(uint16_t addr) {
     if (sgm_lower && (addr < 0x2000)) {
-        return sgmram[addr];
+        return cvsys.sgmram[addr];
     }
     else if (addr < 0x2000) { // BIOS from 0x0000 to 0x1fff
         return cvbios[addr];
     }
     else if (sgm_upper && (addr < 0x8000)) {
-        return sgmram[addr];
+        return cvsys.sgmram[addr];
     }
     else if (addr < 0x6000) { // Expansion port reads when no SGM is plugged in
         return 0xff; // Return default 0xff if nothing is plugged in
@@ -172,9 +171,9 @@ void jcv_mem_wr(uint16_t addr, uint8_t data) {
        base system RAM are now going into SGM RAM.
     */
     if (sgm_lower && (addr < 0x2000))
-        sgmram[addr] = data;
+        cvsys.sgmram[addr] = data;
     else if (sgm_upper && (addr > 0x1fff) && (addr < 0x8000))
-        sgmram[addr] = data;
+        cvsys.sgmram[addr] = data;
     else if ((addr > 0x5fff) && (addr < 0x8000)) // Base System RAM writes
         cvsys.ram[addr & 0x3ff] = data;
 }
@@ -263,7 +262,7 @@ void jcv_memio_init(void) {
     for (int i = 0; i < SIZE_CVRAM; i++)
         cvsys.ram[i] = rand() % 256; // Random numbers from 0-255
     
-    memset(sgmram, 0xff, 0x6000);
+    memset(cvsys.sgmram, 0xff, 0x6000);
     
     cvsys.cseg = 0; // Controller Strobe Segment
     cvsys.ctrl[0] = cvsys.ctrl[1] = 0; // Reset input states to empty
@@ -284,6 +283,7 @@ void jcv_state_load_raw(const void *sstate) {
     cv_state_t *st = (cv_state_t*)sstate; // Cast the raw data
     cvsys = st->cvsys;
     jcv_psg_state_load(&(st->psg));
+    jcv_sgmpsg_state_load(&(st->sgmpsg));
     jcv_vdp_state_load(&(st->vdp));
     jcv_z80_state_load(&(st->z80st));
     for (int i = 0; i < 4; i++)
@@ -330,6 +330,7 @@ int jcv_state_load(const char *filename) {
 const void* jcv_state_save_raw(void) {
     cvstate.cvsys = cvsys;
     jcv_psg_state_save(&cvstate.psg);
+    jcv_sgmpsg_state_save(&cvstate.sgmpsg);
     jcv_vdp_state_save(&cvstate.vdp);
     jcv_z80_state_save(&cvstate.z80st);
     for (int i = 0; i < 4; i++)

@@ -31,7 +31,7 @@ typedef struct _cv_sgmpsg_t {
     uint8_t nenable[3]; // Enable bit for Noise on Channels A, B, and C
     uint8_t emode[3]; // Envelope Mode Enable bit for Tones A, B, and C
     
-    uint8_t sign[3]; // FIXME name this something else?
+    uint8_t sign[3]; // Signify whether the waveform is high or low
     
     size_t cfrac; // Clock the PSG every 16 CPU cycles (Clock Fractions)
 } cv_sgmpsg_t;
@@ -42,5 +42,8 @@ uint8_t jcv_sgmpsg_rd(void);
 void jcv_sgmpsg_wr(uint8_t data);
 void jcv_sgmpsg_set_reg(uint8_t);
 size_t jcv_sgmpsg_exec(void);
+
+void jcv_sgmpsg_state_load(cv_sgmpsg_t*);
+void jcv_sgmpsg_state_save(cv_sgmpsg_t*);
 
 #endif

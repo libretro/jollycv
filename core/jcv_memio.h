@@ -40,6 +40,7 @@
 
 typedef struct _cv_sys_t {
     uint8_t ram[SIZE_CVRAM]; // System RAM
+    uint8_t sgmram[SIZE_32K]; // Super Game Module RAM
     uint8_t cseg; // Controller Strobe Segment
     uint16_t ctrl[2]; // Controller Input state
 } cv_sys_t;
