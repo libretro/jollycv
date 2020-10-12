@@ -23,7 +23,9 @@ CSRCS := objs/resample/resample.c \
 	objs/z80/z80.c \
 	objs/jcv.c \
 	objs/jcv_memio.c \
+	objs/jcv_mixer.c \
 	objs/jcv_psg.c \
+	objs/jcv_sgmpsg.c \
 	objs/jcv_vdp.c \
 	objs/jcv_z80.c \
 	objs/jg.c

@@ -15,6 +15,7 @@
 #include "jcv.h"
 #include "jcv_memio.h"
 #include "jcv_psg.h"
+#include "jcv_sgmpsg.h"
 #include "jcv_vdp.h"
 #include "jcv_z80.h"
 
@@ -35,7 +36,11 @@ static size_t romsize = 0; // Size of the ROM in bytes
 static uint8_t rompages = 0; // Number of 8K ROM pages
 static uint32_t rompage[4]; // Offsets to the start of 8K ROM pages
 
-static uint8_t megacart = 0;
+static uint8_t megacart = 0; // Mark whether the cart is a Mega Cart or not
+static uint8_t sgm_upper = 0; // Enable upper 24K SGM RAM
+static uint8_t sgm_lower = 0; // Enable lower 8K SGM RAM - replaces BIOS mapping
+
+static uint8_t sgmram[SIZE_32K];
 
 static cv_sys_t cvsys; // ColecoVision System Context
 static cv_state_t cvstate; // System State containing all components
@@ -64,7 +69,9 @@ uint8_t jcv_io_rd(uint8_t port) {
                 ~((uint8_t)(cvsys.ctrl[p] & 0xff) | 0x80); // Numpad, FireR
         }
         default: {
-            return 0xff; // Reading invalid port addresses returns default 0xff
+            if (port == 0x52) // SGM PSG Read
+                return jcv_sgmpsg_rd();
+            return 0xff;
         }
     }
 }
@@ -101,6 +108,14 @@ void jcv_io_wr(uint8_t port, uint8_t data) {
             break;
         }
         default: {
+            if (port == 0x50) // Set the SGM PSG's active register
+                jcv_sgmpsg_set_reg(data & 0x0f);
+            else if (port == 0x51) // Write to the SGM PSG's selected register
+                jcv_sgmpsg_wr(data);
+            else if (port == 0x53)
+                sgm_upper = 1;
+            else if (port == 0x7f)
+                sgm_lower = ~data & 0x02;
             break;
         }
     }
@@ -116,11 +131,17 @@ void jcv_io_wr(uint8_t port, uint8_t data) {
 
 // Read a byte of memory
 uint8_t jcv_mem_rd(uint16_t addr) {
-    if (addr < 0x2000) { // BIOS from 0x0000 to 0x1fff
+    if (sgm_lower && (addr < 0x2000)) {
+        return sgmram[addr];
+    }
+    else if (addr < 0x2000) { // BIOS from 0x0000 to 0x1fff
         return cvbios[addr];
     }
-    else if (addr < 0x6000) { // Two Expansion Ports from 0x2000 to 0x6000
-        return 0xff; // No expansion port devices currently supported
+    else if (sgm_upper && (addr < 0x8000)) {
+        return sgmram[addr];
+    }
+    else if (addr < 0x6000) { // Expansion port reads when no SGM is plugged in
+        return 0xff; // Return default 0xff if nothing is plugged in
     }
     else if (addr < 0x8000) { // 1K RAM mirrored every 1K for 8K
         return cvsys.ram[addr & 0x3ff];
@@ -146,7 +167,15 @@ uint8_t jcv_mem_rd(uint16_t addr) {
 
 // Write a byte to a memory location
 void jcv_mem_wr(uint16_t addr, uint8_t data) {
-    if ((addr > 0x5fff) && (addr < 0x8000)) // Only handle RAM writes
+    /* If the Super Game Module is plugged in and activated, the RAM writes will
+       all be mapped to the SGM RAM. This means writes that would normally go to
+       base system RAM are now going into SGM RAM.
+    */
+    if (sgm_lower && (addr < 0x2000))
+        sgmram[addr] = data;
+    else if (sgm_upper && (addr > 0x1fff) && (addr < 0x8000))
+        sgmram[addr] = data;
+    else if ((addr > 0x5fff) && (addr < 0x8000)) // Base System RAM writes
         cvsys.ram[addr & 0x3ff] = data;
 }
 
@@ -155,7 +184,7 @@ int jcv_bios_load(const char *biospath) {
     FILE *file;
     long size;
     
-    if(!(file = fopen(biospath, "rb")))
+    if (!(file = fopen(biospath, "rb")))
         return 0;
     
     // Find out the file's size
@@ -164,7 +193,7 @@ int jcv_bios_load(const char *biospath) {
     fseek(file, 0, SEEK_SET);
     
     // Make sure it is the correct size before attempting to load it
-    if(size != SIZE_CVBIOS) {
+    if (size != SIZE_CVBIOS) {
         fclose(file);
         return 0;
     }
@@ -233,6 +262,8 @@ void jcv_memio_init(void) {
     srand(time(NULL));
     for (int i = 0; i < SIZE_CVRAM; i++)
         cvsys.ram[i] = rand() % 256; // Random numbers from 0-255
+    
+    memset(sgmram, 0xff, 0x6000);
     
     cvsys.cseg = 0; // Controller Strobe Segment
     cvsys.ctrl[0] = cvsys.ctrl[1] = 0; // Reset input states to empty

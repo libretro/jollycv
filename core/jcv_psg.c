@@ -11,9 +11,12 @@
 #include <stdint.h>
 #include <string.h>
 
-#include "resample.h" // Speex Resampler
-
 #include "jcv_psg.h"
+
+#define CFRAC 16 // Clock Fraction - PSG runs at 1/16th the input clock rate
+#define LFSRSHIFT 14 // Linear Feedback Shift Register is 15 bits, so shift 14
+#define NOISETAP 0x0003 // Tapped bits for ColecoVision are 0 and 1
+#define SIZE_PSGBUF 4600 // 4461 maximum in PAL mode, but give some overhead
 
 // Based on smspower documentation values, divided by 8 and tweaked
 static const int16_t vtable[16] = { // Volume Table
@@ -21,56 +24,19 @@ static const int16_t vtable[16] = { // Volume Table
     540,    392,    294,    208,    140,    76,     36,     0,
 };
 
-// Callback to notify the fronted that N samples are ready
-static void (*jcv_psg_cb)(size_t);
-
 static cv_psg_t psg; // PSG Context
 
 static int16_t psgbuf[SIZE_PSGBUF]; // Buffer for raw PSG output samples
-static int16_t *abuf = NULL; // Buffer to output resampled data into
 static size_t bufpos = 0; // Keep track of the position in the PSG output buffer
-static size_t samplerate = 48000; // Default sample rate is 48000Hz
-static uint8_t framerate = 60; // Default to 60 for NTSC
-static uint8_t rsq = 3; // Default resampler quality is 3
 
-// Speex
-static SpeexResamplerState *resampler = NULL;
-static int err;
-
-// Set the pointer to the output audio buffer
-void jcv_psg_set_buffer(int16_t *ptr) {
-    abuf = ptr;
-}
-
-// Set the callback that notifies the frontend that N audio samples are ready
-void jcv_psg_set_callback(void (*cb)(size_t)) {
-    jcv_psg_cb = cb;
-}
-
-// Set the output sample rate
-void jcv_psg_set_rate(size_t rate) {
-    switch (rate) {
-        case 44100: case 48000: case 96000: case 192000:
-            samplerate = rate;
-            break;
-        default:
-            break;
-    }
-}
-
-// Set the region
-void jcv_psg_set_region(uint8_t region) {
-    framerate = region ? 50 : 60; // 50 for PAL, 60 for NSTC
-}
-
-// Set the resampler quality
-void jcv_psg_set_rsqual(uint8_t qual) {
-    if (qual <= 10)
-        rsq = qual;
+// Grab the pointer to the PSG's buffer
+int16_t* jcv_psg_get_buffer(void) {
+    bufpos = 0;
+    return &psgbuf[0];
 }
 
 // Set initial values
-void jcv_psg_reset(void) {
+void jcv_psg_init(void) {
     psg.clatch = 0x00; // Channel Latch starts at Tone Channel 0
     psg.cfrac = 0; // Start with 0 cycle fractions
     
@@ -84,23 +50,6 @@ void jcv_psg_reset(void) {
     
     psg.lfsr = 1 << LFSRSHIFT; // Seed the noise shift register
     psg.sign = 0x00; // Sign bits start at 0 (Positive)
-}
-
-// Set initial values and initialize the resampler context
-void jcv_psg_init(void) {
-    // Reset to initialize everything to defaults
-    jcv_psg_reset();
-    
-    // Bring up the Speex resampler
-    resampler = speex_resampler_init(1, SAMPLERATE_PSG, samplerate, rsq, &err);
-}
-
-// Deinitialize the resampler
-void jcv_psg_deinit(void) {
-    if (resampler) {
-        speex_resampler_destroy(resampler);
-        resampler = NULL;
-    }
 }
 
 // Write to PSG Control Registers
@@ -169,25 +118,6 @@ void jcv_psg_wr(uint8_t data) {
             psg.lfsr = 1 << LFSRSHIFT;
         }
     }
-}
-
-// Resample raw audio and execute the callback
-void jcv_psg_resamp(size_t insamps) {
-    bufpos = 0; // Reset the buffer position
-    
-    #ifdef _NORESAMP
-    // No internal resampling if doing it all in the frontend is preferred
-    memcpy(abuf, psgbuf, insamps * sizeof(int16_t));
-    jcv_psg_cb(insamps);
-    return;
-    #endif
-    
-    // Speex Resampler
-    spx_uint32_t in_len = insamps;
-    spx_uint32_t outsamps = samplerate / framerate;
-    err = speex_resampler_process_int(resampler, 0, (spx_int16_t*)psgbuf,
-        &in_len, (spx_int16_t*)abuf, &outsamps);
-    jcv_psg_cb(outsamps);
 }
 
 // Based on the example algorithm from the smspower documentation

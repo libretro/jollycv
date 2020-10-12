@@ -9,12 +9,6 @@
 #ifndef JCV_PSG_H
 #define JCV_PSG_H
 
-#define CFRAC 16 // Clock Fraction - PSG runs at 1/16th the input clock rate
-#define LFSRSHIFT 14 // Linear Feedback Shift Register is 15 bits, so shift 14
-#define NOISETAP 0x0003 // Tapped bits for ColecoVision are 0 and 1
-#define SAMPLERATE_PSG 224000 // Approximate sample rate the PSG outputs at (Hz)
-#define SIZE_PSGBUF 4600 // 4461 maximum in PAL mode, but give some overhead
-
 typedef struct _cv_psg_t {
     uint8_t clatch; // Channel latch tells which channel's registers to write
     uint8_t attenuator[4]; // Four attenuators control volume on four channels
@@ -27,19 +21,10 @@ typedef struct _cv_psg_t {
     size_t cfrac; // Clock the PSG every 16 CPU cycles (Clock Fractions)
 } cv_psg_t;
 
-void jcv_psg_set_buffer(int16_t*);
-void jcv_psg_set_callback(void (*)(size_t));
-void jcv_psg_set_rate(size_t);
-void jcv_psg_set_region(uint8_t);
-void jcv_psg_set_rsqual(uint8_t);
+int16_t* jcv_psg_get_buffer(void);
 
-void jcv_psg_reset(void);
 void jcv_psg_init(void);
-void jcv_psg_deinit(void);
-
 void jcv_psg_wr(uint8_t);
-
-void jcv_psg_resamp(size_t);
 size_t jcv_psg_exec(void);
 
 void jcv_psg_state_load(cv_psg_t*);

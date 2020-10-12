@@ -14,7 +14,7 @@
 
 #include "jcv.h"
 #include "jcv_memio.h"
-#include "jcv_psg.h"
+#include "jcv_mixer.h"
 #include "jcv_vdp.h"
 
 #define SAMPLERATE 48000
@@ -144,9 +144,9 @@ void jg_set_cb_settings_read(jg_cb_settings_read_t func) {
 int jg_init(void) {
     jcv_settings_read();
     jcv_input_set_callback(&jcv_input_poll);
-    jcv_psg_set_callback(jg_cb_audio);
-    jcv_psg_set_rate(SAMPLERATE);
-    jcv_psg_set_rsqual(settings_jcv[RSQUAL].value);
+    jcv_mixer_set_callback(jg_cb_audio);
+    jcv_mixer_set_rate(SAMPLERATE);
+    jcv_mixer_set_rsqual(settings_jcv[RSQUAL].value);
     jcv_vdp_set_palette(settings_jcv[PALETTE].value);
     jcv_set_region(settings_jcv[REGION].value);
     jcv_init();
@@ -237,7 +237,7 @@ void jg_setup_video(void) {
 }
 
 void jg_setup_audio(void) {
-    jcv_psg_set_buffer(audinfo.buf);
+    jcv_mixer_set_buffer(audinfo.buf);
 }
 
 void jg_set_inputstate(jg_inputstate_t *ptr, int port) {

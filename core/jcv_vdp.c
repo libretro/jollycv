@@ -148,12 +148,12 @@ static void jcv_vdp_wr_reg(uint8_t rnum, uint8_t data) {
            |----------------------------------------------------------------|
     */
     // Masks to avoid writing "Don't Care" bits
-    uint8_t dcbits[8] = { 0x03, 0xfb, 0x0f, 0xff, 0x07, 0x7f, 0x07, 0xff };
+    uint8_t dcmask[8] = { 0x03, 0xfb, 0x0f, 0xff, 0x07, 0x7f, 0x07, 0xff };
     
     // Save the GINT bit status before writing to a register
     const uint8_t old_gint = jcv_vdp_gint();
     
-    vdp.ctrl[rnum] = data & dcbits[rnum]; // Write to the register
+    vdp.ctrl[rnum] = data & dcmask[rnum]; // Write to the register
     
     // Bit shifts in cases 2-6 create a 14-bit address offset from the
     // start of VRAM, based on the value written to the register
