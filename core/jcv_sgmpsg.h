@@ -15,9 +15,9 @@ typedef struct _cv_sgmpsg_t {
     
     uint16_t tperiod[3]; // Periods for Tones A, B, and C
     uint16_t tcounter[3]; // Counters for Tones A, B, and C
-    uint16_t amplitude[3]; // Amplitudes for Tones A, B, and C
+    uint8_t amplitude[3]; // Amplitudes for Tones A, B, and C
     
-    uint16_t nperiod; // Noise Period
+    uint8_t nperiod; // Noise Period
     uint16_t ncounter; // Noise Counter
     uint32_t nshift; // Noise Random Number Generator Shift Register (17-bit)
     

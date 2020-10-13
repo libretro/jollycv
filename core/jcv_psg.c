@@ -8,8 +8,8 @@
 
 // ColecoVision PSG - Texas Instruments SN76489AN
 
+#include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
 #include "jcv_psg.h"
 

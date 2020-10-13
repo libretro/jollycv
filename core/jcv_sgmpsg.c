@@ -8,8 +8,8 @@
 
 // ColecoVision Super Game Module PSG - General Instrument AY-3-8910
 
+#include <stddef.h>
 #include <stdint.h>
-#include <string.h>
 
 #include "jcv_sgmpsg.h"
 
@@ -32,12 +32,14 @@ static inline void jcv_sgmpsg_env_reset(void) {
     
     if (psg.eseg) { // Segment 1
         switch (psg.reg[13]) {
-            case 8: case 11: case 13: case 14: // Start from the top
+            case 8: case 11: case 13: case 14: { // Start from the top
                 psg.evol = 15;
                 break;
-            default: // Start from the bottom
+            }
+            default: { // Start from the bottom
                 psg.evol = 0;
                 break;
+            }
         }
     }
     else { // Segment 0
@@ -54,16 +56,44 @@ int16_t* jcv_sgmpsg_get_buffer(void) {
 
 // Set initial values
 void jcv_sgmpsg_init(void) {
+    // Registers
     for (int i = 0; i < 16; i++)
         psg.reg[i] = 0x00;
     
-    for (int i = 0; i < 3; i++)
-        psg.tcounter[i] = 0;
+    // Latched Register
+    psg.rlatch = 0x00;
+    
+    // Tone Periods, Tone Counters, Amplitude, Sign bits
+    for (int i = 0; i < 3; i++) {
+        psg.tperiod[i] = 0x0000;
+        psg.tcounter[i] = 0x0000;
+        psg.amplitude[i] = 0x00;
+        psg.sign[i] = 0x00;
+    }
+    
+    // Noise Period, Noise Counter
+    psg.nperiod = 0x00;
+    psg.ncounter = 0x0000;
     
     // Seed the Noise RNG Shift Register
     psg.nshift = 1;
     
-    psg.estep = 0;
+    // Envelope Period, Counter, Segment, Step, and Volume
+    psg.eperiod = 0x0000;
+    psg.ecounter = 0x0000;
+    psg.eseg = 0x00;
+    psg.estep = 0x00;
+    psg.evol = 0x00;
+    
+    // Enable bits for Tone, Noise, and Envelope
+    for (int i = 0; i < 3; i++) {
+        psg.tenable[i] = 0x00;
+        psg.nenable[i] = 0x00;
+        psg.emode[i] = 0x00;
+    }
+    
+    // Start with 0 cycle fractions
+    psg.cfrac = 0;
 }
 
 // Read from the currently latched Control Register
@@ -184,8 +214,9 @@ void jcv_sgmpsg_wr(uint8_t data) {
         /* Nothing really needs to be done for the IO Port Data Store Registers,
            so skip cases 14 and 15.
         */
-        default:
+        default: {
             break;
+        }
     }
 }
 
@@ -202,6 +233,7 @@ size_t jcv_sgmpsg_exec(void) {
     // Every 16th CPU clock cycle, allow the code below to run
     psg.cfrac = 0; // Reset the PSG clock fraction counter
     
+    // Clock Tone Counters for Channels A, B, and C
     for (int i = 0; i < 3; i++) {
         if (++psg.tcounter[i] >= psg.tperiod[i]) {
             psg.tcounter[i] = 0;
@@ -209,6 +241,7 @@ size_t jcv_sgmpsg_exec(void) {
         }
     }
     
+    // Clock Noise Counter
     if (++psg.ncounter >= (psg.nperiod << 1)) {
         psg.ncounter = 0;
         /* The Noise Random Number Generator is a 17-bit shift register, whose
@@ -217,11 +250,13 @@ size_t jcv_sgmpsg_exec(void) {
            to output noise when a sample is generated.
         */
         psg.nshift = (psg.nshift >> 1) |
-            (((psg.nshift ^ (psg.nshift >> 3)) & 0x1) << 16);
+            (((psg.nshift ^ (psg.nshift >> 3)) & 0x01) << 16);
     }
     
+    // Clock Envelope Counter
     if (++psg.ecounter >= (psg.eperiod << 1)) {
         psg.ecounter = 0;
+        
         /* Envelope Shape
            The bits from 3 to 0 represent Continue, Attack, Alternate, and Hold.
            For Continue values of 0, the bottom two bits are irrelevant, meaning
@@ -231,39 +266,32 @@ size_t jcv_sgmpsg_exec(void) {
            1000: \|\|\|     1001: \_____     1010: \/\/\/     1011: \|----
            1100: /|/|/|     1101: /-----     1110: /\/\/\     1111: /|____
         */
-        if (psg.eseg) { // Second half of the envelope shape
-            switch (psg.reg[13]) {
-                case 8: case 14: { // Count Downwards
-                    psg.evol--;
-                    break;
-                }
-                case 10: case 12: { // Count Upwards
-                    psg.evol++;
-                    break;
-                }
-                case 11: case 13: { // Hold High
-                    psg.evol = 15;
-                    break;
-                }
-                default: { // Hold Low
-                    psg.evol = 0;
-                    break;
-                }
-            }
+        if (psg.estep == 0) {
+            // Do not change the envelope's volume for the 0th step
+        }
+        else if (psg.eseg) { // Second half of the envelope shape
+            if ((psg.reg[13] == 10) || (psg.reg[13] == 12)) // Count Up
+                psg.evol++;
+            else if ((psg.reg[13] == 8) || (psg.reg[13] == 14)) // Count Down
+                psg.evol--;
+            // Otherwise, simply hold the current value
         }
         else { // First half of the envelope shape
-            if (psg.reg[13] & 0x04) // Attack is set - Count upwards
+            if (psg.reg[13] & 0x04) // Attack is set - Count Up
                 psg.evol++;
-            else // Otherwise count downwards
+            else // Count Down
                 psg.evol--;
         }
+        
+        // Reset and start the new Segment if this is the last Envelope Step
         if (++psg.estep >= 16) {
             psg.eseg ^= 1;
             jcv_sgmpsg_env_reset();
         }
     }
     
-    int16_t vol = 0;
+    int16_t vol = 0; // Initial output volume of this sample
+    
     for (int i = 0; i < 3; i++) {
         /* If the tone channel is enabled and the sign bit is set, or noise
            output for this channel is enabled and the bit 0 of the noise shift
@@ -280,8 +308,10 @@ size_t jcv_sgmpsg_exec(void) {
             vol += psg.emode[i] ? vtable[psg.evol] : vtable[psg.amplitude[i]];
     }
     
+    // Add the mixed sample to the output buffer and increment the position
     psgbuf[bufpos++] = vol;
-    return 1;
+    
+    return 1; // Return 1, signifying that a sample has been generated
 }
 
 void jcv_sgmpsg_state_load(cv_sgmpsg_t *st_sgmpsg) {
