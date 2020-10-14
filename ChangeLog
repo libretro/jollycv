@@ -1,3 +1,8 @@
+Version 0.1.1
+-------------
+ - Rework mixer logic and simplify envelope code in AY-3-8910
+ - Fix bug that prevented resetting Super Game Module content
+
 Version 0.1.0
 -------------
  - Emulation of the Super Game Module
