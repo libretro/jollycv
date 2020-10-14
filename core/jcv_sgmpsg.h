@@ -27,8 +27,8 @@ typedef struct _cv_sgmpsg_t {
     uint8_t estep; // Envelope Step
     uint8_t evol; // Envelope Volume
     
-    uint8_t tenable[3]; // Enable bit for Tones A, B, and C
-    uint8_t nenable[3]; // Enable bit for Noise on Channels A, B, and C
+    uint8_t tdisable[3]; // Disable bit for Tones A, B, and C
+    uint8_t ndisable[3]; // Disable bit for Noise on Channels A, B, and C
     uint8_t emode[3]; // Envelope Mode Enable bit for Tones A, B, and C
     
     uint8_t sign[3]; // Signify whether the waveform is high or low

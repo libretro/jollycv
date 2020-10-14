@@ -87,8 +87,8 @@ void jcv_sgmpsg_init(void) {
     
     // Enable bits for Tone, Noise, and Envelope
     for (int i = 0; i < 3; i++) {
-        psg.tenable[i] = 0x00;
-        psg.nenable[i] = 0x00;
+        psg.tdisable[i] = 0x00;
+        psg.ndisable[i] = 0x00;
         psg.emode[i] = 0x00;
     }
     
@@ -148,7 +148,7 @@ void jcv_sgmpsg_wr(uint8_t data) {
     
     switch (psg.rlatch) {
         /* Tone Periods are 12-bit values comprising 8 bits from the first
-           register, and 4 bits from the second regiser.
+           register, 4 bits from the second register. Value is for half period.
            The lowest period for tones is 1, so if 0 is set, change it to 1.
         */
         case 0: case 1: { // Channel A Tone Period
@@ -177,12 +177,12 @@ void jcv_sgmpsg_wr(uint8_t data) {
         }
         case 7: { // Enable IO/Noise/Tone
             // Register 7's Enable bits are actually Disable bits.
-            psg.tenable[0] = !(psg.reg[7] & 0x01);
-            psg.tenable[1] = !(psg.reg[7] & 0x02);
-            psg.tenable[2] = !(psg.reg[7] & 0x04);
-            psg.nenable[0] = !(psg.reg[7] & 0x08);
-            psg.nenable[1] = !(psg.reg[7] & 0x10);
-            psg.nenable[2] = !(psg.reg[7] & 0x20);
+            psg.tdisable[0] = (psg.reg[7] >> 0) & 0x01;
+            psg.tdisable[1] = (psg.reg[7] >> 1) & 0x01;
+            psg.tdisable[2] = (psg.reg[7] >> 2) & 0x01;
+            psg.ndisable[0] = (psg.reg[7] >> 3) & 0x01;
+            psg.ndisable[1] = (psg.reg[7] >> 4) & 0x01;
+            psg.ndisable[2] = (psg.reg[7] >> 5) & 0x01;
             break;
         }
         case 8: { // Channel A Amplitude
@@ -293,12 +293,20 @@ size_t jcv_sgmpsg_exec(void) {
     int16_t vol = 0; // Initial output volume of this sample
     
     for (int i = 0; i < 3; i++) {
-        /* If the tone channel is enabled and the sign bit is set, or noise
-           output for this channel is enabled and the bit 0 of the noise shift
-           register is set, output a value. Otherwise, leave it at 0.
+        /* Determine whether to output a volume for this channel. The logic here
+           is unintuitive. From the datasheet:
+             "Disabling noise and tone does _not_ turn off a channel. Turning a
+             channel off can only be accomplished by writing all zeroes into the
+             correspending Amplitude Control register."
+           If both tone and noise disable bits are set, the output value will
+           effectively be silence because the waveform will not oscillate. If
+           either only the tone or only the noise disable bit is set, it will
+           determine whether tone or noise is output. If neither are set, sound
+           will only be output when both the noise shift register bit 0 is true
+           and the tone is in the second half of the period.
         */
-        uint8_t out = (psg.tenable[i] && psg.sign[i]) ||
-            (psg.nenable[i] && psg.nshift & 0x01);
+        uint8_t out = (psg.tdisable[i] | psg.sign[i]) &
+            (psg.ndisable[i] | (psg.nshift & 0x01));
         
         /* If the envelope mode bit is set for this channel, output variable
            level amplitude (envelope step), otherwise output the fixed level
