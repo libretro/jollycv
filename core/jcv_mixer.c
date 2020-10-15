@@ -16,7 +16,6 @@
 #include "jcv_sgmpsg.h"
 
 #define SAMPLERATE_PSG 224000 // Approximate PSG sample rate (Hz)
-#define SAMPLERATE_SGMPSG 448000 // Approximate SGM PSG sample rate (Hz)
 
 static int16_t *abuf = NULL; // Buffer to output resampled data into
 static size_t samplerate = 48000; // Default sample rate is 48000Hz

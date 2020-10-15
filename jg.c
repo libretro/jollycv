@@ -31,7 +31,7 @@ static jg_cb_rumble_t jg_cb_rumble;
 static jg_cb_settings_read_t jg_cb_settings_read;
 
 static jg_coreinfo_t coreinfo = {
-    "jollycv", "JollyCV", "0.0.0", "coleco", NUMINPUTS, 0x00
+    "jollycv", "JollyCV", VERSION, "coleco", NUMINPUTS, 0x00
 };
 
 static jg_videoinfo_t vidinfo = {

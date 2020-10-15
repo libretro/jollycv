@@ -297,12 +297,12 @@ size_t jcv_sgmpsg_exec(void) {
            is unintuitive. From the datasheet:
              "Disabling noise and tone does _not_ turn off a channel. Turning a
              channel off can only be accomplished by writing all zeroes into the
-             correspending Amplitude Control register."
+             corresponding Amplitude Control register."
            If both tone and noise disable bits are set, the output value will
            effectively be silence because the waveform will not oscillate. If
            either only the tone or only the noise disable bit is set, it will
            determine whether tone or noise is output. If neither are set, sound
-           will only be output when both the noise shift register bit 0 is true
+           will only be output when both the noise shift register bit 0 is set
            and the tone is in the second half of the period.
         */
         uint8_t out = (psg.tdisable[i] | psg.sign[i]) &
