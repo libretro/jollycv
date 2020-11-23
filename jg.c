@@ -8,6 +8,7 @@
 
 #include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 
 #include <jg/jg.h>
 #include <jg/jg_coleco.h>
@@ -16,6 +17,7 @@
 #include "jcv_memio.h"
 #include "jcv_mixer.h"
 #include "jcv_vdp.h"
+#include "jcv_z80.h"
 
 #define SAMPLERATE 48000
 #define FRAMERATE 60
@@ -89,23 +91,38 @@ enum {
     "200aa603996bfd2734e353098ebe8dd5", // Victory (USA)
 };*/
 
-// Some games may have optional support
-/*static const char *gamedb_wheel[] = { // Steering Wheel (Driving Controller)
-    "ec72a0e3bebe07ba631a8dcb750c1591", // Destructor (USA, Europe)
-    "dbd4f21702be17775e84b2fb6c534c94", // Dukes of Hazzard, The (USA)
-    "bd905555983c05456ab81ea154a570b1", // Fall Guy (Europe) (Proto)
-    "6f146d9bd3f64bbc006a761f59e2a1cf", // Turbo (USA, Europe)
-};*/
-
 /*static const char *gamedb_sketchpad[] = { // Only one game seems to use this
     "a46d20d65533ed979933fc1cfe6c0ad7", // Super Sketch - Sketch Master (USA)
 };*/
+
+static const char *gamedb_sac[] = { // Super Action Controller
+    "4520ee5d8d0fcf151a3332966f7ebda0", // Front Line (USA, Europe)
+    "d145de191e3f694c7f0920787ccbda48",
+        // Front Line (USA, Europe) (Green Version)
+    "d35fdb81f4a733925b0a33dfb53d9d78",
+        // Rocky - Super Action Boxing (USA, Europe)
+    "f96a21f920e889d1e21abbf00f4d381d", // Spy Hunter (USA)
+    "7da9f2fda17e1e34a41b180d1ceb0c37", // Spy Hunter (USA) (Beta)
+    "45006eaf52ee16ddcadd1dca68b265c8",
+        // Star Trek - Strategic Operations Simulator (USA)
+    "4c4b25a93301e59b86decb0df7a0ee51", // Super Action Baseball (USA)
+    "8aabed060476fde3cc706c6463f02980", // Super Action Football (Europe)
+    "bee90a110d14b29d2e64f0ff0f303bc6", // Super Action Football (USA)
+};
+
+static const char *gamedb_wheel[] = { // Steering Wheel
+    //"ec72a0e3bebe07ba631a8dcb750c1591", // Destructor (USA, Europe)
+    //"dbd4f21702be17775e84b2fb6c534c94", // Dukes of Hazzard, The (USA)
+    //"bd905555983c05456ab81ea154a570b1", // Fall Guy (Europe) (Proto)
+    "6f146d9bd3f64bbc006a761f59e2a1cf", // Turbo (USA, Europe)
+};
 
 static void jcv_settings_read(void) {
     jg_cb_settings_read(settings_jcv,
         sizeof(settings_jcv) / sizeof(jg_setting_t));
 }
 
+// ColecoVision Paddle
 static uint16_t cv_input_map[] = {
     CV_INPUT_U, CV_INPUT_D, CV_INPUT_L, CV_INPUT_R, CV_INPUT_FL, CV_INPUT_FR,
     CV_INPUT_1, CV_INPUT_2, CV_INPUT_3, CV_INPUT_4, CV_INPUT_5, CV_INPUT_6,
@@ -117,6 +134,77 @@ static uint16_t jcv_input_poll(int port) {
     
     for (int i = 0; i < NDEFS_COLECOPAD; i++)
         if (input_device[port]->button[i]) b |= cv_input_map[i];
+    
+    return b;
+}
+
+// ColecoVision Super Action Controller
+static uint16_t cv_input_map_sac[] = {
+    CV_INPUT_U, CV_INPUT_D, CV_INPUT_L, CV_INPUT_R,
+    CV_INPUT_Y, CV_INPUT_O, CV_INPUT_P, CV_INPUT_B,
+    CV_INPUT_1, CV_INPUT_2, CV_INPUT_3, CV_INPUT_4, CV_INPUT_5, CV_INPUT_6,
+    CV_INPUT_7, CV_INPUT_8, CV_INPUT_9, CV_INPUT_0, CV_INPUT_STR, CV_INPUT_PND,
+};
+
+static uint16_t jcv_input_poll_sac(int port) {
+    uint16_t b = 0x0000;
+    
+    for (int i = 0; i < NDEFS_COLECOSAC - 2; i++)
+        if (input_device[port]->button[i]) b |= cv_input_map_sac[i];
+    
+    // Speed Rollers
+    if (input_device[port]->button[20]) {
+        b |= CV_INPUT_SP;
+        if (input_device[port]->button[20]++ > 2) {
+            input_device[port]->button[20] = 1;
+            jcv_z80_irq(0);
+        }
+    }
+    if (input_device[port]->button[21]) {
+        b |= CV_INPUT_SM;
+        if (input_device[port]->button[21]++ > 2) {
+            input_device[port]->button[21] = 1;
+            jcv_z80_irq(0);
+        }
+    }
+    
+    return b;
+}
+
+// ColecoVision Expansion Module #2 - Steering Wheel
+static uint16_t cv_input_map_wheel[] = {
+    CV_INPUT_U, CV_INPUT_D, CV_INPUT_L, CV_INPUT_R,
+    CV_INPUT_1, CV_INPUT_2, CV_INPUT_3, CV_INPUT_4, CV_INPUT_5, CV_INPUT_6,
+    CV_INPUT_7, CV_INPUT_8, CV_INPUT_9, CV_INPUT_0, CV_INPUT_STR, CV_INPUT_PND,
+};
+
+static uint16_t jcv_input_poll_wheel(int port) {
+    uint16_t b = 0x0000;
+    
+    if (port == 0) { // Steering Wheel and Pedal on first port
+        if (input_device[0]->button[16]) { // Steer Left
+            b |= CV_INPUT_SM;
+            if (input_device[0]->button[16]++ > 2) {
+                input_device[0]->button[16] = 1;
+                jcv_z80_irq(0);
+            }
+        }
+        if (input_device[0]->button[17]) { // Steer Right
+            b |= CV_INPUT_SP;
+            if (input_device[0]->button[17]++ > 2) {
+                input_device[0]->button[17] = 1;
+                jcv_z80_irq(0);
+            }
+        }
+        
+        // Pedal uses the same signal as the FireL on the standard paddle
+        if (input_device[0]->button[18]) b |= CV_INPUT_FL;
+    }
+    else if (port == 1) { // Numpad and Stick on second port
+        for (int i = 0; i < NDEFS_COLECOWHEEL - 3; i++)
+            // Hardcode to input device 0 as defined in the frontend
+            if (input_device[0]->button[i]) b |= cv_input_map_wheel[i];
+    }
     
     return b;
 }
@@ -176,15 +264,6 @@ int jg_game_load(void) {
     if (!jcv_rom_load(gameinfo.data, gameinfo.size))
         return 0;
     
-    // Set up input devices
-    inputinfo[0] = (jg_inputinfo_t){ JG_INPUT_CONTROLLER, 0,
-        "colecopad1", "ColecoVision Paddle",
-        defs_colecopad, 0, NDEFS_COLECOPAD };
-    
-    inputinfo[1] = (jg_inputinfo_t){ JG_INPUT_CONTROLLER, 1,
-        "colecopad2", "ColecoVision Paddle",
-        defs_colecopad, 0, NDEFS_COLECOPAD };
-    
     // Set the samples per frame and frame timing depending on region
     if (settings_jcv[REGION].value) { // PAL mode
         vidinfo.aspect = ASPECT_PAL;
@@ -194,6 +273,43 @@ int jg_game_load(void) {
     else { // NTSC mode
         jg_cb_frametime(FRAMERATE);
     }
+    
+    // Check game databases and set up input devices
+    for (size_t i = 0; i < (sizeof(gamedb_sac) / sizeof(const char*)); i++) {
+        if (!strcmp(gamedb_sac[i], gameinfo.md5)) {
+            inputinfo[0] = (jg_inputinfo_t){ JG_INPUT_CONTROLLER, 0,
+                "colecosac1", "Super Action Controller",
+                defs_colecosac, 0, NDEFS_COLECOSAC };
+            
+            inputinfo[1] = (jg_inputinfo_t){ JG_INPUT_CONTROLLER, 1,
+                "colecosac2", "Super Action Controller",
+                defs_colecosac, 0, NDEFS_COLECOSAC };
+            
+            jcv_input_set_callback(&jcv_input_poll_sac);
+            return 1;
+        }
+    }
+    
+    for (size_t i = 0; i < (sizeof(gamedb_wheel) / sizeof(const char*)); i++) {
+        if (!strcmp(gamedb_wheel[i], gameinfo.md5)) {
+            inputinfo[0] = (jg_inputinfo_t){ JG_INPUT_CONTROLLER, 0,
+                "colecowheel", "Steering Wheel",
+                defs_colecowheel, 0, NDEFS_COLECOWHEEL };
+            
+            jcv_input_set_callback(&jcv_input_poll_wheel);
+            return 1;
+        }
+    }
+    
+    // If there are no special input devices, use defaults
+    inputinfo[0] = (jg_inputinfo_t){ JG_INPUT_CONTROLLER, 0,
+        "colecopad1", "ColecoVision Paddle",
+        defs_colecopad, 0, NDEFS_COLECOPAD };
+    
+    inputinfo[1] = (jg_inputinfo_t){ JG_INPUT_CONTROLLER, 1,
+        "colecopad2", "ColecoVision Paddle",
+        defs_colecopad, 0, NDEFS_COLECOPAD };
+    
     return 1;
 }
 

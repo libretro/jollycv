@@ -33,10 +33,17 @@
 #define CV_INPUT_PND 0x09 // Numpad Pound (#)
 // Segment 1: Joystick, FireL - Shifted 8 left for easier input state management
 #define CV_INPUT_FL 0x40 << 8 // Left Fire Button
+#define CV_INPUT_SP 0x30 << 8 // Spinner Plus
+#define CV_INPUT_SM 0x10 << 8 // Spinner Minus
 #define CV_INPUT_U 0x01 << 8 // Joystick Up
 #define CV_INPUT_D 0x04 << 8 // Joystick Down
 #define CV_INPUT_L 0x08 << 8 // Joystick Left
 #define CV_INPUT_R 0x02 << 8 // Joystick Right
+// Super Action Controller Buttons
+#define CV_INPUT_Y CV_INPUT_FL // Yellow
+#define CV_INPUT_O CV_INPUT_FR // Orange
+#define CV_INPUT_P 0x07 // Purple
+#define CV_INPUT_B 0x0b // Blue
 
 typedef struct _cv_sys_t {
     uint8_t ram[SIZE_CVRAM]; // System RAM
