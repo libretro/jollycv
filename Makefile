@@ -1,7 +1,11 @@
+SOURCEDIR := $(abspath $(patsubst %/,%,$(dir $(abspath $(lastword \
+	$(MAKEFILE_LIST))))))
+
 CC ?= cc
 CFLAGS ?= -O2
 FLAGS := -fPIC -std=c99 -Wall -Wextra -Wshadow -Wmissing-prototypes -pedantic
-INCLUDES := -Icore -Icore/resample -Icore/z80
+SRCDIR := $(SOURCEDIR)/core
+INCLUDES := -I$(SRCDIR) -I$(SRCDIR)/resample -I$(SRCDIR)/z80
 SHARED := -fPIC
 NAME := jollycv
 PREFIX ?= /usr/local
@@ -37,10 +41,10 @@ OBJDIRS := objs objs/resample objs/z80
 OBJS := $(CSRCS:.c=.o)
 
 # Rules
-objs/%.o: core/%.c
+objs/%.o: $(SRCDIR)/%.c
 	$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) -c $< -o $@
 
-objs/%.o: %.c
+objs/%.o: $(SOURCEDIR)/%.c
 	$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) -c $< -o $@
 
 all: maketree $(TARGET)
@@ -57,7 +61,7 @@ $(TARGET): $(OBJS)
 clean:
 	rm -rf $(OBJDIRS) $(TARGET) $(NAME)/
 
-install:
+install: all
 	@mkdir -p $(DESTDIR)$(LIBDIR)/jollygood
 	cp $(NAME)/$(TARGET) $(DESTDIR)$(LIBDIR)/jollygood/
 
