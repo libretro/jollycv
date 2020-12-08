@@ -7,9 +7,12 @@ FLAGS := -fPIC -std=c99 -Wall -Wextra -Wshadow -Wmissing-prototypes -pedantic
 SRCDIR := $(SOURCEDIR)/core
 INCLUDES := -I$(SRCDIR) -I$(SRCDIR)/resample -I$(SRCDIR)/z80
 SHARED := -fPIC
+
 NAME := jollycv
 PREFIX ?= /usr/local
 LIBDIR ?= $(PREFIX)/lib
+DATAROOTDIR ?= $(PREFIX)/share
+DOCDIR ?= $(DATAROOTDIR)/doc/$(NAME)
 
 UNAME := $(shell uname -s)
 ifeq ($(UNAME), Darwin)
@@ -62,8 +65,12 @@ clean:
 	rm -rf $(OBJDIRS) $(TARGET) $(NAME)/
 
 install: all
+	@mkdir -p $(DESTDIR)$(DOCDIR)
 	@mkdir -p $(DESTDIR)$(LIBDIR)/jollygood
 	cp $(NAME)/$(TARGET) $(DESTDIR)$(LIBDIR)/jollygood/
+	cp $(SOURCEDIR)/LICENSE $(DESTDIR)$(DOCDIR)
+	cp $(SOURCEDIR)/README $(DESTDIR)$(DOCDIR)
 
 uninstall:
-	rm $(DESTDIR)$(LIBDIR)/jollygood/$(TARGET)
+	rm -rf $(DESTDIR)$(DOCDIR)
+	rm -f $(DESTDIR)$(LIBDIR)/jollygood/$(TARGET)
