@@ -71,6 +71,9 @@ install: all
 	cp $(SOURCEDIR)/LICENSE $(DESTDIR)$(DOCDIR)
 	cp $(SOURCEDIR)/README $(DESTDIR)$(DOCDIR)
 
+install-strip: install
+	strip $(DESTDIR)$(LIBDIR)/jollygood/$(TARGET)
+
 uninstall:
 	rm -rf $(DESTDIR)$(DOCDIR)
 	rm -f $(DESTDIR)$(LIBDIR)/jollygood/$(TARGET)
