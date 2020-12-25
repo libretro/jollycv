@@ -47,10 +47,11 @@ N = Resampler Quality (0-10)
 region = 0
 0 = NTSC, 1 = PAL
 
-Known Problems
---------------
-This emulator is still very new, so it is not perfect. Compatibility is
-extremely high, but the following software is presently not usable:
+Compatibility
+-------------
+JollyCV is compatible with 100% of the commercially released ColecoVision
+library, all known and freely available homebrew, and the majority of betas.
+The following is known not to work:
 
 Lord of the Dungeon (USA) (Beta) - Likely needs SRAM support implemented
 
@@ -66,6 +67,11 @@ with significant modifications, a clear indication that it is not officially
 supported should be made, either by changing the name of the project or
 by appending to it. Please be an honest person and respect the licenses that
 apply to the software.
+
+Documentation
+-------------
+Documentation used to create the emulator is available at
+https://gitlab.com/carmiker/colecodocs
 
 Copyright
 ---------
