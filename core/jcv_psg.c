@@ -161,8 +161,8 @@ size_t jcv_psg_exec(void) {
                offset value corresponding to the volume level (in other words,
                the wave does not oscillate above and below 0). PCM is done by
                rapidly changing the volume level. Squish'em Sam seems to use 16
-               as the magic number for PCM samples, but no documentation
-               mentions this being a special value. Further research required.
+               as the magic number for PCM samples, possibly because the PSG
+               is clocked every 16 CPU cycles.
             */
             if ((psg.frequency[i] == 1) || (psg.frequency[i] == 16))
                 continue; // Do not flip the sign bit
@@ -186,11 +186,11 @@ size_t jcv_psg_exec(void) {
     if (psg.counter[3] == 0) {
         /* Set the shift rate or use the Tone Generator 2 frequency
            If the value of the lowest two bits of the noise register is 3, then
-           use the value of Tone Generator 2's counter. Otherwise shift 0x10
+           use the value of Tone Generator 2's frequency. Otherwise shift 0x10
            left by the value of the register.
         */
         psg.counter[3] = (psg.noise & 0x03) == 0x03 ?
-            psg.counter[2] : 0x10 << (psg.noise & 0x03);
+            psg.frequency[2] : 0x10 << (psg.noise & 0x03);
         
         psg.sign ^= 0x08; // Flip the bit for this channel
         
