@@ -26,43 +26,46 @@ else
 	TARGET := $(NAME).so
 endif
 
-CSRCS := objs/resample/resample.c \
-	objs/z80/z80.c \
-	objs/jcv.c \
-	objs/jcv_memio.c \
-	objs/jcv_mixer.c \
-	objs/jcv_psg.c \
-	objs/jcv_sgmpsg.c \
-	objs/jcv_vdp.c \
-	objs/jcv_z80.c \
-	objs/jg.c
+OBJDIR := objs
+
+CSRCS := $(OBJDIR)/resample/resample.c \
+	$(OBJDIR)/z80/z80.c \
+	$(OBJDIR)/jcv.c \
+	$(OBJDIR)/jcv_memio.c \
+	$(OBJDIR)/jcv_mixer.c \
+	$(OBJDIR)/jcv_psg.c \
+	$(OBJDIR)/jcv_sgmpsg.c \
+	$(OBJDIR)/jcv_vdp.c \
+	$(OBJDIR)/jcv_z80.c \
+	$(OBJDIR)/jg.c
 
 # Object dirs
-OBJDIRS := objs objs/resample objs/z80
+OBJDIRS := $(OBJDIR)/resample $(OBJDIR)/z80
 
 # List of object files
 OBJS := $(CSRCS:.c=.o)
 
 # Rules
-objs/%.o: $(SRCDIR)/%.c
+$(OBJDIR)/%.o: $(SRCDIR)/%.c maketree
 	$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) -c $< -o $@
 
-objs/%.o: $(SOURCEDIR)/%.c
+$(OBJDIR)/%.o: $(SOURCEDIR)/%.c maketree
 	$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) -c $< -o $@
 
-all: maketree $(TARGET)
+all: $(TARGET)
 
-maketree: $(sort $(OBJDIRS))
+maketree: $(OBJDIR)/.tag
 
-$(sort $(OBJDIRS)):
-	@mkdir -p $@
+$(OBJDIR)/.tag:
+	@mkdir -p -- $(sort $(OBJDIRS))
+	@touch $@
 
 $(TARGET): $(OBJS)
 	@mkdir -p $(NAME)
 	$(CC) $^ $(LDFLAGS) $(SHARED) -o $(NAME)/$(TARGET)
 
 clean:
-	rm -rf $(OBJDIRS) $(TARGET) $(NAME)/
+	rm -rf $(OBJDIR)/ $(TARGET) $(NAME)/
 
 install: all
 	@mkdir -p $(DESTDIR)$(DOCDIR)
