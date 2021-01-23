@@ -46,10 +46,10 @@ OBJDIRS := $(OBJDIR)/resample $(OBJDIR)/z80
 OBJS := $(CSRCS:.c=.o)
 
 # Rules
-$(OBJDIR)/%.o: $(SRCDIR)/%.c maketree
+$(OBJDIR)/%.o: $(SRCDIR)/%.c $(OBJDIR)/.tag
 	$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) -c $< -o $@
 
-$(OBJDIR)/%.o: $(SOURCEDIR)/%.c maketree
+$(OBJDIR)/%.o: $(SOURCEDIR)/%.c $(OBJDIR)/.tag
 	$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) -c $< -o $@
 
 all: $(TARGET)
@@ -65,7 +65,7 @@ $(TARGET): $(OBJS)
 	$(CC) $^ $(LDFLAGS) $(SHARED) -o $(NAME)/$(TARGET)
 
 clean:
-	rm -rf $(OBJDIR)/ $(TARGET) $(NAME)/
+	rm -rf $(OBJDIR)/ $(NAME)/
 
 install: all
 	@mkdir -p $(DESTDIR)$(DOCDIR)
