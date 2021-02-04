@@ -266,21 +266,20 @@ size_t jcv_sgmpsg_exec(void) {
            1000: \|\|\|     1001: \_____     1010: \/\/\/     1011: \|----
            1100: /|/|/|     1101: /-----     1110: /\/\/\     1111: /|____
         */
-        if (psg.estep == 0) {
-            // Do not change the envelope's volume for the 0th step
-        }
-        else if (psg.eseg) { // Second half of the envelope shape
-            if ((psg.reg[13] == 10) || (psg.reg[13] == 12)) // Count Up
-                psg.evol++;
-            else if ((psg.reg[13] == 8) || (psg.reg[13] == 14)) // Count Down
-                psg.evol--;
-            // Otherwise, simply hold the current value
-        }
-        else { // First half of the envelope shape
-            if (psg.reg[13] & 0x04) // Attack is set - Count Up
-                psg.evol++;
-            else // Count Down
-                psg.evol--;
+        if (psg.estep) { // Do not change the envelope's volume for the 0th step
+            if (psg.eseg) { // Second half of the envelope shape
+                if ((psg.reg[13] == 10) || (psg.reg[13] == 12))
+                    psg.evol++; // Count Up
+                else if ((psg.reg[13] == 8) || (psg.reg[13] == 14))
+                    psg.evol--; // Count Down
+                // Otherwise, simply hold the current value (no else statement)
+            }
+            else { // First half of the envelope shape
+                if (psg.reg[13] & 0x04) // Attack is set - Count Up
+                    psg.evol++;
+                else // Count Down
+                    psg.evol--;
+            }
         }
         
         // Reset and start the new Segment if this is the last Envelope Step
