@@ -159,6 +159,9 @@ static uint16_t jcv_input_poll_sac(int port) {
             input_device[port]->button[20] = 1;
             jcv_z80_irq(0);
         }
+        else {
+            jcv_z80_irq_clr();
+        }
     }
     if (input_device[port]->button[21]) {
         b |= CV_INPUT_SM;
@@ -166,7 +169,13 @@ static uint16_t jcv_input_poll_sac(int port) {
             input_device[port]->button[21] = 1;
             jcv_z80_irq(0);
         }
+        else {
+            jcv_z80_irq_clr();
+        }
     }
+    
+    if (!(input_device[0]->button[20] || input_device[0]->button[21]))
+        jcv_z80_irq_clr();
     
     return b;
 }
@@ -188,6 +197,9 @@ static uint16_t jcv_input_poll_wheel(int port) {
                 input_device[0]->button[16] = 1;
                 jcv_z80_irq(0);
             }
+            else {
+                jcv_z80_irq_clr();
+            }
         }
         if (input_device[0]->button[17]) { // Steer Right
             b |= CV_INPUT_SP;
@@ -195,7 +207,13 @@ static uint16_t jcv_input_poll_wheel(int port) {
                 input_device[0]->button[17] = 1;
                 jcv_z80_irq(0);
             }
+            else {
+                jcv_z80_irq_clr();
+            }
         }
+        
+        if (!(input_device[0]->button[16] || input_device[0]->button[17]))
+            jcv_z80_irq_clr();
         
         // Pedal uses the same signal as the FireL on the standard paddle
         if (input_device[0]->button[18]) b |= CV_INPUT_FL;
