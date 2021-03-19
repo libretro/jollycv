@@ -668,7 +668,7 @@ static inline void process_interrupts(z80* const z) {
   }
 
   if (z->int_pending && z->iff1) {
-    z->int_pending = 0;
+    //z->int_pending = 0; // Commented when function to clear the line was added
     z->halted = 0;
     z->iff1 = 0;
     z->iff2 = 0;
@@ -791,6 +791,10 @@ void z80_gen_nmi(z80* const z) {
 void z80_gen_int(z80* const z, uint8_t data) {
   z->int_pending = 1;
   z->int_data = data;
+}
+
+void z80_clr_int(z80* const z) {
+    z->int_pending = 0;
 }
 
 // executes a non-prefixed opcode

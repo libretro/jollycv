@@ -30,6 +30,7 @@ typedef struct _cv_z80st_t {
 void jcv_z80_cyc_store(size_t);
 size_t jcv_z80_cyc_restore(void);
 void jcv_z80_init(void);
+void jcv_z80_irq_clr(void);
 void jcv_z80_irq(uint8_t data);
 void jcv_z80_nmi(void);
 void jcv_z80_reset(void);

@@ -69,6 +69,11 @@ void jcv_z80_reset(void) {
     jcv_z80_init();
 }
 
+// Clear the Interrupt line
+void jcv_z80_irq_clr(void) {
+    z80_clr_int(&z80ctx);
+}
+
 // Generate an Interrupt
 void jcv_z80_irq(uint8_t data) {
     z80_gen_int(&z80ctx, data);
