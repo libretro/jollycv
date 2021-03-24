@@ -64,9 +64,10 @@ static jg_inputstate_t *input_device[NUMINPUTS];
 
 // Emulator settings
 static jg_setting_t settings_jcv[] = {   // name, default, min, max
-    { "palette", 0, 0, 1 }, // 0 = TeaTime, 1 = SYoung
-    { "rsqual", 3, 0, 10 }, // N = Resampler Quality
-    { "region", REGION_NTSC, REGION_NTSC, REGION_PAL }, // 0 = NTSC, 1 = PAL
+    { "palette", "", 0, 0, 1 }, // 0 = TeaTime, 1 = SYoung
+    { "rsqual", "", 3, 0, 10 }, // N = Resampler Quality
+    // = 0 NTSC, 1 = PAL
+    { "region", "", REGION_NTSC, REGION_NTSC, REGION_PAL },
 };
 
 enum {
@@ -111,9 +112,9 @@ static const char *gamedb_sac[] = { // Super Action Controller
 };
 
 static const char *gamedb_wheel[] = { // Steering Wheel
-    //"ec72a0e3bebe07ba631a8dcb750c1591", // Destructor (USA, Europe)
-    //"dbd4f21702be17775e84b2fb6c534c94", // Dukes of Hazzard, The (USA)
-    //"bd905555983c05456ab81ea154a570b1", // Fall Guy (Europe) (Proto)
+    "ec72a0e3bebe07ba631a8dcb750c1591", // Destructor (USA, Europe)
+    "dbd4f21702be17775e84b2fb6c534c94", // Dukes of Hazzard, The (USA)
+    "bd905555983c05456ab81ea154a570b1", // Fall Guy (Europe) (Proto)
     "6f146d9bd3f64bbc006a761f59e2a1cf", // Turbo (USA, Europe)
 };
 
