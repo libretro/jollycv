@@ -62,10 +62,10 @@ uint8_t jcv_io_rd(uint8_t port) {
             uint8_t p = (port & 0x02) >> 1; // Port variable for convenience
             cvsys.ctrl[p] = jcv_input_cb(p); // Call frontend for input state
             
-            // Return the complement of the value - always unset bit 7
+            // Return the complement of the value
             return cvsys.cseg ? // Two strobes are done for two sets of buttons
-                ~((uint8_t)(cvsys.ctrl[p] >> 8) | 0x80) : // Joystick, FireL
-                ~((uint8_t)(cvsys.ctrl[p] & 0xff) | 0x80); // Numpad, FireR
+                ~((uint8_t)(cvsys.ctrl[p] >> 8)) : // Joystick, FireL
+                ~((uint8_t)(cvsys.ctrl[p] & 0xff)); // Numpad, FireR
         }
         default: {
             if (port == 0x52) // SGM PSG Read

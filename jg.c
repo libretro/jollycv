@@ -131,7 +131,7 @@ static uint16_t cv_input_map[] = {
 };
 
 static uint16_t jcv_input_poll(int port) {
-    uint16_t b = 0x0000;
+    uint16_t b = 0x8080; // Always preset bit 7 for both segments
     
     for (int i = 0; i < NDEFS_COLECOPAD; i++)
         if (input_device[port]->button[i]) b |= cv_input_map[i];
