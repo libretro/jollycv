@@ -475,7 +475,7 @@ static int resampler_basic_interpolate_single(SpeexResamplerState *st, spx_uint3
       }
 
       cubic_coef(frac, interp);
-      sum = MULT16_32_Q15(interp[0],SHR32(accum[0], 1)) + MULT16_32_Q15(interp[1],SHR32(accum[1], 1)) + MULT16_32_Q15(interp[2],SHR32(accum[2], 1)) + MULT16_32_Q15(interp[3],SHR32(accum[3], 1));
+      sum = MULT16_32_Q15(interp[0],accum[0]) + MULT16_32_Q15(interp[1],accum[1]) + MULT16_32_Q15(interp[2],accum[2]) + MULT16_32_Q15(interp[3],accum[3]);
       sum = SATURATE32PSHR(sum, 15, 32767);
 #else
       cubic_coef(frac, interp);
@@ -672,8 +672,8 @@ static int update_filter(SpeexResamplerState *st)
       spx_uint32_t i;
       for (i=0;i<st->den_rate;i++)
       {
-         spx_uint32_t j;
-         for (j=0;j<st->filt_len;j++)
+         spx_int32_t j;
+         for (j=0;j<(spx_int32_t)st->filt_len;j++)
          {
             st->sinc_table[i*st->filt_len+j] = sinc(st->cutoff,((j-(spx_int32_t)st->filt_len/2+1)-((float)i)/st->den_rate), st->filt_len, quality_map[st->quality].window_func);
          }
