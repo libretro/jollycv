@@ -71,7 +71,7 @@ static void speex_free(void *ptr) {free(ptr);}
 #ifndef EXPORT
 #define EXPORT
 #endif
-#include "resample.h"
+#include "speex_resampler.h"
 #include "arch.h"
 #else /* OUTSIDE_SPEEX */
 

@@ -4,8 +4,9 @@ SOURCEDIR := $(abspath $(patsubst %/,%,$(dir $(abspath $(lastword \
 CC ?= cc
 CFLAGS ?= -O2
 FLAGS := -fPIC -std=c99 -Wall -Wextra -Wshadow -Wmissing-prototypes -pedantic
+DEPDIR := $(SOURCEDIR)/deps
 SRCDIR := $(SOURCEDIR)/core
-INCLUDES := -I$(SRCDIR) -I$(SRCDIR)/resample -I$(SRCDIR)/z80
+INCLUDES := -I$(SRCDIR) -I$(SRCDIR)/z80
 SHARED := -fPIC
 
 NAME := jollycv
@@ -24,12 +25,12 @@ else ifeq ($(OS), Windows_NT)
 else
 	SHARED += -shared
 	TARGET := $(NAME).so
+	USE_SYSTEM_SPEEXDSP ?= 1
 endif
 
 OBJDIR := objs
 
-CSRCS := $(OBJDIR)/resample/resample.c \
-	$(OBJDIR)/z80/z80.c \
+CSRCS := $(OBJDIR)/z80/z80.c \
 	$(OBJDIR)/jcv.c \
 	$(OBJDIR)/jcv_memio.c \
 	$(OBJDIR)/jcv_mixer.c \
@@ -39,13 +40,24 @@ CSRCS := $(OBJDIR)/resample/resample.c \
 	$(OBJDIR)/jcv_z80.c \
 	$(OBJDIR)/jg.c
 
+ifeq ($(USE_SYSTEM_SPEEXDSP), 1)
+	INCLUDES += $(shell pkg-config --cflags speexdsp)
+	LIBS := $(shell pkg-config --libs speexdsp)
+else
+	INCLUDES += -I$(DEPDIR)
+	CSRCS += $(OBJDIR)/speex/resample.c
+endif
+
 # Object dirs
-OBJDIRS := $(OBJDIR)/resample $(OBJDIR)/z80
+OBJDIRS := $(OBJDIR)/speex $(OBJDIR)/z80
 
 # List of object files
 OBJS := $(CSRCS:.c=.o)
 
 # Rules
+$(OBJDIR)/%.o: $(DEPDIR)/%.c $(OBJDIR)/.tag
+	$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) -c $< -o $@
+
 $(OBJDIR)/%.o: $(SRCDIR)/%.c $(OBJDIR)/.tag
 	$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) -c $< -o $@
 
@@ -62,7 +74,7 @@ $(OBJDIR)/.tag:
 
 $(TARGET): $(OBJS)
 	@mkdir -p $(NAME)
-	$(CC) $^ $(LDFLAGS) $(SHARED) -o $(NAME)/$(TARGET)
+	$(CC) $^ $(LDFLAGS) $(LIBS) $(SHARED) -o $(NAME)/$(TARGET)
 
 clean:
 	rm -rf $(OBJDIR)/ $(NAME)/

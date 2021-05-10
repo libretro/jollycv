@@ -9,7 +9,7 @@
 #include <stddef.h>
 #include <stdint.h>
 
-#include "resample.h" // Speex Resampler
+#include <speex/speex_resampler.h>
 
 #include "jcv_mixer.h"
 #include "jcv_psg.h"
