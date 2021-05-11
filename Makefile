@@ -15,6 +15,8 @@ LIBDIR ?= $(PREFIX)/lib
 DATAROOTDIR ?= $(PREFIX)/share
 DOCDIR ?= $(DATAROOTDIR)/doc/$(NAME)
 
+USE_VENDORED_SPEEXDSP ?= 0
+
 UNAME := $(shell uname -s)
 ifeq ($(UNAME), Darwin)
 	SHARED += -dynamiclib
@@ -25,7 +27,6 @@ else ifeq ($(OS), Windows_NT)
 else
 	SHARED += -shared
 	TARGET := $(NAME).so
-	USE_SYSTEM_SPEEXDSP ?= 1
 endif
 
 OBJDIR := objs
@@ -40,12 +41,12 @@ CSRCS := $(OBJDIR)/z80/z80.c \
 	$(OBJDIR)/jcv_z80.c \
 	$(OBJDIR)/jg.c
 
-ifeq ($(USE_SYSTEM_SPEEXDSP), 1)
-	INCLUDES += $(shell pkg-config --cflags speexdsp)
-	LIBS := $(shell pkg-config --libs speexdsp)
-else
+ifneq ($(USE_VENDORED_SPEEXDSP), 0)
 	INCLUDES += -I$(DEPDIR)
 	CSRCS += $(OBJDIR)/speex/resample.c
+else
+	INCLUDES += $(shell pkg-config --cflags speexdsp)
+	LIBS := $(shell pkg-config --libs speexdsp)
 endif
 
 # Object dirs
