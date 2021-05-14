@@ -6,6 +6,10 @@ CFLAGS ?= -O2
 FLAGS := -fPIC -std=c99 -Wall -Wextra -Wshadow -Wmissing-prototypes -pedantic
 DEPDIR := $(SOURCEDIR)/deps
 SRCDIR := $(SOURCEDIR)/core
+
+PKGCONF ?= pkg-config
+CFLAGS_JG := $(shell $(PKGCONF) --cflags jg)
+
 INCLUDES := -I$(SRCDIR) -I$(SRCDIR)/z80
 SHARED := -fPIC
 
@@ -63,7 +67,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c $(OBJDIR)/.tag
 	$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) -c $< -o $@
 
 $(OBJDIR)/%.o: $(SOURCEDIR)/%.c $(OBJDIR)/.tag
-	$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) -c $< -o $@
+	$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) $(CFLAGS_JG) -c $< -o $@
 
 all: $(TARGET)
 
