@@ -200,7 +200,11 @@ int jcv_bios_load(const char *biospath) {
     // Allocate memory for the BIOS
     cvbios = (uint8_t*)malloc(SIZE_CVBIOS * sizeof(uint8_t));
     
-    fread(cvbios, SIZE_CVBIOS, 1, file);
+    if (!fread(cvbios, SIZE_CVBIOS, 1, file)) {
+        fclose(file);
+        return 0;
+    }
+    
     fclose(file);
     
     return 1;
