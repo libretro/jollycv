@@ -296,13 +296,8 @@ int jg_game_load(void) {
     // Check game databases and set up input devices
     for (size_t i = 0; i < (sizeof(gamedb_sac) / sizeof(const char*)); i++) {
         if (!strcmp(gamedb_sac[i], gameinfo.md5)) {
-            inputinfo[0] = (jg_inputinfo_t){ JG_INPUT_CONTROLLER, 0,
-                "colecosac1", "Super Action Controller",
-                defs_colecosac, 0, NDEFS_COLECOSAC };
-            
-            inputinfo[1] = (jg_inputinfo_t){ JG_INPUT_CONTROLLER, 1,
-                "colecosac2", "Super Action Controller",
-                defs_colecosac, 0, NDEFS_COLECOSAC };
+            inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_SAC);
+            inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_SAC);
             
             jcv_input_set_callback(&jcv_input_poll_sac);
             return 1;
@@ -311,9 +306,7 @@ int jg_game_load(void) {
     
     for (size_t i = 0; i < (sizeof(gamedb_wheel) / sizeof(const char*)); i++) {
         if (!strcmp(gamedb_wheel[i], gameinfo.md5)) {
-            inputinfo[0] = (jg_inputinfo_t){ JG_INPUT_CONTROLLER, 0,
-                "colecowheel", "Steering Wheel",
-                defs_colecowheel, 0, NDEFS_COLECOWHEEL };
+            inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_WHEEL);
             
             jcv_input_set_callback(&jcv_input_poll_wheel);
             return 1;
@@ -321,13 +314,8 @@ int jg_game_load(void) {
     }
     
     // If there are no special input devices, use defaults
-    inputinfo[0] = (jg_inputinfo_t){ JG_INPUT_CONTROLLER, 0,
-        "colecopad1", "ColecoVision Paddle",
-        defs_colecopad, 0, NDEFS_COLECOPAD };
-    
-    inputinfo[1] = (jg_inputinfo_t){ JG_INPUT_CONTROLLER, 1,
-        "colecopad2", "ColecoVision Paddle",
-        defs_colecopad, 0, NDEFS_COLECOPAD };
+    inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_PAD);
+    inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_PAD);
     
     return 1;
 }
