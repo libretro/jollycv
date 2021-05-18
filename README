@@ -84,7 +84,7 @@ JollyCV
 
 Speex Resampler
   Copyright (c) 2003, 2007, 2008 Xiph.org Foundation (BSD-3-Clause)
-  See source files in core/resample/ for detailed information
+  See source files in deps/speex/ for detailed information
 
 Z80 CPU Core
   Copyright (c) 2019 Nicolas Allemand (MIT)
