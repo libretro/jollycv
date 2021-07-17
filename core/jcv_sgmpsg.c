@@ -57,7 +57,7 @@ void jcv_sgmpsg_reset_buffer(void) {
 // Set initial values
 void jcv_sgmpsg_init(void) {
     // Registers
-    for (int i = 0; i < 16; i++)
+    for (int i = 0; i < 16; ++i)
         psg.reg[i] = 0x00;
     
     // Latched Register
@@ -225,7 +225,7 @@ void jcv_sgmpsg_set_reg(uint8_t r) {
 // Execute a PSG cycle
 size_t jcv_sgmpsg_exec(void) {
     // Clock Tone Counters for Channels A, B, and C
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; ++i) {
         if (++psg.tcounter[i] >= psg.tperiod[i]) {
             psg.tcounter[i] = 0;
             psg.sign[i] ^= 1;
@@ -260,16 +260,16 @@ size_t jcv_sgmpsg_exec(void) {
         if (psg.estep) { // Do not change the envelope's volume for the 0th step
             if (psg.eseg) { // Second half of the envelope shape
                 if ((psg.reg[13] == 10) || (psg.reg[13] == 12))
-                    psg.evol++; // Count Up
+                    ++psg.evol; // Count Up
                 else if ((psg.reg[13] == 8) || (psg.reg[13] == 14))
-                    psg.evol--; // Count Down
+                    --psg.evol; // Count Down
                 // Otherwise, simply hold the current value (no else statement)
             }
             else { // First half of the envelope shape
                 if (psg.reg[13] & 0x04) // Attack is set - Count Up
-                    psg.evol++;
+                    ++psg.evol;
                 else // Count Down
-                    psg.evol--;
+                    --psg.evol;
             }
         }
         

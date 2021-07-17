@@ -101,7 +101,7 @@ void jcv_exec(void) {
             itercycs = jcv_z80_exec(); // Run a single CPU instruction
             linecycs += itercycs; // Add the number of cycles to the total
             
-            for (size_t s = 0; s < itercycs; s++) { // Catch PSGs up to the CPU
+            for (size_t s = 0; s < itercycs; ++s) { // Catch PSGs up to the CPU
                 if (++psgcycs % DIV_PSG == 0) {
                     psgsamps += jcv_psg_exec();
                     sgmpsgsamps += jcv_sgmpsg_exec();
