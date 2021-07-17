@@ -98,7 +98,7 @@ void jcv_vdp_init(void) {
     vdp.dot = 0;
     
     // Set VDP control register defaults
-    for (int i = 0; i < 8; i++)
+    for (int i = 0; i < 8; ++i)
         vdp.ctrl[i] = 0x00;
     
     vdp.stat = 0x00; // Zero the Status register
@@ -270,14 +270,14 @@ static void jcv_vdp_bgline(void) {
         bg = jcv_vdp_bdcol();
         
         // Draw 8 pixel left/right borders in text mode, using backdrop colour
-        for (uint8_t p = 0; p < 8; p++) {
+        for (uint8_t p = 0; p < 8; ++p) {
             jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, vdp.dot++);
             jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, p + 248);
         }
         
         // The screen is divided into a grid of 40 text positions aross and 24
         // down. Each of the text positions is 6 pixels wide and 8 pixels high.
-        for (int i = 0; i < 40; i++) {
+        for (int i = 0; i < 40; ++i) {
             offset_pname = vdp.vram[vdp.tbl_pname + (srow * 40) + i];
             pindex = vdp.vram[vdp.tbl_pgen + (offset_pname << 3) + prow];
             
@@ -292,7 +292,7 @@ static void jcv_vdp_bgline(void) {
     }
     
     // Graphics 1/2 and Multicolor Modes - Info on shifts in Datasheet, 3-3
-    for (int i = 0; i < 32; i++) { // 256 pixels - 32 tiles, 8 pixels wide each
+    for (int i = 0; i < 32; ++i) { // 256 pixels - 32 tiles, 8 pixels wide each
         if (scrmode == 0x00) { // Mode 0: Graphics 1
             offset_pname = vdp.vram[vdp.tbl_pname + (srow << 5) + i];
             chpat = vdp.vram[vdp.tbl_pgen + (offset_pname << 3) + prow];
@@ -360,11 +360,12 @@ static void jcv_vdp_bgline(void) {
             bg = pindex & 0x0f ? palette[pindex & 0x0f] : jcv_vdp_bdcol();
             
             // Draw left and right background data
-            for (uint8_t p = 0; p < 4; p++)
+            for (uint8_t p = 0; p < 4; ++p)
                 jcv_vdp_pixel(fg, vdp.line, vdp.dot++);
             
-            for (uint8_t p = 0; p < 4; p++)
+            for (uint8_t p = 0; p < 4; ++p)
                 jcv_vdp_pixel(bg, vdp.line, vdp.dot++);
+            
             continue; // Pixels are already drawn, skip the rest of the loop
         }
         
@@ -399,7 +400,7 @@ static void jcv_vdp_sprline(void) {
     uint8_t cbuf[CV_VDP_WIDTH];
     memset(cbuf, 0x00, CV_VDP_WIDTH);
     
-    for (uint8_t i = 0; i < 32; i++) {
+    for (uint8_t i = 0; i < 32; ++i) {
         /* Sprite Attribute Table Entry - Datasheet 2-25
         -------------------------------------
         |   7   6   5   4   3   2   1   0   | Bit Position
@@ -447,7 +448,7 @@ static void jcv_vdp_sprline(void) {
            the sprite "butted up at the top of the screen, touching the backdrop
            area".
         */
-        y++;
+        ++y;
         
         // If no rows of the sprite are actually on the scanline in question,
         // this iteration is finished.
@@ -491,7 +492,7 @@ static void jcv_vdp_sprline(void) {
         */
         
         // Loop through the sprite's pixel data - use shifts for magnification
-        for (int p = 0; p < (sprsize << sprmag); p++) {
+        for (int p = 0; p < (sprsize << sprmag); ++p) {
             // Move to next iteration if the pixel is off screen, or empty
             if (((x + p) < 0) || ((x + p) >= CV_VDP_WIDTH) || (c == 0))
                 continue;
@@ -516,7 +517,7 @@ static void jcv_vdp_sprline(void) {
     }
     
     // Draw values to the line
-    for (int i = 0; i < CV_VDP_WIDTH; i++)
+    for (int i = 0; i < CV_VDP_WIDTH; ++i)
         if (linebuf[i]) // Draw non-transparent pixels
             jcv_vdp_pixel(palette[linebuf[i]], vdp.line, i);
 }
@@ -529,12 +530,12 @@ void jcv_vdp_exec(void) {
             jcv_vdp_sprline(); // Draw sprites
     }
     else if (vdp.line < CV_VDP_HEIGHT) {
-        for (int i = 0; i < CV_VDP_WIDTH; i++) // Blank line: backdrop colour
+        for (int i = 0; i < CV_VDP_WIDTH; ++i) // Blank line: backdrop colour
             jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, i);
     }
     
     // Increment the line number
-    vdp.line++;
+    ++vdp.line;
     
     if (vdp.line == CV_VDP_HEIGHT) { // Enter VBLANK
         // Save the state of the Status Register INT bit

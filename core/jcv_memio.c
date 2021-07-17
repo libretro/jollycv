@@ -263,7 +263,7 @@ void jcv_memio_init(void) {
        have its own affinities, but the values are still indeterminate.
     */
     srand(time(NULL));
-    for (int i = 0; i < SIZE_CVRAM; i++)
+    for (int i = 0; i < SIZE_CVRAM; ++i)
         cvsys.ram[i] = rand() % 256; // Random numbers from 0-255
     
     memset(cvsys.sgmram, 0xff, 0x6000);
@@ -341,7 +341,7 @@ const void* jcv_state_save_raw(void) {
     jcv_sgmpsg_state_save(&cvstate.sgmpsg);
     jcv_vdp_state_save(&cvstate.vdp);
     jcv_z80_state_save(&cvstate.z80st);
-    for (int i = 0; i < 4; i++)
+    for (int i = 0; i < 4; ++i)
         cvstate.rompage[i] = rompage[i];
     return (const void*)&cvstate;
 }
