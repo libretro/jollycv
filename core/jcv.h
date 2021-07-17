@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2020 Rupert Carmichael
+ * Copyright (c) 2020-2021 Rupert Carmichael
  *
  * This Source Code Form is subject to the terms of the Mozilla Public
  * License, v. 2.0. If a copy of the MPL was not distributed with this
@@ -14,7 +14,7 @@
 #define REGION_NTSC 0
 #define REGION_PAL 1
 
-#define VERSION "0.1.1+"
+#define VERSION "0.2.0-pre1"
 
 void jcv_set_region(uint8_t);
 void jcv_init(void);
