@@ -338,6 +338,13 @@ void jg_media_select(void) {
 void jg_media_insert(void) {
 }
 
+void jg_cheat_clear(void) {
+}
+
+void jg_cheat_set(const char *code) {
+    if (code) { }
+}
+
 jg_coreinfo_t* jg_get_coreinfo(const char *sys) {
     if (sys) { } // Unused
     return &coreinfo;
