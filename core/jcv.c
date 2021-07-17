@@ -40,6 +40,7 @@ PSG cycles per frame:
 #define Z80_CYC_LINE 228 // Z80 CPU cycles per scanline (227.99873)
 
 static uint16_t numscanlines = CV_VDP_SCANLINES;
+static size_t psgcycs = 0;
 
 // Set the region
 void jcv_set_region(uint8_t region) {
@@ -74,8 +75,6 @@ void jcv_reset(int hard) {
     jcv_vdp_init();
     jcv_z80_reset();
 }
-
-static size_t psgcycs = 0;
 
 // Run emulation for one frame
 void jcv_exec(void) {
