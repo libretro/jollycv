@@ -13,7 +13,6 @@
 
 #include "jcv_psg.h"
 
-#define CFRAC 16 // Clock Fraction - PSG runs at 1/16th the input clock rate
 #define LFSRSHIFT 14 // Linear Feedback Shift Register is 15 bits, so shift 14
 #define NOISETAP 0x0003 // Tapped bits for ColecoVision are 0 and 1
 #define SIZE_PSGBUF 4600 // 4461 maximum in PAL mode, but give some overhead
@@ -38,9 +37,8 @@ int16_t* jcv_psg_get_buffer(void) {
 // Set initial values
 void jcv_psg_init(void) {
     psg.clatch = 0x00; // Channel Latch starts at Tone Channel 0
-    psg.cfrac = 0; // Start with 0 cycle fractions
     
-    for (int i = 0; i < 4; i++) {
+    for (int i = 0; i < 4; ++i) {
         psg.attenuator[i] = 0x0f; // Silence
         psg.counter[i] = 0x00; // Count starting from 0
     }
@@ -130,18 +128,11 @@ static inline uint16_t parity(uint16_t input) {
 
 // Execute a PSG cycle
 size_t jcv_psg_exec(void) {
-    // The PSG clock frequency is the input clock frequency divided by 16
-    if (++psg.cfrac != CFRAC) // Only clock the PSG every 16th CPU clock cycle
-        return 0; // Zero samples generated
-    
-    // Every 16th CPU clock cycle, allow the code below to run
-    psg.cfrac = 0; // Reset the PSG clock fraction counter
-    
     // Tone Generators
-    for (size_t i = 0; i < 3; i++) {
+    for (size_t i = 0; i < 3; ++i) {
         // Each clock cycle, the counter is decremented (if it is non-zero)
         if (psg.counter[i] > 0)
-            psg.counter[i]--; // Decrement the period counter
+            --psg.counter[i]; // Decrement the period counter
         
         if (psg.counter[i] == 0) {
             /* When the tone counter decrements to zero, it is reloaded with the
@@ -178,7 +169,7 @@ size_t jcv_psg_exec(void) {
     
     // Noise Generator
     if (psg.counter[3] > 0) // If it is already zero, no need to decrement
-        psg.counter[3]--;
+        --psg.counter[3];
     
     // Update the volume value for the noise output channel
     psg.output[3] = (psg.lfsr & 0x01) * vtable[psg.attenuator[3]];

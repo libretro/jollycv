@@ -32,8 +32,6 @@ typedef struct _cv_sgmpsg_t {
     uint8_t emode[3]; // Envelope Mode Enable bit for Tones A, B, and C
     
     uint8_t sign[3]; // Signify whether the waveform is high or low
-    
-    size_t cfrac; // Clock the PSG every 16 CPU cycles (Clock Fractions)
 } cv_sgmpsg_t;
 
 int16_t* jcv_sgmpsg_get_buffer(void);

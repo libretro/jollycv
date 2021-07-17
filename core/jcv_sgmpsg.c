@@ -14,7 +14,6 @@
 #include "jcv_sgmpsg.h"
 
 #define SIZE_PSGBUF 4600
-#define CFRAC 16 // Clock Fraction - PSG runs at 1/16th the input clock rate
 
 static const int16_t vtable[16] = { // Volume Table
     0,       40,      60,     86,    124,    186,    264,    440,
@@ -64,7 +63,7 @@ void jcv_sgmpsg_init(void) {
     psg.rlatch = 0x00;
     
     // Tone Periods, Tone Counters, Amplitude, Sign bits
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; ++i) {
         psg.tperiod[i] = 0x0000;
         psg.tcounter[i] = 0x0000;
         psg.amplitude[i] = 0x00;
@@ -86,14 +85,11 @@ void jcv_sgmpsg_init(void) {
     psg.evol = 0x00;
     
     // Enable bits for Tone, Noise, and Envelope
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; ++i) {
         psg.tdisable[i] = 0x00;
         psg.ndisable[i] = 0x00;
         psg.emode[i] = 0x00;
     }
-    
-    // Start with 0 cycle fractions
-    psg.cfrac = 0;
 }
 
 // Read from the currently latched Control Register
@@ -227,12 +223,6 @@ void jcv_sgmpsg_set_reg(uint8_t r) {
 
 // Execute a PSG cycle
 size_t jcv_sgmpsg_exec(void) {
-    if (++psg.cfrac != CFRAC) // Only clock the PSG every 16th CPU clock cycle
-        return 0; // Zero samples generated
-    
-    // Every 16th CPU clock cycle, allow the code below to run
-    psg.cfrac = 0; // Reset the PSG clock fraction counter
-    
     // Clock Tone Counters for Channels A, B, and C
     for (int i = 0; i < 3; i++) {
         if (++psg.tcounter[i] >= psg.tperiod[i]) {
@@ -291,7 +281,7 @@ size_t jcv_sgmpsg_exec(void) {
     
     int16_t vol = 0; // Initial output volume of this sample
     
-    for (int i = 0; i < 3; i++) {
+    for (int i = 0; i < 3; ++i) {
         /* Determine whether to output a volume for this channel. The logic here
            is unintuitive. From the datasheet:
              "Disabling noise and tone does _not_ turn off a channel. Turning a

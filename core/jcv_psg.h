@@ -18,7 +18,6 @@ typedef struct _cv_psg_t {
     uint16_t counter[4]; // Period Counter
     int16_t output[4]; // Per-channel output volumes for mixing
     uint8_t sign; // Four bits for four channels, 0 = Positive, 1 = Negative
-    size_t cfrac; // Clock the PSG every 16 CPU cycles (Clock Fractions)
 } cv_psg_t;
 
 int16_t* jcv_psg_get_buffer(void);

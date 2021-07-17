@@ -15,7 +15,7 @@
 #include "jcv_psg.h"
 #include "jcv_sgmpsg.h"
 
-#define SAMPLERATE_PSG 224000 // Approximate PSG sample rate (Hz)
+#define SAMPLERATE_PSG 224010 // Approximate PSG sample rate (Hz)
 
 static int16_t *abuf = NULL; // Buffer to output resampled data into
 static size_t samplerate = 48000; // Default sample rate is 48000Hz
@@ -84,7 +84,7 @@ void jcv_mixer_resamp(size_t in_psg, size_t in_sgmpsg) {
     
     // If the SGM is active, mix it in
     if (in_sgmpsg) {
-        for (size_t i = 0; i < in_len; i++)
+        for (size_t i = 0; i < in_len; ++i)
             psgbuf[i] += sgmpsgbuf[i];
     }
     

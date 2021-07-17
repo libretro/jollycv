@@ -36,6 +36,7 @@ PSG cycles per frame:
     59735.66667 / 16 = 3733.4792 (~224KHz)
 */
 
+#define DIV_PSG 16 // PSG Clock Divider
 #define Z80_CYC_LINE 228 // Z80 CPU cycles per scanline (227.99873)
 
 static uint16_t numscanlines = CV_VDP_SCANLINES;
@@ -74,6 +75,8 @@ void jcv_reset(int hard) {
     jcv_z80_reset();
 }
 
+static size_t psgcycs = 0;
+
 // Run emulation for one frame
 void jcv_exec(void) {
     // Record the number of samples generated
@@ -100,8 +103,11 @@ void jcv_exec(void) {
             linecycs += itercycs; // Add the number of cycles to the total
             
             for (size_t s = 0; s < itercycs; s++) { // Catch PSGs up to the CPU
-                psgsamps += jcv_psg_exec();
-                sgmpsgsamps += jcv_sgmpsg_exec();
+                if (++psgcycs % DIV_PSG == 0) {
+                    psgsamps += jcv_psg_exec();
+                    sgmpsgsamps += jcv_sgmpsg_exec();
+                    psgcycs = 0;
+                }
             }
         }
         
