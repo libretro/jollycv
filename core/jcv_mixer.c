@@ -6,8 +6,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include <stddef.h>
 #include <stdint.h>
+#include <stdlib.h>
 
 #include <speex/speex_resampler.h>
 
@@ -16,8 +16,11 @@
 #include "jcv_sgmpsg.h"
 
 #define SAMPLERATE_PSG 224010 // Approximate PSG sample rate (Hz)
+#define SIZE_PSGBUF 4600 // Size of the PSG buffers
 
 static int16_t *abuf = NULL; // Buffer to output resampled data into
+static int16_t *psgbuf = NULL; // PSG buffer
+static int16_t *sgmpsgbuf = NULL; // SGM PSG buffer
 static size_t samplerate = 48000; // Default sample rate is 48000Hz
 static uint8_t framerate = 60; // Default to 60 for NTSC
 static uint8_t rsq = 3; // Default resampler quality is 3
@@ -67,18 +70,28 @@ void jcv_mixer_deinit(void) {
         speex_resampler_destroy(resampler);
         resampler = NULL;
     }
+    
+    if (psgbuf)
+        free(psgbuf);
+    
+    if (sgmpsgbuf)
+        free(sgmpsgbuf);
 }
 
 // Bring up the Speex resampler
 void jcv_mixer_init(void) {
     resampler = speex_resampler_init(1, SAMPLERATE_PSG, samplerate, rsq, &err);
+    psgbuf = (int16_t*)calloc(1, SIZE_PSGBUF * sizeof(int16_t));
+    sgmpsgbuf = (int16_t*)calloc(1, SIZE_PSGBUF * sizeof(int16_t));
+    jcv_psg_set_buffer(psgbuf);
+    jcv_sgmpsg_set_buffer(sgmpsgbuf);
 }
 
 // Resample raw audio and execute the callback
 void jcv_mixer_resamp(size_t in_psg, size_t in_sgmpsg) {
-    // Get buffers from both chips
-    int16_t *psgbuf = jcv_psg_get_buffer();
-    int16_t *sgmpsgbuf = jcv_sgmpsg_get_buffer();
+    // Reset buffer position for both chips
+    jcv_psg_reset_buffer();
+    jcv_sgmpsg_reset_buffer();
     
     spx_uint32_t in_len = in_psg;
     

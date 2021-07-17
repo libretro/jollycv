@@ -13,16 +13,13 @@
 
 #include "jcv_sgmpsg.h"
 
-#define SIZE_PSGBUF 4600
-
 static const int16_t vtable[16] = { // Volume Table
     0,       40,      60,     86,    124,    186,    264,    440,
     518,    840,    1196,   1526,   2016,   2602,   3300,   4096,
 };
 
 static cv_sgmpsg_t psg; // SGM PSG Context
-
-static int16_t psgbuf[SIZE_PSGBUF]; // Buffer for raw PSG output samples
+static int16_t *psgbuf = NULL; // Buffer for raw PSG output samples
 static size_t bufpos = 0; // Keep track of the position in the PSG output buffer
 
 // Reset the Envelope step and volume depending on the currently selected shape
@@ -47,10 +44,14 @@ static inline void jcv_sgmpsg_env_reset(void) {
     }
 }
 
-// Grab the pointer to the PSG's buffer
-int16_t* jcv_sgmpsg_get_buffer(void) {
+// Set the pointer to the sample buffer
+void jcv_sgmpsg_set_buffer(int16_t *ptr) {
+    psgbuf = ptr;
+}
+
+// Reset position of the buffer
+void jcv_sgmpsg_reset_buffer(void) {
     bufpos = 0;
-    return &psgbuf[0];
 }
 
 // Set initial values

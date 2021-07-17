@@ -34,7 +34,8 @@ typedef struct _cv_sgmpsg_t {
     uint8_t sign[3]; // Signify whether the waveform is high or low
 } cv_sgmpsg_t;
 
-int16_t* jcv_sgmpsg_get_buffer(void);
+void jcv_sgmpsg_set_buffer(int16_t*);
+void jcv_sgmpsg_reset_buffer(void);
 void jcv_sgmpsg_init(void);
 uint8_t jcv_sgmpsg_rd(void);
 void jcv_sgmpsg_wr(uint8_t data);

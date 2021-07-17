@@ -20,7 +20,8 @@ typedef struct _cv_psg_t {
     uint8_t sign; // Four bits for four channels, 0 = Positive, 1 = Negative
 } cv_psg_t;
 
-int16_t* jcv_psg_get_buffer(void);
+void jcv_psg_set_buffer(int16_t*);
+void jcv_psg_reset_buffer(void);
 
 void jcv_psg_init(void);
 void jcv_psg_wr(uint8_t);

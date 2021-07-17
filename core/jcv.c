@@ -52,9 +52,9 @@ void jcv_set_region(uint8_t region) {
 // Initialize
 void jcv_init(void) {
     jcv_memio_init();
-    jcv_mixer_init();
     jcv_psg_init();
     jcv_sgmpsg_init();
+    jcv_mixer_init();
     jcv_vdp_init();
     jcv_z80_init();
 }

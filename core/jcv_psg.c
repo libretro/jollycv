@@ -15,7 +15,6 @@
 
 #define LFSRSHIFT 14 // Linear Feedback Shift Register is 15 bits, so shift 14
 #define NOISETAP 0x0003 // Tapped bits for ColecoVision are 0 and 1
-#define SIZE_PSGBUF 4600 // 4461 maximum in PAL mode, but give some overhead
 
 // Based on smspower documentation values, divided by 8 and tweaked
 static const int16_t vtable[16] = { // Volume Table
@@ -24,14 +23,17 @@ static const int16_t vtable[16] = { // Volume Table
 };
 
 static cv_psg_t psg; // PSG Context
-
-static int16_t psgbuf[SIZE_PSGBUF]; // Buffer for raw PSG output samples
+static int16_t *psgbuf = NULL; // Buffer for raw PSG output samples
 static size_t bufpos = 0; // Keep track of the position in the PSG output buffer
 
+// Set the pointer to the sample buffer
+void jcv_psg_set_buffer(int16_t *ptr) {
+    psgbuf = ptr;
+}
+
 // Grab the pointer to the PSG's buffer
-int16_t* jcv_psg_get_buffer(void) {
+void jcv_psg_reset_buffer(void) {
     bufpos = 0;
-    return &psgbuf[0];
 }
 
 // Set initial values
