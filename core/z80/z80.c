@@ -1663,6 +1663,7 @@ void exec_opcode_ed(z80* const z, uint8_t opcode) {
     outd(z);
     if (z->b > 0) {
       z->pc -= 2;
+      z->cyc += 5;
     }
   } break; // otdr
 
