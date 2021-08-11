@@ -494,7 +494,7 @@ static void jcv_vdp_sprline(void) {
         // Loop through the sprite's pixel data - use shifts for magnification
         for (int p = 0; p < (sprsize << sprmag); ++p) {
             // Move to next iteration if the pixel is off screen, or empty
-            if (((x + p) < 0) || ((x + p) >= CV_VDP_WIDTH) || (c == 0))
+            if (((x + p) < -sprsize) || ((x + p) >= CV_VDP_WIDTH) || (c == 0))
                 continue;
             
             // Handle the second pattern byte of 16x16 sprites
@@ -506,7 +506,7 @@ static void jcv_vdp_sprline(void) {
                 // Set the C flag if a pixel has been drawn here already
                 if (cbuf[x + p])
                     vdp.stat |= 0x20;
-                else { // Otherwise draw a new pixel
+                else if (x + p >= 0) { // Otherwise draw a new pixel
                     linebuf[x + p] = c & 0x0f;
                     
                     // Set collision data even if palette entry is transparent
