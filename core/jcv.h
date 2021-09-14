@@ -14,7 +14,7 @@
 #define REGION_NTSC 0
 #define REGION_PAL 1
 
-#define VERSION "0.2.0-pre1"
+#define VERSION "0.2.0"
 
 void jcv_set_region(uint8_t);
 void jcv_init(void);

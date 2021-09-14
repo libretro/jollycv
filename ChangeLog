@@ -1,3 +1,12 @@
+Version 0.2.0
+-------------
+ - PSG Noise channel accuracy improvement
+ - Z80 fixes backported from Cega
+ - Optionally build with vendored or system SpeexDSP
+ - Improve audio performance and adjust pitch to be more accurate
+ - Super Action Controller support added
+ - Fix VDP bug when EC bit is set on magnified/doubled sprites
+
 Version 0.1.1
 -------------
  - Rework mixer logic and simplify envelope code in AY-3-8910
