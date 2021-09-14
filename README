@@ -9,6 +9,8 @@ code are verbose, yet easy to follow. The ColecoVision is the perfect console
 to use for educational purposes, because it is very simple and uses generic,
 off-the-shelf chips with widely available documentation and datasheets.
 
+This repository lives at https://gitlab.com/jgemu/jollycv
+
 Compiling
 ---------
 Make sure you have The Jolly Good API's header files installed. If you did
