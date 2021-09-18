@@ -275,7 +275,10 @@ size_t jcv_sgmpsg_exec(void) {
         
         // Reset and start the new Segment if this is the last Envelope Step
         if (++psg.estep >= 16) {
-            psg.eseg ^= 1;
+            if ((psg.reg[13] & 0x09) == 0x08) // Switch Envelope Segment
+                psg.eseg ^= 1;
+            else // Hold the current Segment for 0-7, 9, 11, 13, 15
+                psg.eseg = 1;
             jcv_sgmpsg_env_reset();
         }
     }
