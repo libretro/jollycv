@@ -1,3 +1,7 @@
+Version 0.2.2
+-------------
+- Relicense from MPL-2.0 to BSD-3-Clause
+
 Version 0.2.1
 -------------
 - Fix AY-3-8910 Envelope when Hold bit is set
