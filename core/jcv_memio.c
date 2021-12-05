@@ -124,7 +124,7 @@ void jcv_io_wr(uint8_t port, uint8_t data) {
                according to the datasheet. It could be more like 54, but there
                does not seem to be any definitive data on this.
             */
-            jcv_z80_delay(32); // PCM sample pitch will be high without a delay
+            jcv_z80_delay(48); // PCM sample pitch will be high without a delay
             jcv_psg_wr(data);
             break;
         }

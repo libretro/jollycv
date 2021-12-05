@@ -38,10 +38,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define LFSRSHIFT 14 // Linear Feedback Shift Register is 15 bits, so shift 14
 #define NOISETAP 0x0003 // Tapped bits for ColecoVision are 0 and 1
 
-// Based on smspower documentation values, divided by 8 and tweaked
+// Based on smspower documentation, divided by 4 and tweaked
 static const int16_t vtable[16] = { // Volume Table
-    4096,   3162,   2546,   1986,   1564,   1186,   936,    712,
-    540,    392,    294,    208,    140,    76,     36,     0,
+    0x1fff, 0x196b, 0x1431, 0x100a, 0x0cbd, 0x0a1f, 0x080a, 0x066a,
+    0x0512, 0x0407, 0x0333, 0x028b, 0x0205, 0x019b, 0x0146, 0x0000,
 };
 
 static cv_psg_t psg; // PSG Context
@@ -71,7 +71,7 @@ void jcv_psg_init(void) {
     psg.frequency[0] = psg.frequency[1] = psg.frequency[2] = psg.noise = 0x00;
     
     psg.lfsr = 1 << LFSRSHIFT; // Seed the noise shift register
-    psg.sign = 0x00; // Sign bits start at 0 (Positive)
+    psg.freqff = 0x00; // Frequency flip-flop bits start at 0 (Positive)
 }
 
 // Write to PSG Control Registers
@@ -159,35 +159,26 @@ size_t jcv_psg_exec(void) {
             --psg.counter[i]; // Decrement the period counter
         
         if (psg.counter[i] == 0) {
-            /* When the tone counter decrements to zero, it is reloaded with the
-               value of the corresponding frequency register. In order to
-               produce a wave, it must also be flipped above and below zero. The
-               value in the frequency register actually represents half of the
-               period (the period is double the value in the register). The
-               datasheet calls the sign bit the "frequency flip-flop".
+            /* When the tone counter decrements to zero, it is reloaded with
+               the value of the corresponding frequency register. In order to
+               produce a wave, it must oscillate. The value in the frequency
+               register actually represents half of the period (the period is
+               double the value in the register). PCM sample playback uses a
+               special feature of the SN76489's tone generators: when the value
+               is set to 1, they output a DC offset value corresponding to the
+               volume level. PCM is done by rapidly changing the volume level.
             */
             psg.counter[i] = psg.frequency[i];
             
             // Update the volume of the output channel
             psg.output[i] = vtable[psg.attenuator[i]];
             
-            /* PCM sample playback uses a special feature of the SN76489's
-               tone generators: when the value is set to 1, they output a DC
-               offset value corresponding to the volume level (in other words,
-               the wave does not oscillate above and below 0). PCM is done by
-               rapidly changing the volume level. Squish'em Sam seems to use 16
-               as the magic number for PCM samples, possibly because the PSG
-               is clocked every 16 CPU cycles.
-            */
-            if ((psg.frequency[i] == 1) || (psg.frequency[i] == 16))
-                continue; // Do not flip the sign bit
+            // Flip the frequency flip-flop for the channel (sign/polarity bit)
+            psg.freqff ^= 1 << i;
             
-            // Flip the sign bit for this channel
-            psg.sign ^= 1 << i;
-            
-            // Put the waveform on the proper side of zero
-            if (psg.sign & (1 << i))
-                psg.output[i] *= -1;
+            // Set the waveform high or low
+            if (psg.freqff & (1 << i))
+                psg.output[i] = 0;
         }
     }
     
@@ -207,7 +198,7 @@ size_t jcv_psg_exec(void) {
         psg.counter[3] = (psg.noise & 0x03) == 0x03 ?
             psg.frequency[2] : 0x10 << (psg.noise & 0x03);
         
-        psg.sign ^= 0x08; // Flip the bit for this channel
+        psg.freqff ^= 0x08; // Flip the bit for this channel
         
         /* White Noise:
         ->|1|0|0|0|0|0|0|0|0|0|0|0|0|0|0|  Bits 0 and 1 are the Tapped Bits.
@@ -230,7 +221,7 @@ size_t jcv_psg_exec(void) {
         
         Bit 14 set, Bit 0 discarded
         */
-        if (psg.sign & 0x08) { // Only do the adjustment if the sign bit is set
+        if (psg.freqff & 0x08) { // Adjust if frequency flip-flop bit is set
             // First shift the register, then insert the proper bit at Bit 14
             psg.lfsr = (psg.lfsr >> 1) | ((psg.noise & 0x04) ?
                 (parity(psg.lfsr & NOISETAP) << LFSRSHIFT) : // White Noise

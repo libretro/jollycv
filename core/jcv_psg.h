@@ -39,7 +39,7 @@ typedef struct _cv_psg_t {
     uint16_t lfsr; // Linear Feedback Shift Register (15 bits on ColecoVision)
     uint16_t counter[4]; // Period Counter
     int16_t output[4]; // Per-channel output volumes for mixing
-    uint8_t sign; // Four bits for four channels, 0 = Positive, 1 = Negative
+    uint8_t freqff; // Four bits for four channels, 0 = Positive, 1 = Negative
 } cv_psg_t;
 
 void jcv_psg_set_buffer(int16_t*);
