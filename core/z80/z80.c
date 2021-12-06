@@ -1454,12 +1454,9 @@ void exec_opcode_cb(z80* const z, uint8_t opcode) {
   case 3: *reg |= 1 << y_; break; // SET y, r[z]
   }
 
-  if ((x_ == 0 || x_ == 2 || x_ == 3) && z_ == 6) {
-    z->cyc += 7;
-  }
-
-  if (reg == &hl) {
+  if ((x_ != 1) && (z_ == 6)) { // BIT (HL) not included
     wb(z, get_hl(z), hl);
+    z->cyc += 7;
   }
 }
 
