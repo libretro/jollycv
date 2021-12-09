@@ -54,6 +54,7 @@ typedef struct _cv_state_t {
 static uint16_t (*jcv_input_cb)(int); // Input poll callback
 
 static uint8_t *cvbios = NULL; // BIOS ROM
+static uint8_t bios_internal = 0; // BIOS loaded internally
 static uint8_t *romdata = NULL; // Game ROM
 static size_t romsize = 0; // Size of the ROM in bytes
 static uint8_t rompages = 0; // Number of 8K ROM pages
@@ -201,7 +202,7 @@ void jcv_mem_wr(uint16_t addr, uint8_t data) {
 }
 
 // Load the ColecoVision BIOS
-int jcv_bios_load(const char *biospath) {
+int jcv_bios_load_file(const char *biospath) {
     FILE *file;
     long size;
     
@@ -229,6 +230,14 @@ int jcv_bios_load(const char *biospath) {
     
     fclose(file);
     
+    bios_internal = 1;
+    return 1;
+}
+
+// Load the ColecoVision BIOS from a memory buffer
+int jcv_bios_load(void *data, size_t size) {
+    if (size) { }
+    cvbios = data;
     return 1;
 }
 
@@ -300,7 +309,7 @@ void jcv_memio_init(void) {
 
 // Deinitialize any allocated memory
 void jcv_memio_deinit(void) {
-    if (cvbios)
+    if (cvbios && bios_internal)
         free(cvbios);
 }
 

@@ -85,7 +85,8 @@ void jcv_mem_wr(uint16_t, uint8_t);
 void jcv_memio_init(void);
 void jcv_memio_deinit(void);
 
-int jcv_bios_load(const char*);
+int jcv_bios_load_file(const char*);
+int jcv_bios_load(void*, size_t);
 int jcv_rom_load(void*, size_t);
 
 size_t jcv_state_size(void);

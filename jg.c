@@ -80,6 +80,7 @@ static jg_audioinfo_t audinfo = {
 };
 
 static jg_pathinfo_t pathinfo;
+static jg_fileinfo_t biosinfo;
 static jg_fileinfo_t gameinfo;
 static jg_inputinfo_t inputinfo[NUMINPUTS];
 static jg_inputstate_t *input_device[NUMINPUTS];
@@ -295,11 +296,16 @@ void jg_exec_frame(void) {
 }
 
 int jg_game_load(void) {
-    // Load the BIOS
-    char biospath[256];
-    snprintf(biospath, sizeof(biospath), "%s/coleco.rom", pathinfo.bios);
-    if (!jcv_bios_load(biospath))
-        jg_cb_log(JG_LOG_ERR, "Failed to load bios %s\n", biospath);
+    // Try to load the BIOS as an auxiliary file
+    if (biosinfo.size) {
+        jcv_bios_load(biosinfo.data, biosinfo.size);
+    }
+    else {
+        char biospath[256];
+        snprintf(biospath, sizeof(biospath), "%s/coleco.rom", pathinfo.bios);
+        if (!jcv_bios_load_file(biospath))
+            jg_cb_log(JG_LOG_ERR, "Failed to load bios %s\n", biospath);
+    }
     
     // Load the ROM
     if (!jcv_rom_load(gameinfo.data, gameinfo.size))
@@ -401,7 +407,9 @@ void jg_set_gameinfo(jg_fileinfo_t info) {
 }
 
 void jg_set_auxinfo(jg_fileinfo_t info, int index) {
-    if (info.size || index) { }
+    if (index)
+        return;
+    biosinfo = info;
 }
 
 void jg_set_paths(jg_pathinfo_t paths) {
