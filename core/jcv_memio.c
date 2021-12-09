@@ -220,7 +220,7 @@ int jcv_bios_load(const char *biospath) {
     }
     
     // Allocate memory for the BIOS
-    cvbios = (uint8_t*)malloc(SIZE_CVBIOS * sizeof(uint8_t));
+    cvbios = (uint8_t*)calloc(SIZE_CVBIOS, sizeof(uint8_t));
     
     if (!fread(cvbios, SIZE_CVBIOS, 1, file)) {
         fclose(file);
@@ -300,7 +300,8 @@ void jcv_memio_init(void) {
 
 // Deinitialize any allocated memory
 void jcv_memio_deinit(void) {
-    free(cvbios);
+    if (cvbios)
+        free(cvbios);
 }
 
 // Return the size of a state
@@ -337,7 +338,7 @@ int jcv_state_load(const char *filename) {
     fseek(file, 0, SEEK_SET);
     
     // Allocate memory to read the file into
-    sstatefile = (void*)malloc(filesize * sizeof(uint8_t));
+    sstatefile = (void*)calloc(filesize, sizeof(uint8_t));
     if (sstatefile == NULL)
         return 0;
     

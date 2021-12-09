@@ -80,7 +80,7 @@ static jg_audioinfo_t audinfo = {
 };
 
 static jg_pathinfo_t pathinfo;
-static jg_gameinfo_t gameinfo;
+static jg_fileinfo_t gameinfo;
 static jg_inputinfo_t inputinfo[NUMINPUTS];
 static jg_inputstate_t *input_device[NUMINPUTS];
 
@@ -396,8 +396,12 @@ void jg_set_inputstate(jg_inputstate_t *ptr, int port) {
     input_device[port] = ptr;
 }
 
-void jg_set_gameinfo(jg_gameinfo_t info) {
+void jg_set_gameinfo(jg_fileinfo_t info) {
     gameinfo = info;
+}
+
+void jg_set_auxinfo(jg_fileinfo_t info, int index) {
+    if (info.size || index) { }
 }
 
 void jg_set_paths(jg_pathinfo_t paths) {
