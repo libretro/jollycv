@@ -66,13 +66,19 @@ OBJS := $(CSRCS:.c=.o)
 
 # Rules
 $(OBJDIR)/%.o: $(DEPDIR)/%.c $(OBJDIR)/.tag
-	$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) -c $< -o $@
+	$(info $(CC) $(CFLAGS) $(FLAGS) \
+		$(subst $(SOURCEDIR)/,,$(INCLUDES) $<) -o $@)
+	@$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) -c $< -o $@
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c $(OBJDIR)/.tag
-	$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) -c $< -o $@
+	$(info $(CC) $(CFLAGS) $(FLAGS) \
+		$(subst $(SOURCEDIR)/,,$(INCLUDES) $<) -o $@)
+	@$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) -c $< -o $@
 
 $(OBJDIR)/%.o: $(SOURCEDIR)/%.c $(OBJDIR)/.tag
-	$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) $(CFLAGS_JG) -c $< -o $@
+	$(info $(CC) $(CFLAGS) $(FLAGS) \
+		$(subst $(SOURCEDIR)/,,$(INCLUDES) $(CFLAGS_JG) $<) -o $@)
+	@$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) $(CFLAGS_JG) -c $< -o $@
 
 all: $(TARGET)
 
