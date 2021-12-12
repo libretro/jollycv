@@ -54,7 +54,7 @@ else
 endif
 
 # Object dirs
-OBJDIRS := $(OBJDIR)/speex $(OBJDIR)/z80
+MKDIRS := $(OBJDIR)/speex $(OBJDIR)/z80
 
 # List of object files
 OBJS := $(CSRCS:.c=.o)
@@ -74,7 +74,7 @@ $(OBJDIR)/%.o: $(SOURCEDIR)/%.c $(OBJDIR)/.tag
 all: $(TARGET)
 
 $(OBJDIR)/.tag:
-	@mkdir -p -- $(sort $(OBJDIRS))
+	@mkdir -p -- $(sort $(MKDIRS))
 	@touch $@
 
 $(TARGET): $(OBJS)
