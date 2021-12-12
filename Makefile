@@ -46,12 +46,15 @@ CSRCS := $(OBJDIR)/z80/z80.c \
 	$(OBJDIR)/jg.c
 
 ifneq ($(USE_VENDORED_SPEEXDSP), 0)
-	INCLUDES += -I$(DEPDIR)
+	CFLAGS_SPEEX := -I$(DEPDIR)
 	CSRCS += $(OBJDIR)/speex/resample.c
 else
-	INCLUDES += $(shell pkg-config --cflags speexdsp)
-	LIBS := $(shell pkg-config --libs speexdsp)
+	CFLAGS_SPEEX := $(shell $(PKGCONF) --cflags speexdsp)
+	LIBS_SPEEX := $(shell $(PKGCONF) --libs speexdsp)
 endif
+
+INCLUDES += $(CFLAGS_SPEEX)
+LIBS := $(LIBS_SPEEX)
 
 # Object dirs
 MKDIRS := $(OBJDIR)/speex $(OBJDIR)/z80
