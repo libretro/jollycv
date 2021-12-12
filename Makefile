@@ -59,6 +59,8 @@ OBJDIRS := $(OBJDIR)/speex $(OBJDIR)/z80
 # List of object files
 OBJS := $(CSRCS:.c=.o)
 
+.PHONY: all clean install install-strip uninstall
+
 # Rules
 $(OBJDIR)/%.o: $(DEPDIR)/%.c $(OBJDIR)/.tag
 	$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) -c $< -o $@
@@ -70,8 +72,6 @@ $(OBJDIR)/%.o: $(SOURCEDIR)/%.c $(OBJDIR)/.tag
 	$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) $(CFLAGS_JG) -c $< -o $@
 
 all: $(TARGET)
-
-maketree: $(OBJDIR)/.tag
 
 $(OBJDIR)/.tag:
 	@mkdir -p -- $(sort $(OBJDIRS))
