@@ -76,9 +76,9 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c $(OBJDIR)/.tag
 	@$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) -c $< -o $@
 
 $(OBJDIR)/%.o: $(SOURCEDIR)/%.c $(OBJDIR)/.tag
-	$(info $(CC) $(CFLAGS) $(FLAGS) \
-		$(subst $(SOURCEDIR)/,,$(INCLUDES) $(CFLAGS_JG) $<) -o $@)
-	@$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) $(CFLAGS_JG) -c $< -o $@
+	$(info $(CC) $(CFLAGS) $(FLAGS) $(CFLAGS_JG) \
+		$(subst $(SOURCEDIR)/,,$(INCLUDES) $<) -o $@)
+	@$(CC) $(CFLAGS) $(FLAGS) $(CFLAGS_JG) $(INCLUDES) -c $< -o $@
 
 all: $(TARGET)
 
