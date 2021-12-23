@@ -62,23 +62,30 @@ MKDIRS := $(OBJDIR)/speex $(OBJDIR)/z80
 # List of object files
 OBJS := $(CSRCS:.c=.o)
 
+# Compiler command
+COMPILE_C = $(CC) $(CFLAGS) $(1) -c $< -o $@
+
+# Info command
+COMPILE_INFO = $(info $(subst $(SOURCEDIR)/,,$(1)))
+
+# Core commands
+BUILD_JG = $(call COMPILE_C, $(FLAGS) $(INCLUDES) $(CFLAGS_JG))
+BUILD_MAIN = $(call COMPILE_C, $(FLAGS) $(INCLUDES))
+
 .PHONY: all clean install install-strip uninstall
 
 # Rules
 $(OBJDIR)/%.o: $(DEPDIR)/%.c $(OBJDIR)/.tag
-	$(info $(CC) $(CFLAGS) $(FLAGS) \
-		$(subst $(SOURCEDIR)/,,$(INCLUDES) $<) -o $@)
-	@$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) -c $< -o $@
+	$(call COMPILE_INFO, $(BUILD_MAIN))
+	@$(BUILD_MAIN)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c $(OBJDIR)/.tag
-	$(info $(CC) $(CFLAGS) $(FLAGS) \
-		$(subst $(SOURCEDIR)/,,$(INCLUDES) $<) -o $@)
-	@$(CC) $(CFLAGS) $(FLAGS) $(INCLUDES) -c $< -o $@
+	$(call COMPILE_INFO, $(BUILD_MAIN))
+	@$(BUILD_MAIN)
 
 $(OBJDIR)/%.o: $(SOURCEDIR)/%.c $(OBJDIR)/.tag
-	$(info $(CC) $(CFLAGS) $(FLAGS) $(CFLAGS_JG) \
-		$(subst $(SOURCEDIR)/,,$(INCLUDES) $<) -o $@)
-	@$(CC) $(CFLAGS) $(FLAGS) $(CFLAGS_JG) $(INCLUDES) -c $< -o $@
+	$(call COMPILE_INFO, $(BUILD_JG))
+	@$(BUILD_JG)
 
 all: $(TARGET)
 
