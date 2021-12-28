@@ -47,16 +47,17 @@ CSRCS := $(OBJDIR)/z80/z80.c \
 
 ifneq ($(USE_VENDORED_SPEEXDSP), 0)
 	Q_SPEEXDSP :=
-	CFLAGS_SPEEX := -I$(DEPDIR)
+	CFLAGS_SPEEXDSP := -I$(DEPDIR)
+	LIBS_SPEEXDSP :=
 	CSRCS += $(OBJDIR)/speex/resample.c
 else
 	Q_SPEEXDSP := @
-	CFLAGS_SPEEX := $(shell $(PKGCONF) --cflags speexdsp)
-	LIBS_SPEEX := $(shell $(PKGCONF) --libs speexdsp)
+	CFLAGS_SPEEXDSP := $(shell $(PKGCONF) --cflags speexdsp)
+	LIBS_SPEEXDSP := $(shell $(PKGCONF) --libs speexdsp)
 endif
 
-INCLUDES += $(CFLAGS_SPEEX)
-LIBS := $(LIBS_SPEEX)
+INCLUDES += $(CFLAGS_SPEEXDSP)
+LIBS := $(LIBS_SPEEXDSP)
 
 # Object dirs
 MKDIRS := $(OBJDIR)/speex $(OBJDIR)/z80
