@@ -46,15 +46,18 @@ CSRCS := $(OBJDIR)/z80/z80.c \
 	$(OBJDIR)/jg.c
 
 ifneq ($(USE_VENDORED_SPEEXDSP), 0)
-	CFLAGS_SPEEX := -I$(DEPDIR)
+	Q_SPEEXDSP :=
+	CFLAGS_SPEEXDSP := -I$(DEPDIR)
+	LIBS_SPEEXDSP :=
 	CSRCS += $(OBJDIR)/speex/resample.c
 else
-	CFLAGS_SPEEX := $(shell $(PKGCONF) --cflags speexdsp)
-	LIBS_SPEEX := $(shell $(PKGCONF) --libs speexdsp)
+	Q_SPEEXDSP := @
+	CFLAGS_SPEEXDSP := $(shell $(PKGCONF) --cflags speexdsp)
+	LIBS_SPEEXDSP := $(shell $(PKGCONF) --libs speexdsp)
 endif
 
-INCLUDES += $(CFLAGS_SPEEX)
-LIBS := $(LIBS_SPEEX)
+INCLUDES += $(CFLAGS_SPEEXDSP)
+LIBS := $(LIBS_SPEEXDSP)
 
 # Object dirs
 MKDIRS := $(OBJDIR)/speex $(OBJDIR)/z80
@@ -107,6 +110,10 @@ install: all
 	cp $(SOURCEDIR)/core/z80/LICENSE $(DESTDIR)$(DOCDIR)/LICENSE-z80
 	cp $(SOURCEDIR)/LICENSE $(DESTDIR)$(DOCDIR)
 	cp $(SOURCEDIR)/README $(DESTDIR)$(DOCDIR)
+	$(Q_SPEEXDSP)if test $(USE_VENDORED_SPEEXDSP) != 0; then \
+		cp $(DEPDIR)/speex/COPYING \
+			$(DESTDIR)$(DOCDIR)/COPYING-speexdsp; \
+	fi
 
 install-strip: install
 	strip $(DESTDIR)$(LIBDIR)/jollygood/$(TARGET)
