@@ -66,7 +66,7 @@ MKDIRS := $(OBJDIR)/speex $(OBJDIR)/z80
 OBJS := $(CSRCS:.c=.o)
 
 # Compiler command
-COMPILE_C = $(strip $(CC) $(CFLAGS) $(1) -c $< -o $@)
+COMPILE_C = $(strip $(CC) $(CFLAGS) $(CPPFLAGS) $(1) -c $< -o $@)
 
 # Info command
 COMPILE_INFO = $(info $(subst $(SOURCEDIR)/,,$(1)))
