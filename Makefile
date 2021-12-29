@@ -3,7 +3,7 @@ SOURCEDIR := $(abspath $(patsubst %/,%,$(dir $(abspath $(lastword \
 
 CC ?= cc
 CFLAGS ?= -O2
-FLAGS := -fPIC -std=c99 -Wall -Wextra -Wshadow -Wmissing-prototypes -pedantic
+FLAGS := -std=c99 -Wall -Wextra -Wshadow -Wmissing-prototypes -pedantic
 DEPDIR := $(SOURCEDIR)/deps
 SRCDIR := $(SOURCEDIR)/core
 
@@ -11,7 +11,8 @@ PKGCONF ?= pkg-config
 CFLAGS_JG := $(shell $(PKGCONF) --cflags jg)
 
 INCLUDES := -I$(SRCDIR) -I$(SRCDIR)/z80
-SHARED := -fPIC
+PIC := -fPIC
+SHARED := $(PIC)
 
 NAME := jollycv
 PREFIX ?= /usr/local
@@ -66,7 +67,8 @@ MKDIRS := $(OBJDIR)/speex $(OBJDIR)/z80
 OBJS := $(CSRCS:.c=.o)
 
 # Compiler command
-COMPILE_C = $(strip $(CC) $(CFLAGS) $(CPPFLAGS) $(1) -c $< -o $@)
+COMPILE = $(strip $(1) $(CPPFLAGS) $(PIC) $(2) -c $< -o $@)
+COMPILE_C = $(call COMPILE, $(CC) $(CFLAGS), $(1))
 
 # Info command
 COMPILE_INFO = $(info $(subst $(SOURCEDIR)/,,$(1)))
