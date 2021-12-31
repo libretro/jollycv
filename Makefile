@@ -34,23 +34,21 @@ else
 	TARGET := $(NAME).so
 endif
 
-OBJDIR := objs
-
-CSRCS := $(OBJDIR)/z80/z80.c \
-	$(OBJDIR)/jcv.c \
-	$(OBJDIR)/jcv_memio.c \
-	$(OBJDIR)/jcv_mixer.c \
-	$(OBJDIR)/jcv_psg.c \
-	$(OBJDIR)/jcv_sgmpsg.c \
-	$(OBJDIR)/jcv_vdp.c \
-	$(OBJDIR)/jcv_z80.c \
-	$(OBJDIR)/jg.c
+CSRCS := z80/z80.c \
+	jcv.c \
+	jcv_memio.c \
+	jcv_mixer.c \
+	jcv_psg.c \
+	jcv_sgmpsg.c \
+	jcv_vdp.c \
+	jcv_z80.c \
+	jg.c
 
 ifneq ($(USE_VENDORED_SPEEXDSP), 0)
 	Q_SPEEXDSP :=
 	CFLAGS_SPEEXDSP := -I$(DEPDIR)
 	LIBS_SPEEXDSP :=
-	CSRCS += $(OBJDIR)/speex/resample.c
+	CSRCS += speex/resample.c
 else
 	Q_SPEEXDSP := @
 	CFLAGS_SPEEXDSP := $(shell $(PKGCONF) --cflags speexdsp)
@@ -61,10 +59,12 @@ INCLUDES += $(CFLAGS_SPEEXDSP)
 LIBS := $(LIBS_SPEEXDSP)
 
 # Object dirs
-MKDIRS := $(OBJDIR)/speex $(OBJDIR)/z80
+MKDIRS := speex z80
+
+OBJDIR := objs
 
 # List of object files
-OBJS := $(CSRCS:.c=.o)
+OBJS := $(patsubst %,$(OBJDIR)/%,$(CSRCS:.c=.o))
 
 # Compiler command
 COMPILE = $(strip $(1) $(CPPFLAGS) $(PIC) $(2) -c $< -o $@)
@@ -95,7 +95,7 @@ $(OBJDIR)/%.o: $(SOURCEDIR)/%.c $(OBJDIR)/.tag
 	@$(BUILD_JG)
 
 $(OBJDIR)/.tag:
-	@mkdir -p -- $(sort $(MKDIRS))
+	@mkdir -p -- $(patsubst %,$(OBJDIR)/%,$(MKDIRS))
 	@touch $@
 
 $(NAME)/$(TARGET): $(OBJS)
