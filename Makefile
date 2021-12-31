@@ -34,23 +34,21 @@ else
 	TARGET := $(NAME).so
 endif
 
-OBJDIR := objs
-
-CSRCS := $(OBJDIR)/z80/z80.c \
-	$(OBJDIR)/jcv.c \
-	$(OBJDIR)/jcv_memio.c \
-	$(OBJDIR)/jcv_mixer.c \
-	$(OBJDIR)/jcv_psg.c \
-	$(OBJDIR)/jcv_sgmpsg.c \
-	$(OBJDIR)/jcv_vdp.c \
-	$(OBJDIR)/jcv_z80.c \
-	$(OBJDIR)/jg.c
+CSRCS := z80/z80.c \
+	jcv.c \
+	jcv_memio.c \
+	jcv_mixer.c \
+	jcv_psg.c \
+	jcv_sgmpsg.c \
+	jcv_vdp.c \
+	jcv_z80.c \
+	jg.c
 
 ifneq ($(USE_VENDORED_SPEEXDSP), 0)
 	Q_SPEEXDSP :=
 	CFLAGS_SPEEXDSP := -I$(DEPDIR)
 	LIBS_SPEEXDSP :=
-	CSRCS += $(OBJDIR)/speex/resample.c
+	CSRCS += speex/resample.c
 else
 	Q_SPEEXDSP := @
 	CFLAGS_SPEEXDSP := $(shell $(PKGCONF) --cflags speexdsp)
@@ -61,10 +59,12 @@ INCLUDES += $(CFLAGS_SPEEXDSP)
 LIBS := $(LIBS_SPEEXDSP)
 
 # Object dirs
-MKDIRS := $(OBJDIR)/speex $(OBJDIR)/z80
+MKDIRS := speex z80
+
+OBJDIR := objs
 
 # List of object files
-OBJS := $(CSRCS:.c=.o)
+OBJS := $(patsubst %,$(OBJDIR)/%,$(CSRCS:.c=.o))
 
 # Compiler command
 COMPILE = $(strip $(1) $(CPPFLAGS) $(PIC) $(2) -c $< -o $@)
@@ -79,6 +79,8 @@ BUILD_MAIN = $(call COMPILE_C, $(FLAGS) $(INCLUDES))
 
 .PHONY: all clean install install-strip uninstall
 
+all: $(NAME)/$(TARGET)
+
 # Rules
 $(OBJDIR)/%.o: $(DEPDIR)/%.c $(OBJDIR)/.tag
 	$(call COMPILE_INFO, $(BUILD_MAIN))
@@ -92,15 +94,13 @@ $(OBJDIR)/%.o: $(SOURCEDIR)/%.c $(OBJDIR)/.tag
 	$(call COMPILE_INFO, $(BUILD_JG))
 	@$(BUILD_JG)
 
-all: $(TARGET)
-
 $(OBJDIR)/.tag:
-	@mkdir -p -- $(sort $(MKDIRS))
+	@mkdir -p -- $(patsubst %,$(OBJDIR)/%,$(MKDIRS))
 	@touch $@
 
-$(TARGET): $(OBJS)
+$(NAME)/$(TARGET): $(OBJS)
 	@mkdir -p $(NAME)
-	$(CC) $^ $(LDFLAGS) $(LIBS) $(SHARED) -o $(NAME)/$(TARGET)
+	$(CC) $^ $(LDFLAGS) $(LIBS) $(SHARED) -o $@
 
 clean:
 	rm -rf $(OBJDIR)/ $(NAME)/
