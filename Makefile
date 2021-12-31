@@ -79,6 +79,8 @@ BUILD_MAIN = $(call COMPILE_C, $(FLAGS) $(INCLUDES))
 
 .PHONY: all clean install install-strip uninstall
 
+all: $(NAME)/$(TARGET)
+
 # Rules
 $(OBJDIR)/%.o: $(DEPDIR)/%.c $(OBJDIR)/.tag
 	$(call COMPILE_INFO, $(BUILD_MAIN))
@@ -92,15 +94,13 @@ $(OBJDIR)/%.o: $(SOURCEDIR)/%.c $(OBJDIR)/.tag
 	$(call COMPILE_INFO, $(BUILD_JG))
 	@$(BUILD_JG)
 
-all: $(TARGET)
-
 $(OBJDIR)/.tag:
 	@mkdir -p -- $(sort $(MKDIRS))
 	@touch $@
 
-$(TARGET): $(OBJS)
+$(NAME)/$(TARGET): $(OBJS)
 	@mkdir -p $(NAME)
-	$(CC) $^ $(LDFLAGS) $(LIBS) $(SHARED) -o $(NAME)/$(TARGET)
+	$(CC) $^ $(LDFLAGS) $(LIBS) $(SHARED) -o $@
 
 clean:
 	rm -rf $(OBJDIR)/ $(NAME)/
