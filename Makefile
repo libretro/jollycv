@@ -5,7 +5,7 @@ CC ?= cc
 CFLAGS ?= -O2
 FLAGS := -std=c99 -Wall -Wextra -Wshadow -Wmissing-prototypes -pedantic
 DEPDIR := $(SOURCEDIR)/deps
-SRCDIR := $(SOURCEDIR)/core
+SRCDIR := $(SOURCEDIR)/src
 
 PKGCONF ?= pkg-config
 CFLAGS_JG := $(shell $(PKGCONF) --cflags jg)
