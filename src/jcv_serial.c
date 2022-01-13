@@ -70,6 +70,18 @@ void jcv_serial_push32(uint8_t *mem, uint32_t v) {
     mem[index++] = v & 0xff;
 }
 
+// Push a 64-bit integer
+void jcv_serial_push64(uint8_t *mem, uint64_t v) {
+    mem[index++] = v >> 56;
+    mem[index++] = (v >> 48) & 0xff;
+    mem[index++] = (v >> 40) & 0xff;
+    mem[index++] = (v >> 32) & 0xff;
+    mem[index++] = (v >> 24) & 0xff;
+    mem[index++] = (v >> 16) & 0xff;
+    mem[index++] = (v >> 8) & 0xff;
+    mem[index++] = v & 0xff;
+}
+
 // Pop an 8-bit integer
 uint8_t jcv_serial_pop8(uint8_t *mem) {
     return mem[index++];
@@ -85,6 +97,19 @@ uint16_t jcv_serial_pop16(uint8_t *mem) {
 // Pop a 32-bit integer
 uint32_t jcv_serial_pop32(uint8_t *mem) {
     uint32_t ret = mem[index++] << 24;
+    ret |= mem[index++] << 16;
+    ret |= mem[index++] << 8;
+    ret |= mem[index++];
+    return ret;
+}
+
+// Pop a 64-bit integer
+uint64_t jcv_serial_pop64(uint8_t *mem) {
+    uint64_t ret = (uint64_t)(mem[index++]) << 56;
+    ret |= (uint64_t)(mem[index++]) << 48;
+    ret |= (uint64_t)(mem[index++]) << 40;
+    ret |= (uint64_t)(mem[index++]) << 32;
+    ret |= mem[index++] << 24;
     ret |= mem[index++] << 16;
     ret |= mem[index++] << 8;
     ret |= mem[index++];

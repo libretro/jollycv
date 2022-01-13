@@ -36,9 +36,11 @@ void jcv_serial_memcpy(uint8_t*, uint8_t*, size_t);
 void jcv_serial_push8(uint8_t*, uint8_t);
 void jcv_serial_push16(uint8_t*, uint16_t);
 void jcv_serial_push32(uint8_t*, uint32_t);
+void jcv_serial_push64(uint8_t*, uint64_t);
 uint8_t jcv_serial_pop8(uint8_t*);
 uint16_t jcv_serial_pop16(uint8_t*);
 uint32_t jcv_serial_pop32(uint8_t*);
+uint64_t jcv_serial_pop64(uint8_t*);
 size_t jcv_serial_size(void);
 
 #endif
