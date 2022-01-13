@@ -3,11 +3,12 @@ JollyCV
 JollyCV is an emulator for the ColecoVision, including support for the
 Super Game Module.
 
-JollyCV is the first emulator written specifically for The Jolly Good API. It
-is focused on the educational aspects of emulation. The comments in the source
-code are verbose, yet easy to follow. The ColecoVision is the perfect console
-to use for educational purposes, because it is very simple and uses generic,
-off-the-shelf chips with widely available documentation and datasheets.
+JollyCV was the first emulator written specifically for The Jolly Good API.
+It is designed to document the ColecoVision for educational purposes through
+verbose comments, and high quality emulation. The ColecoVision is the perfect
+console to use to demonstrate how computer systems and emulators function
+because it is very simple and uses generic, off-the-shelf chips with widely
+available datasheets.
 
 This repository lives at https://gitlab.com/jgemu/jollycv
 

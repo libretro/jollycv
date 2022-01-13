@@ -1,3 +1,11 @@
+Version 0.3.0
+-------------
+- Code, build, and filesystem layout cleanups
+- More accurate SN76489AN emulation
+- Z80 fixes backported from Cega
+- Allow specifying a BIOS and loading from a memory buffer
+- Stable Save State format
+
 Version 0.2.2
 -------------
 - Relicense from MPL-2.0 to BSD-3-Clause
