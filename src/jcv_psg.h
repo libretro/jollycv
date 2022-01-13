@@ -49,7 +49,7 @@ void jcv_psg_init(void);
 void jcv_psg_wr(uint8_t);
 size_t jcv_psg_exec(void);
 
-void jcv_psg_state_load(cv_psg_t*);
-void jcv_psg_state_save(cv_psg_t*);
+void jcv_psg_state_load(uint8_t*);
+void jcv_psg_state_save(uint8_t*);
 
 #endif

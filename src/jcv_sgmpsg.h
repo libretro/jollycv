@@ -64,7 +64,7 @@ void jcv_sgmpsg_wr(uint8_t data);
 void jcv_sgmpsg_set_reg(uint8_t);
 size_t jcv_sgmpsg_exec(void);
 
-void jcv_sgmpsg_state_load(cv_sgmpsg_t*);
-void jcv_sgmpsg_state_save(cv_sgmpsg_t*);
+void jcv_sgmpsg_state_load(uint8_t*);
+void jcv_sgmpsg_state_save(uint8_t*);
 
 #endif

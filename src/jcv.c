@@ -105,7 +105,7 @@ void jcv_exec(void) {
     size_t sgmpsgsamps = 0;
     
     // Restore the leftover cycle count
-    size_t extcycs = jcv_z80_cyc_restore();
+    uint32_t extcycs = jcv_z80_cyc_restore();
     
     // Run scanline-based iterations of emulation until a frame is complete
     for (size_t i = 0; i < numscanlines; i++) {

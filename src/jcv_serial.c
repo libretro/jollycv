@@ -44,10 +44,17 @@ void jcv_serial_begin(void) {
     index = 0;
 }
 
-// Serially copy a block of memory, one byte at a time
-void jcv_serial_memcpy(uint8_t *dst, uint8_t *src, size_t len) {
+// Serially push a block of memory, one byte at a time
+void jcv_serial_pushblk(uint8_t *dst, uint8_t *src, size_t len) {
     for (size_t i = 0; i < len; ++i)
-        dst[index + i] = src[index + i];
+        dst[index + i] = src[i];
+    index += len;
+}
+
+// Serially pop a block of memory, one byte at a time
+void jcv_serial_popblk(uint8_t *dst, uint8_t *src, size_t len) {
+    for (size_t i = 0; i < len; ++i)
+        dst[i] = src[index + i];
     index += len;
 }
 

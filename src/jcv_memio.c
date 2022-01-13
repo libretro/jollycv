@@ -37,19 +37,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "jcv.h"
 #include "jcv_memio.h"
 #include "jcv_psg.h"
+#include "jcv_serial.h"
 #include "jcv_sgmpsg.h"
 #include "jcv_vdp.h"
 #include "jcv_z80.h"
 
-// ColecoVision State
-typedef struct _cv_state_t {
-    cv_sys_t cvsys;
-    cv_psg_t psg;
-    cv_sgmpsg_t sgmpsg;
-    cv_vdp_t vdp;
-    cv_z80st_t z80st;
-    uint32_t rompage[4];
-} cv_state_t;
+#define SIZE_STATE 50392
+static uint8_t state[SIZE_STATE];
 
 static uint16_t (*jcv_input_cb)(int); // Input poll callback
 
@@ -65,7 +59,6 @@ static uint8_t sgm_upper = 0; // Enable upper 24K SGM RAM
 static uint8_t sgm_lower = 0; // Enable lower 8K SGM RAM - replaces BIOS mapping
 
 static cv_sys_t cvsys; // ColecoVision System Context
-static cv_state_t cvstate; // System State containing all components
 
 void jcv_input_set_callback(uint16_t (*cb)(int)) {
     jcv_input_cb = cb;
@@ -315,19 +308,23 @@ void jcv_memio_deinit(void) {
 
 // Return the size of a state
 size_t jcv_state_size(void) {
-    return sizeof(cv_state_t);
+    return SIZE_STATE;
 }
 
 // Load raw state data into the running system
 void jcv_state_load_raw(const void *sstate) {
-    cv_state_t *st = (cv_state_t*)sstate; // Cast the raw data
-    cvsys = st->cvsys;
-    jcv_psg_state_load(&(st->psg));
-    jcv_sgmpsg_state_load(&(st->sgmpsg));
-    jcv_vdp_state_load(&(st->vdp));
-    jcv_z80_state_load(&(st->z80st));
-    for (int i = 0; i < 4; i++)
-        rompage[i] = st->rompage[i];
+    uint8_t *st = (uint8_t*)sstate;
+    jcv_serial_begin();
+    jcv_serial_popblk(cvsys.ram, st, SIZE_CVRAM);
+    jcv_serial_popblk(cvsys.sgmram, st, SIZE_32K);
+    cvsys.cseg = jcv_serial_pop8(st);
+    cvsys.ctrl[0] = jcv_serial_pop16(st);
+    cvsys.ctrl[1] = jcv_serial_pop16(st);
+    for (int i = 0; i < 4; ++i) rompage[i] = jcv_serial_pop32(st);
+    jcv_psg_state_load(st);
+    jcv_sgmpsg_state_load(st);
+    jcv_vdp_state_load(st);
+    jcv_z80_state_load(st);
 }
 
 // Load a state from a file
@@ -368,14 +365,18 @@ int jcv_state_load(const char *filename) {
 
 // Snapshot the running state and return the address of the raw data
 const void* jcv_state_save_raw(void) {
-    cvstate.cvsys = cvsys;
-    jcv_psg_state_save(&cvstate.psg);
-    jcv_sgmpsg_state_save(&cvstate.sgmpsg);
-    jcv_vdp_state_save(&cvstate.vdp);
-    jcv_z80_state_save(&cvstate.z80st);
-    for (int i = 0; i < 4; ++i)
-        cvstate.rompage[i] = rompage[i];
-    return (const void*)&cvstate;
+    jcv_serial_begin();
+    jcv_serial_pushblk(state, cvsys.ram, SIZE_CVRAM);
+    jcv_serial_pushblk(state, cvsys.sgmram, SIZE_32K);
+    jcv_serial_push8(state, cvsys.cseg);
+    jcv_serial_push16(state, cvsys.ctrl[0]);
+    jcv_serial_push16(state, cvsys.ctrl[1]);
+    for (int i = 0; i < 4; ++i) jcv_serial_push32(state, rompage[i]);
+    jcv_psg_state_save(state);
+    jcv_sgmpsg_state_save(state);
+    jcv_vdp_state_save(state);
+    jcv_z80_state_save(state);
+    return (const void*)state;
 }
 
 // Save a state to a file
@@ -387,7 +388,7 @@ int jcv_state_save(const char *filename) {
         return 0;
     
     // Snapshot the running state and get the memory address
-    cv_state_t *sstate = (cv_state_t*)jcv_state_save_raw();
+    uint8_t *sstate = (uint8_t*)jcv_state_save_raw();
     
     // Write and close the file
     fwrite(sstate, jcv_state_size(), sizeof(uint8_t), file);

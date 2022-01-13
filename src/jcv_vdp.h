@@ -39,8 +39,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SIZE_VRAM 0x4000
 
 typedef struct _cv_vdp_t {
-    int line; // Line currently being drawn
-    int dot; // Dot currently being drawn
+    uint16_t line; // Line currently being drawn
+    uint16_t dot; // Dot currently being drawn
     uint8_t vram[SIZE_VRAM]; // 16K VRAM
     uint16_t addr; // Memory Address - 14 bit address
     uint8_t dlatch; // Data Latch (general purpose 8-bit data register)
@@ -68,7 +68,7 @@ void jcv_vdp_wr_data(uint8_t);
 
 void jcv_vdp_exec(void);
 
-void jcv_vdp_state_load(cv_vdp_t*);
-void jcv_vdp_state_save(cv_vdp_t*);
+void jcv_vdp_state_load(uint8_t*);
+void jcv_vdp_state_save(uint8_t*);
 
 #endif

@@ -34,6 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 
 #include "jcv_psg.h"
+#include "jcv_serial.h"
 
 #define LFSRSHIFT 14 // Linear Feedback Shift Register is 15 bits, so shift 14
 #define NOISETAP 0x0003 // Tapped bits for ColecoVision are 0 and 1
@@ -236,10 +237,24 @@ size_t jcv_psg_exec(void) {
     return 1; // Return 1, signifying that a sample has been generated
 }
 
-void jcv_psg_state_load(cv_psg_t *st_psg) {
-    psg = *st_psg;
+void jcv_psg_state_load(uint8_t *st) {
+    psg.clatch = jcv_serial_pop8(st);
+    for (size_t i = 0; i < 4; ++i) psg.attenuator[i] = jcv_serial_pop8(st);
+    for (size_t i = 0; i < 3; ++i) psg.frequency[i] = jcv_serial_pop16(st);
+    psg.noise = jcv_serial_pop8(st);
+    psg.lfsr = jcv_serial_pop16(st);
+    for (size_t i = 0; i < 4; ++i) psg.counter[i] = jcv_serial_pop16(st);
+    for (size_t i = 0; i < 4; ++i) psg.output[i] = jcv_serial_pop16(st);
+    psg.freqff = jcv_serial_pop8(st);
 }
 
-void jcv_psg_state_save(cv_psg_t *st_psg) {
-    *st_psg = psg;
+void jcv_psg_state_save(uint8_t *st) {
+    jcv_serial_push8(st, psg.clatch);
+    for (size_t i = 0; i < 4; ++i) jcv_serial_push8(st, psg.attenuator[i]);
+    for (size_t i = 0; i < 3; ++i) jcv_serial_push16(st, psg.frequency[i]);
+    jcv_serial_push8(st, psg.noise);
+    jcv_serial_push16(st, psg.lfsr);
+    for (size_t i = 0; i < 4; ++i) jcv_serial_push16(st, psg.counter[i]);
+    for (size_t i = 0; i < 4; ++i) jcv_serial_push16(st, psg.output[i]);
+    jcv_serial_push8(st, psg.freqff);
 }

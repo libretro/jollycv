@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stddef.h>
 #include <stdint.h>
 
+#include "jcv_serial.h"
 #include "jcv_sgmpsg.h"
 
 static const int16_t vtable[16] = { // Volume Table
@@ -337,10 +338,42 @@ size_t jcv_sgmpsg_exec(void) {
     return 1; // Return 1, signifying that a sample has been generated
 }
 
-void jcv_sgmpsg_state_load(cv_sgmpsg_t *st_sgmpsg) {
-    psg = *st_sgmpsg;
+void jcv_sgmpsg_state_load(uint8_t *st) {
+    for (size_t i = 0; i < 16; ++i) psg.reg[i] = jcv_serial_pop8(st);
+    psg.rlatch = jcv_serial_pop8(st);
+    for (size_t i = 0; i < 3; ++i) psg.tperiod[i] = jcv_serial_pop16(st);
+    for (size_t i = 0; i < 3; ++i) psg.tcounter[i] = jcv_serial_pop16(st);
+    for (size_t i = 0; i < 3; ++i) psg.amplitude[i] = jcv_serial_pop8(st);
+    psg.nperiod = jcv_serial_pop8(st);
+    psg.ncounter = jcv_serial_pop16(st);
+    psg.nshift = jcv_serial_pop32(st);
+    psg.eperiod = jcv_serial_pop16(st);
+    psg.ecounter = jcv_serial_pop16(st);
+    psg.eseg = jcv_serial_pop8(st);
+    psg.estep = jcv_serial_pop8(st);
+    psg.evol = jcv_serial_pop8(st);
+    for (size_t i = 0; i < 3; ++i) psg.tdisable[i] = jcv_serial_pop8(st);
+    for (size_t i = 0; i < 3; ++i) psg.ndisable[i] = jcv_serial_pop8(st);
+    for (size_t i = 0; i < 3; ++i) psg.emode[i] = jcv_serial_pop8(st);
+    for (size_t i = 0; i < 3; ++i) psg.sign[i] = jcv_serial_pop8(st);
 }
 
-void jcv_sgmpsg_state_save(cv_sgmpsg_t *st_sgmpsg) {
-    *st_sgmpsg = psg;
+void jcv_sgmpsg_state_save(uint8_t *st) {
+    for (size_t i = 0; i < 16; ++i) jcv_serial_push8(st, psg.reg[i]);
+    jcv_serial_push8(st, psg.rlatch);
+    for (size_t i = 0; i < 3; ++i) jcv_serial_push16(st, psg.tperiod[i]);
+    for (size_t i = 0; i < 3; ++i) jcv_serial_push16(st, psg.tcounter[i]);
+    for (size_t i = 0; i < 3; ++i) jcv_serial_push8(st, psg.amplitude[i]);
+    jcv_serial_push8(st, psg.nperiod);
+    jcv_serial_push16(st, psg.ncounter);
+    jcv_serial_push32(st, psg.nshift);
+    jcv_serial_push16(st, psg.eperiod);
+    jcv_serial_push16(st, psg.ecounter);
+    jcv_serial_push8(st, psg.eseg);
+    jcv_serial_push8(st, psg.estep);
+    jcv_serial_push8(st, psg.evol);
+    for (size_t i = 0; i < 3; ++i) jcv_serial_push8(st, psg.tdisable[i]);
+    for (size_t i = 0; i < 3; ++i) jcv_serial_push8(st, psg.ndisable[i]);
+    for (size_t i = 0; i < 3; ++i) jcv_serial_push8(st, psg.emode[i]);
+    for (size_t i = 0; i < 3; ++i) jcv_serial_push8(st, psg.sign[i]);
 }

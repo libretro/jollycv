@@ -33,6 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include <string.h>
 
+#include "jcv_serial.h"
 #include "jcv_vdp.h"
 #include "jcv_z80.h"
 
@@ -580,10 +581,34 @@ void jcv_vdp_exec(void) {
         vdp.line = 0;
 }
 
-void jcv_vdp_state_load(cv_vdp_t *st_vdp) {
-    vdp = *st_vdp;
+void jcv_vdp_state_load(uint8_t *st) {
+    vdp.line = jcv_serial_pop16(st);
+    vdp.dot = jcv_serial_pop16(st);
+    jcv_serial_popblk(vdp.vram, st, SIZE_VRAM);
+    vdp.addr = jcv_serial_pop16(st);
+    vdp.dlatch = jcv_serial_pop8(st);
+    vdp.wlatch = jcv_serial_pop8(st);
+    for (size_t i = 0; i < 8; ++i) vdp.ctrl[i] = jcv_serial_pop8(st);
+    vdp.stat = jcv_serial_pop8(st);
+    vdp.tbl_col = jcv_serial_pop16(st);
+    vdp.tbl_pgen = jcv_serial_pop16(st);
+    vdp.tbl_pname = jcv_serial_pop16(st);
+    vdp.tbl_sattr = jcv_serial_pop16(st);
+    vdp.tbl_spgen = jcv_serial_pop16(st);
 }
 
-void jcv_vdp_state_save(cv_vdp_t *st_vdp) {
-    *st_vdp = vdp;
+void jcv_vdp_state_save(uint8_t *st) {
+    jcv_serial_push16(st, vdp.line);
+    jcv_serial_push16(st, vdp.dot);
+    jcv_serial_pushblk(st, vdp.vram, SIZE_VRAM);
+    jcv_serial_push16(st, vdp.addr);
+    jcv_serial_push8(st, vdp.dlatch);
+    jcv_serial_push8(st, vdp.wlatch);
+    for (size_t i = 0; i < 8; ++i) jcv_serial_push8(st, vdp.ctrl[i]);
+    jcv_serial_push8(st, vdp.stat);
+    jcv_serial_push16(st, vdp.tbl_col);
+    jcv_serial_push16(st, vdp.tbl_pgen);
+    jcv_serial_push16(st, vdp.tbl_pname);
+    jcv_serial_push16(st, vdp.tbl_sattr);
+    jcv_serial_push16(st, vdp.tbl_spgen);
 }

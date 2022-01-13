@@ -32,7 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define JCV_SERIAL_H
 
 void jcv_serial_begin(void);
-void jcv_serial_memcpy(uint8_t*, uint8_t*, size_t);
+void jcv_serial_pushblk(uint8_t*, uint8_t*, size_t);
+void jcv_serial_popblk(uint8_t*, uint8_t*, size_t);
 void jcv_serial_push8(uint8_t*, uint8_t);
 void jcv_serial_push16(uint8_t*, uint16_t);
 void jcv_serial_push32(uint8_t*, uint32_t);

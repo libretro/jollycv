@@ -33,13 +33,14 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 
 #include "jcv_memio.h"
+#include "jcv_serial.h"
 #include "jcv_z80.h"
 
 #include "z80.h"
 
 static z80 z80ctx;
-static size_t extracycs = 0;
-static size_t delaycycs = 0;
+static uint32_t extracycs = 0;
+static uint32_t delaycycs = 0;
 
 // Memory Read
 static uint8_t read_byte(void *userdata, uint16_t addr) {
@@ -66,13 +67,13 @@ static void port_out(z80 *z, uint8_t port, uint8_t data) {
 }
 
 // Store extra cycle count
-void jcv_z80_cyc_store(size_t cycs) {
+void jcv_z80_cyc_store(uint32_t cycs) {
     extracycs = cycs;
 }
 
 // Retrieve stored extra cycle count
-size_t jcv_z80_cyc_restore(void) {
-    size_t ret = extracycs;
+uint32_t jcv_z80_cyc_restore(void) {
+    uint32_t ret = extracycs;
     extracycs = 0;
     return ret;
 }
@@ -107,7 +108,7 @@ void jcv_z80_nmi(void) {
 }
 
 // Delay the Z80's execution by a requested number of cycles
-void jcv_z80_delay(size_t delay) {
+void jcv_z80_delay(uint32_t delay) {
     delaycycs += delay;
 }
 
@@ -145,89 +146,87 @@ uint32_t jcv_z80_run(uint32_t cycles) {
 }
 
 // Restore the Z80's state from external data
-void jcv_z80_state_load(cv_z80st_t *st_z80) {
-    z80ctx.cyc = st_z80->cyc;
-    z80ctx.pc = st_z80->pc;
-    z80ctx.sp = st_z80->sp;
-    z80ctx.ix = st_z80->ix;
-    z80ctx.iy = st_z80->iy;
-    z80ctx.mem_ptr = st_z80->mem_ptr;
-    z80ctx.a = st_z80->a;
-    z80ctx.b = st_z80->b;
-    z80ctx.c = st_z80->c;
-    z80ctx.d = st_z80->d;
-    z80ctx.e = st_z80->e;
-    z80ctx.h = st_z80->h;
-    z80ctx.l = st_z80->l;
-    z80ctx.a_ = st_z80->a_;
-    z80ctx.b_ = st_z80->b_;
-    z80ctx.c_ = st_z80->c_;
-    z80ctx.d_ = st_z80->d_;
-    z80ctx.e_ = st_z80->e_;
-    z80ctx.h_ = st_z80->h_;
-    z80ctx.l_ = st_z80->l_;
-    z80ctx.f_ = st_z80->f_;
-    z80ctx.i = st_z80->i;
-    z80ctx.r = st_z80->r;
-    z80ctx.sf = st_z80->sf;
-    z80ctx.zf = st_z80->zf;
-    z80ctx.yf = st_z80->yf;
-    z80ctx.hf = st_z80->hf;
-    z80ctx.xf = st_z80->xf;
-    z80ctx.pf = st_z80->pf;
-    z80ctx.nf = st_z80->nf;
-    z80ctx.cf = st_z80->cf;
-    z80ctx.iff_delay = st_z80->iff_delay;
-    z80ctx.interrupt_mode = st_z80->interrupt_mode;
-    z80ctx.int_data = st_z80->int_data;
-    z80ctx.iff1 = st_z80->iff1;
-    z80ctx.iff2 = st_z80->iff2;
-    z80ctx.halted = st_z80->halted;
-    z80ctx.int_pending = st_z80->int_pending;
-    z80ctx.nmi_pending = st_z80->nmi_pending;
-    extracycs = st_z80->extracycs;
+void jcv_z80_state_load(uint8_t *st) {
+    z80ctx.cyc = jcv_serial_pop64(st);
+    z80ctx.pc = jcv_serial_pop16(st);
+    z80ctx.sp = jcv_serial_pop16(st);
+    z80ctx.ix = jcv_serial_pop16(st);
+    z80ctx.iy = jcv_serial_pop16(st);
+    z80ctx.mem_ptr = jcv_serial_pop16(st);
+    z80ctx.a = jcv_serial_pop8(st);
+    z80ctx.b = jcv_serial_pop8(st);
+    z80ctx.c = jcv_serial_pop8(st);
+    z80ctx.d = jcv_serial_pop8(st);
+    z80ctx.e = jcv_serial_pop8(st);
+    z80ctx.h = jcv_serial_pop8(st);
+    z80ctx.l = jcv_serial_pop8(st);
+    z80ctx.a_ = jcv_serial_pop8(st);
+    z80ctx.b_ = jcv_serial_pop8(st);
+    z80ctx.c_ = jcv_serial_pop8(st);
+    z80ctx.d_ = jcv_serial_pop8(st);
+    z80ctx.e_ = jcv_serial_pop8(st);
+    z80ctx.h_ = jcv_serial_pop8(st);
+    z80ctx.l_ = jcv_serial_pop8(st);
+    z80ctx.f_ = jcv_serial_pop8(st);
+    z80ctx.i  = jcv_serial_pop8(st);
+    z80ctx.r  = jcv_serial_pop8(st);
+    z80ctx.sf = jcv_serial_pop8(st);
+    z80ctx.zf = jcv_serial_pop8(st);
+    z80ctx.yf = jcv_serial_pop8(st);
+    z80ctx.hf = jcv_serial_pop8(st);
+    z80ctx.xf = jcv_serial_pop8(st);
+    z80ctx.pf = jcv_serial_pop8(st);
+    z80ctx.nf = jcv_serial_pop8(st);
+    z80ctx.cf = jcv_serial_pop8(st);
+    z80ctx.iff_delay = jcv_serial_pop8(st);
+    z80ctx.interrupt_mode = jcv_serial_pop8(st);
+    z80ctx.int_data = jcv_serial_pop8(st);
+    z80ctx.iff1 = jcv_serial_pop8(st);
+    z80ctx.iff2 = jcv_serial_pop8(st);
+    z80ctx.halted = jcv_serial_pop8(st);
+    z80ctx.int_pending = jcv_serial_pop8(st);
+    z80ctx.nmi_pending = jcv_serial_pop8(st);
 }
 
 // Export the Z80's state
-void jcv_z80_state_save(cv_z80st_t *st_z80) {
-    st_z80->cyc = z80ctx.cyc;
-    st_z80->pc = z80ctx.pc;
-    st_z80->sp = z80ctx.sp;
-    st_z80->ix = z80ctx.ix;
-    st_z80->iy = z80ctx.iy;
-    st_z80->mem_ptr = z80ctx.mem_ptr;
-    st_z80->a = z80ctx.a;
-    st_z80->b = z80ctx.b;
-    st_z80->c = z80ctx.c;
-    st_z80->d = z80ctx.d;
-    st_z80->e = z80ctx.e;
-    st_z80->h = z80ctx.h;
-    st_z80->l = z80ctx.l;
-    st_z80->a_ = z80ctx.a_;
-    st_z80->b_ = z80ctx.b_;
-    st_z80->c_ = z80ctx.c_;
-    st_z80->d_ = z80ctx.d_;
-    st_z80->e_ = z80ctx.e_;
-    st_z80->h_ = z80ctx.h_;
-    st_z80->l_ = z80ctx.l_;
-    st_z80->f_ = z80ctx.f_;
-    st_z80->i = z80ctx.i;
-    st_z80->r = z80ctx.r;
-    st_z80->sf = z80ctx.sf;
-    st_z80->zf = z80ctx.zf;
-    st_z80->yf = z80ctx.yf;
-    st_z80->hf = z80ctx.hf;
-    st_z80->xf = z80ctx.xf;
-    st_z80->pf = z80ctx.pf;
-    st_z80->nf = z80ctx.nf;
-    st_z80->cf = z80ctx.cf;
-    st_z80->iff_delay = z80ctx.iff_delay;
-    st_z80->interrupt_mode = z80ctx.interrupt_mode;
-    st_z80->int_data = z80ctx.int_data;
-    st_z80->iff1 = z80ctx.iff1;
-    st_z80->iff2 = z80ctx.iff2;
-    st_z80->halted = z80ctx.halted;
-    st_z80->int_pending = z80ctx.int_pending;
-    st_z80->nmi_pending = z80ctx.nmi_pending;
-    st_z80->extracycs = extracycs;
+void jcv_z80_state_save(uint8_t *st) {
+    jcv_serial_push64(st, z80ctx.cyc);
+    jcv_serial_push16(st, z80ctx.pc);
+    jcv_serial_push16(st, z80ctx.sp);
+    jcv_serial_push16(st, z80ctx.ix);
+    jcv_serial_push16(st, z80ctx.iy);
+    jcv_serial_push16(st, z80ctx.mem_ptr);
+    jcv_serial_push8(st, z80ctx.a);
+    jcv_serial_push8(st, z80ctx.b);
+    jcv_serial_push8(st, z80ctx.c);
+    jcv_serial_push8(st, z80ctx.d);
+    jcv_serial_push8(st, z80ctx.e);
+    jcv_serial_push8(st, z80ctx.h);
+    jcv_serial_push8(st, z80ctx.l);
+    jcv_serial_push8(st, z80ctx.a_);
+    jcv_serial_push8(st, z80ctx.b_);
+    jcv_serial_push8(st, z80ctx.c_);
+    jcv_serial_push8(st, z80ctx.d_);
+    jcv_serial_push8(st, z80ctx.e_);
+    jcv_serial_push8(st, z80ctx.h_);
+    jcv_serial_push8(st, z80ctx.l_);
+    jcv_serial_push8(st, z80ctx.f_);
+    jcv_serial_push8(st, z80ctx.i);
+    jcv_serial_push8(st, z80ctx.r);
+    jcv_serial_push8(st, z80ctx.sf);
+    jcv_serial_push8(st, z80ctx.zf);
+    jcv_serial_push8(st, z80ctx.yf);
+    jcv_serial_push8(st, z80ctx.hf);
+    jcv_serial_push8(st, z80ctx.xf);
+    jcv_serial_push8(st, z80ctx.pf);
+    jcv_serial_push8(st, z80ctx.nf);
+    jcv_serial_push8(st, z80ctx.cf);
+    jcv_serial_push8(st, z80ctx.iff_delay);
+    jcv_serial_push8(st, z80ctx.interrupt_mode);
+    jcv_serial_push8(st, z80ctx.int_data);
+    jcv_serial_push8(st, z80ctx.iff1);
+    jcv_serial_push8(st, z80ctx.iff2);
+    jcv_serial_push8(st, z80ctx.halted);
+    jcv_serial_push8(st, z80ctx.int_pending);
+    jcv_serial_push8(st, z80ctx.nmi_pending);
 }
