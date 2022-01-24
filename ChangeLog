@@ -1,3 +1,7 @@
+Version 0.3.1
+-------------
+- Fix bug in serializer when loading the upper bits of 64-bit integers
+
 Version 0.3.0
 -------------
 - Code, build, and filesystem layout cleanups
