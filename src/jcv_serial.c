@@ -116,10 +116,10 @@ uint64_t jcv_serial_pop64(uint8_t *mem) {
     ret |= (uint64_t)(mem[index++]) << 48;
     ret |= (uint64_t)(mem[index++]) << 40;
     ret |= (uint64_t)(mem[index++]) << 32;
-    ret |= mem[index++] << 24;
-    ret |= mem[index++] << 16;
-    ret |= mem[index++] << 8;
-    ret |= mem[index++];
+    ret |= (uint64_t)(mem[index++]) << 24;
+    ret |= (uint64_t)(mem[index++]) << 16;
+    ret |= (uint64_t)(mem[index++]) << 8;
+    ret |= (uint64_t)(mem[index++]);
     return ret;
 }
 
