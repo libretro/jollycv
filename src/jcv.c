@@ -63,6 +63,8 @@ PSG cycles per frame:
 
 static uint16_t numscanlines = CV_VDP_SCANLINES;
 static size_t psgcycs = 0;
+size_t psgsamps = 0;
+size_t sgmpsgsamps = 0;
 
 // Set the region
 void jcv_set_region(uint8_t region) {
@@ -100,9 +102,9 @@ void jcv_reset(int hard) {
 
 // Run emulation for one frame
 void jcv_exec(void) {
-    // Record the number of samples generated
-    size_t psgsamps = 0;
-    size_t sgmpsgsamps = 0;
+    // Keep track of the number of samples generated this frame
+    psgsamps = 0;
+    sgmpsgsamps = 0;
     
     // Restore the leftover cycle count
     uint32_t extcycs = jcv_z80_cyc_restore();
