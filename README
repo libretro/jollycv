@@ -66,7 +66,7 @@ Other software may require input devices that are not currently emulated.
 
 Porting
 -------
-JollyCV was written in standards compliant ISO C99 and should be extremely
+JollyCV was written in standards compliant ISO C11 and should be extremely
 portable. Though it was written for The Jolly Good API, it was done in a
 manner that allows it to be used easily in multi-emulator frameworks or
 standalone binaries for many potential platforms. If a new fork is created
