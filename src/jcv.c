@@ -61,10 +61,10 @@ PSG cycles per frame:
 #define DIV_PSG 16 // PSG Clock Divider
 #define Z80_CYC_LINE 228 // Z80 CPU cycles per scanline (227.99873)
 
-static uint16_t numscanlines = CV_VDP_SCANLINES;
+static size_t numscanlines = CV_VDP_SCANLINES;
 static size_t psgcycs = 0;
-size_t psgsamps = 0;
-size_t sgmpsgsamps = 0;
+static size_t psgsamps = 0;
+static size_t sgmpsgsamps = 0;
 
 // Set the region
 void jcv_set_region(uint8_t region) {
@@ -110,7 +110,7 @@ void jcv_exec(void) {
     uint32_t extcycs = jcv_z80_cyc_restore();
     
     // Run scanline-based iterations of emulation until a frame is complete
-    for (size_t i = 0; i < numscanlines; i++) {
+    for (size_t i = 0; i < numscanlines; ++i) {
         // Set the number of cycles required to complete this scanline
         size_t reqcycs = Z80_CYC_LINE - extcycs;
         
