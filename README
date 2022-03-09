@@ -82,8 +82,8 @@ https://gitlab.com/carmiker/colecodocs
 
 Copyright
 ---------
-JollyCV
-  Copyright (c) 2020-2022 Rupert Carmichael (BSD-3-Clause)
+JollyCV (BSD-3-Clause)
+  Copyright (c) 2020-2022 Rupert Carmichael
   See LICENSE
 
 Jolly Good Z80 (MIT)
@@ -92,6 +92,6 @@ Jolly Good Z80 (MIT)
   Copyright (c) 2022 rofl0r
   See src/z80/LICENSE
 
-Speex Resampler
-  Copyright (c) 2003, 2007, 2008 Xiph.org Foundation (BSD-3-Clause)
+Speex Resampler (BSD-3-Clause)
+  Copyright (c) 2003, 2007, 2008 Xiph.org Foundation
   See source files in deps/speex/ for detailed information
