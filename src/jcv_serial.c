@@ -37,93 +37,93 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "jcv_serial.h"
 
-static size_t index = 0;
+static size_t pos = 0;
 
 // Begin a Serialize or Deserialize operation
 void jcv_serial_begin(void) {
-    index = 0;
+    pos = 0;
 }
 
 // Serially push a block of memory, one byte at a time
 void jcv_serial_pushblk(uint8_t *dst, uint8_t *src, size_t len) {
     for (size_t i = 0; i < len; ++i)
-        dst[index + i] = src[i];
-    index += len;
+        dst[pos + i] = src[i];
+    pos += len;
 }
 
 // Serially pop a block of memory, one byte at a time
 void jcv_serial_popblk(uint8_t *dst, uint8_t *src, size_t len) {
     for (size_t i = 0; i < len; ++i)
-        dst[i] = src[index + i];
-    index += len;
+        dst[i] = src[pos + i];
+    pos += len;
 }
 
 // Push an 8-bit integer
 void jcv_serial_push8(uint8_t *mem, uint8_t v) {
-    mem[index++] = v;
+    mem[pos++] = v;
 }
 
 // Push a 16-bit integer
 void jcv_serial_push16(uint8_t *mem, uint16_t v) {
-    mem[index++] = v >> 8;
-    mem[index++] = v & 0xff;
+    mem[pos++] = v >> 8;
+    mem[pos++] = v & 0xff;
 }
 
 // Push a 32-bit integer
 void jcv_serial_push32(uint8_t *mem, uint32_t v) {
-    mem[index++] = v >> 24;
-    mem[index++] = (v >> 16) & 0xff;
-    mem[index++] = (v >> 8) & 0xff;
-    mem[index++] = v & 0xff;
+    mem[pos++] = v >> 24;
+    mem[pos++] = (v >> 16) & 0xff;
+    mem[pos++] = (v >> 8) & 0xff;
+    mem[pos++] = v & 0xff;
 }
 
 // Push a 64-bit integer
 void jcv_serial_push64(uint8_t *mem, uint64_t v) {
-    mem[index++] = v >> 56;
-    mem[index++] = (v >> 48) & 0xff;
-    mem[index++] = (v >> 40) & 0xff;
-    mem[index++] = (v >> 32) & 0xff;
-    mem[index++] = (v >> 24) & 0xff;
-    mem[index++] = (v >> 16) & 0xff;
-    mem[index++] = (v >> 8) & 0xff;
-    mem[index++] = v & 0xff;
+    mem[pos++] = v >> 56;
+    mem[pos++] = (v >> 48) & 0xff;
+    mem[pos++] = (v >> 40) & 0xff;
+    mem[pos++] = (v >> 32) & 0xff;
+    mem[pos++] = (v >> 24) & 0xff;
+    mem[pos++] = (v >> 16) & 0xff;
+    mem[pos++] = (v >> 8) & 0xff;
+    mem[pos++] = v & 0xff;
 }
 
 // Pop an 8-bit integer
 uint8_t jcv_serial_pop8(uint8_t *mem) {
-    return mem[index++];
+    return mem[pos++];
 }
 
 // Pop a 16-bit integer
 uint16_t jcv_serial_pop16(uint8_t *mem) {
-    uint16_t ret = mem[index++] << 8;
-    ret |= mem[index++];
+    uint16_t ret = mem[pos++] << 8;
+    ret |= mem[pos++];
     return ret;
 }
 
 // Pop a 32-bit integer
 uint32_t jcv_serial_pop32(uint8_t *mem) {
-    uint32_t ret = mem[index++] << 24;
-    ret |= mem[index++] << 16;
-    ret |= mem[index++] << 8;
-    ret |= mem[index++];
+    uint32_t ret = mem[pos++] << 24;
+    ret |= mem[pos++] << 16;
+    ret |= mem[pos++] << 8;
+    ret |= mem[pos++];
     return ret;
 }
 
 // Pop a 64-bit integer
 uint64_t jcv_serial_pop64(uint8_t *mem) {
-    uint64_t ret = (uint64_t)(mem[index++]) << 56;
-    ret |= (uint64_t)(mem[index++]) << 48;
-    ret |= (uint64_t)(mem[index++]) << 40;
-    ret |= (uint64_t)(mem[index++]) << 32;
-    ret |= (uint64_t)(mem[index++]) << 24;
-    ret |= (uint64_t)(mem[index++]) << 16;
-    ret |= (uint64_t)(mem[index++]) << 8;
-    ret |= (uint64_t)(mem[index++]);
+    uint64_t ret = (uint64_t)(mem[pos++]) << 56;
+    ret |= (uint64_t)(mem[pos++]) << 48;
+    ret |= (uint64_t)(mem[pos++]) << 40;
+    ret |= (uint64_t)(mem[pos++]) << 32;
+    ret |= (uint64_t)(mem[pos++]) << 24;
+    ret |= (uint64_t)(mem[pos++]) << 16;
+    ret |= (uint64_t)(mem[pos++]) << 8;
+    ret |= (uint64_t)(mem[pos++]);
     return ret;
 }
 
 // Return the size of the serialized data
 size_t jcv_serial_size(void) {
-    return index + 1;
+    return pos + 1;
 }
