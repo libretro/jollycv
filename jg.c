@@ -373,6 +373,10 @@ void jg_cheat_set(const char *code) {
     if (code) { }
 }
 
+void jg_rehash(void) {
+    jcv_vdp_set_palette(settings_jcv[PALETTE].value);
+}
+
 jg_coreinfo_t* jg_get_coreinfo(const char *sys) {
     if (sys) { } // Unused
     return &coreinfo;
