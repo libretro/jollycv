@@ -86,11 +86,10 @@ static jg_inputinfo_t inputinfo[NUMINPUTS];
 static jg_inputstate_t *input_device[NUMINPUTS];
 
 // Emulator settings
-static jg_setting_t settings_jcv[] = {   // name, default, min, max
-    { "palette", "", 0, 0, 1 }, // 0 = TeaTime, 1 = SYoung
-    { "rsqual", "", 3, 0, 10 }, // N = Resampler Quality
-    // = 0 NTSC, 1 = PAL
-    { "region", "", REGION_NTSC, REGION_NTSC, REGION_PAL },
+static jg_setting_t settings_jcv[] = {
+    { "palette", "0 = TeaTime, 1 = SYoung", 0, 0, 1 },
+    { "rsqual", "N = Resampler Quality", 3, 0, 10 },
+    { "region", "0 = NTSC, 1 = PAL", REGION_NTSC, REGION_NTSC, REGION_PAL },
 };
 
 enum {
