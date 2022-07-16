@@ -52,7 +52,6 @@ static jg_cb_audio_t jg_cb_audio;
 static jg_cb_frametime_t jg_cb_frametime;
 static jg_cb_log_t jg_cb_log;
 static jg_cb_rumble_t jg_cb_rumble;
-static jg_cb_settings_read_t jg_cb_settings_read;
 
 static jg_coreinfo_t coreinfo = {
     "jollycv", "JollyCV", VERSION, "coleco", NUMINPUTS, 0x00
@@ -139,11 +138,6 @@ static const char *gamedb_wheel[] = { // Steering Wheel
     //"bd905555983c05456ab81ea154a570b1", // Fall Guy (Europe) (Proto)
     "6f146d9bd3f64bbc006a761f59e2a1cf", // Turbo (USA, Europe)
 };
-
-static void jcv_settings_read(void) {
-    jg_cb_settings_read(settings_jcv,
-        sizeof(settings_jcv) / sizeof(jg_setting_t));
-}
 
 // ColecoVision Paddle
 static uint16_t cv_input_map[] = {
@@ -266,12 +260,7 @@ void jg_set_cb_rumble(jg_cb_rumble_t func) {
     jg_cb_rumble = func;
 }
 
-void jg_set_cb_settings_read(jg_cb_settings_read_t func) {
-    jg_cb_settings_read = func;
-}
-
 int jg_init(void) {
-    jcv_settings_read();
     jcv_input_set_callback(&jcv_input_poll);
     jcv_mixer_set_callback(jg_cb_audio);
     jcv_mixer_set_rate(SAMPLERATE);
@@ -391,6 +380,11 @@ jg_audioinfo_t* jg_get_audioinfo(void) {
 
 jg_inputinfo_t* jg_get_inputinfo(int port) {
     return &inputinfo[port];
+}
+
+jg_setting_t* jg_get_settings(size_t *numsettings) {
+    *numsettings = sizeof(settings_jcv) / sizeof(jg_setting_t);
+    return settings_jcv;
 }
 
 void jg_setup_video(void) {
