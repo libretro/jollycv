@@ -344,8 +344,20 @@ int jg_state_load(const char *filename) {
     return jcv_state_load(filename);
 }
 
+void jg_state_load_raw(const void *data) {
+    jcv_state_load_raw(data);
+}
+
 int jg_state_save(const char *filename) {
     return jcv_state_save(filename);
+}
+
+const void* jg_state_save_raw(void) {
+    return jcv_state_save_raw();
+}
+
+size_t jg_state_size(void) {
+    return jcv_state_size();
 }
 
 void jg_media_select(void) {
@@ -363,6 +375,10 @@ void jg_cheat_set(const char *code) {
 
 void jg_rehash(void) {
     jcv_vdp_set_palette(settings_jcv[PALETTE].value);
+}
+
+void jg_input_audio(int port, const int16_t *buf, size_t numsamps) {
+    if (port || buf || numsamps) { }
 }
 
 jg_coreinfo_t* jg_get_coreinfo(const char *sys) {
