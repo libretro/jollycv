@@ -104,7 +104,7 @@ $(NAME)/$(TARGET): $(OBJS)
 	$(CC) $^ $(LDFLAGS) $(LIBS) $(SHARED) -o $@
 
 clean:
-	rm -rf $(OBJDIR)/ $(NAME)/
+	rm -rf $(OBJDIR) $(NAME)
 
 install: all
 	@mkdir -p $(DESTDIR)$(DOCDIR)
