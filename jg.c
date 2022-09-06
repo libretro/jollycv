@@ -86,9 +86,13 @@ static jg_inputstate_t *input_device[NUMINPUTS];
 
 // Emulator settings
 static jg_setting_t settings_jcv[] = {
-    { "palette", "0 = TeaTime, 1 = SYoung", 0, 0, 1 },
-    { "rsqual", "N = Resampler Quality", 3, 0, 10 },
-    { "region", "0 = NTSC, 1 = PAL", REGION_NTSC, REGION_NTSC, REGION_PAL },
+    { "palette", "0 = TeaTime, 1 = SYoung", "", 0, 0, 1, 0 },
+    { "rsqual", "N = Resampler Quality", "", 3, 0, 10, 1 },
+    { "region",
+      "0 = NTSC, 1 = PAL",
+      "",
+      REGION_NTSC, REGION_NTSC, REGION_PAL, 1
+    },
 };
 
 enum {
@@ -264,9 +268,9 @@ int jg_init(void) {
     jcv_input_set_callback(&jcv_input_poll);
     jcv_mixer_set_callback(jg_cb_audio);
     jcv_mixer_set_rate(SAMPLERATE);
-    jcv_mixer_set_rsqual(settings_jcv[RSQUAL].value);
-    jcv_vdp_set_palette(settings_jcv[PALETTE].value);
-    jcv_set_region(settings_jcv[REGION].value);
+    jcv_mixer_set_rsqual(settings_jcv[RSQUAL].val);
+    jcv_vdp_set_palette(settings_jcv[PALETTE].val);
+    jcv_set_region(settings_jcv[REGION].val);
     jcv_init();
     return 1;
 }
@@ -300,7 +304,7 @@ int jg_game_load(void) {
         return 0;
     
     // Set the samples per frame and frame timing depending on region
-    if (settings_jcv[REGION].value) { // PAL mode
+    if (settings_jcv[REGION].val) { // PAL mode
         vidinfo.aspect = ASPECT_PAL;
         audinfo.spf = (SAMPLERATE / FRAMERATE_PAL) * CHANNELS;
         jg_cb_frametime(FRAMERATE_PAL);
@@ -374,7 +378,7 @@ void jg_cheat_set(const char *code) {
 }
 
 void jg_rehash(void) {
-    jcv_vdp_set_palette(settings_jcv[PALETTE].value);
+    jcv_vdp_set_palette(settings_jcv[PALETTE].val);
 }
 
 void jg_input_audio(int port, const int16_t *buf, size_t numsamps) {
