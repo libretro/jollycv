@@ -143,12 +143,14 @@ void jcv_psg_wr(uint8_t data) {
     }
 }
 
-// Based on the example algorithm from the smspower documentation
-static inline uint16_t parity(uint16_t input) {
-    // The noise source is a shift register with an XOR feedback network
-    for (uint8_t i = 0x08; i > 0; i >>= 1)
-        input ^= input >> i;
-    return input & 0x01;
+static inline uint16_t parity(uint16_t v) {
+    /* This technique is used, adapted for 16-bit values:
+       https://graphics.stanford.edu/~seander/bithacks.html#ParityParallel
+    */
+    v ^= v >> 8;
+    v ^= v >> 4;
+    v &= 0xf;
+    return (0x6996 >> v) & 1;
 }
 
 // Execute a PSG cycle
