@@ -88,8 +88,7 @@ static inline uint32_t jcv_vdp_bdcol(void) {
 
 // Draw a single pixel onto the canvas
 static inline void jcv_vdp_pixel(uint32_t c, int line, int dot) {
-    if (line < CV_VDP_HEIGHT && dot < CV_VDP_WIDTH)
-        vbuf[(line * CV_VDP_WIDTH) + dot] = c;
+    vbuf[(line * CV_VDP_WIDTH) + dot] = c;
 }
 
 // Set the video output buffer to be written to
