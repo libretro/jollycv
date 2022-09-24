@@ -57,7 +57,7 @@ region = 0
 Compatibility
 -------------
 JollyCV is compatible with 100% of the commercially released ColecoVision
-library, all known and freely available homebrew.
+library, and all known and freely available homebrew.
 
 Only a single game is known not to work (possibly a bad dump):
 Lord of the Dungeon (USA) (Beta)
