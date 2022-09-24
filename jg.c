@@ -28,8 +28,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <stdio.h>
+#include <stdlib.h>
 #include <stdint.h>
+#include <stdio.h>
 #include <string.h>
 
 #include <jg/jg.h>
@@ -112,12 +113,14 @@ enum {
     "a31facd8adc1134942d9f4102dd3fa9f", // Victory (Europe)
 };*/
 
-// Some games may have optional support (Centipede, Omega Race)
-/*static const char *gamedb_roller[] = { // Roller Controller
+// Some games have optional support (Centipede, Omega Race)
+static const char *gamedb_roller[] = { // Roller Controller
+    //"25ef922aa95b246d6894f5c4c5b29c97", // Centipede (USA)
+    //"28ed941c2746d50e62dd3acd29c7675e", // Omega Race (USA, Europe)
     "7cdc148dff40389fa1ad012d4734ceed", // Slither (USA, Europe)
     "a31facd8adc1134942d9f4102dd3fa9f", // Victory (Europe)
     "200aa603996bfd2734e353098ebe8dd5", // Victory (USA)
-};*/
+};
 
 /*static const char *gamedb_sketchpad[] = { // Only one game seems to use this
     "a46d20d65533ed979933fc1cfe6c0ad7", // Super Sketch - Sketch Master (USA)
@@ -155,8 +158,33 @@ static uint16_t cv_input_map[] = {
 static uint16_t jcv_input_poll(int port) {
     uint16_t b = 0x8080; // Always preset bit 7 for both segments
 
-    for (int i = 0; i < NDEFS_COLECOPAD; i++)
+    for (int i = 0; i < NDEFS_COLECOPAD; ++i)
         if (input_device[port]->button[i]) b |= cv_input_map[i];
+
+    return b;
+}
+
+// ColecoVision Roller Controller
+static uint16_t jcv_input_poll_roller(int port) {
+    uint16_t b = 0x8080; // Always preset bit 7 for both segments
+
+    for (int i = 0; i < NDEFS_COLECOPAD; ++i)
+        if (input_device[port]->button[i]) b |= cv_input_map[i];
+
+    int rel = input_device[0]->axis[port] / 4;
+    input_device[0]->axis[port] -= rel;
+
+    if (rel < 0) {
+        b |= port ? CV_INPUT_SP : CV_INPUT_SM;
+        jcv_z80_irq(0);
+    }
+    else if (rel > 0) {
+        b |= port ? CV_INPUT_SM : CV_INPUT_SP;
+        jcv_z80_irq(0);
+    }
+
+    if (abs(input_device[0]->axis[0]) < 4 && abs(input_device[0]->axis[1]) < 4)
+        jcv_z80_irq_clr();
 
     return b;
 }
@@ -172,7 +200,7 @@ static uint16_t cv_input_map_sac[] = {
 static uint16_t jcv_input_poll_sac(int port) {
     uint16_t b = 0x0000;
 
-    for (int i = 0; i < NDEFS_COLECOSAC - 2; i++)
+    for (int i = 0; i < NDEFS_COLECOSAC - 2; ++i)
         if (input_device[port]->button[i]) b |= cv_input_map_sac[i];
 
     // Speed Rollers
@@ -316,7 +344,17 @@ int jg_game_load(void) {
     }
 
     // Check game databases and set up input devices
-    for (size_t i = 0; i < (sizeof(gamedb_sac) / sizeof(const char*)); i++) {
+    for (size_t i = 0; i < (sizeof(gamedb_roller) / sizeof(const char*)); ++i) {
+        if (!strcmp(gamedb_roller[i], gameinfo.md5)) {
+            inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_ROLLER);
+            inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_ROLLER);
+
+            jcv_input_set_callback(&jcv_input_poll_roller);
+            return 1;
+        }
+    }
+
+    for (size_t i = 0; i < (sizeof(gamedb_sac) / sizeof(const char*)); ++i) {
         if (!strcmp(gamedb_sac[i], gameinfo.md5)) {
             inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_SAC);
             inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_SAC);
@@ -326,7 +364,7 @@ int jg_game_load(void) {
         }
     }
 
-    for (size_t i = 0; i < (sizeof(gamedb_wheel) / sizeof(const char*)); i++) {
+    for (size_t i = 0; i < (sizeof(gamedb_wheel) / sizeof(const char*)); ++i) {
         if (!strcmp(gamedb_wheel[i], gameinfo.md5)) {
             inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_WHEEL);
 
