@@ -1,3 +1,10 @@
+Version ?.?.?
+-------------
+ - PSG Parity optimized
+ - Overscan areas now drawn with backdrop colour
+ - Roller Controller support added
+ - Steering Wheel support added
+
 Version 0.4.0
 -------------
  - Major optimizations in Z80 emulator
