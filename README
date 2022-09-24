@@ -45,6 +45,9 @@ Super Action Controller
 
 Settings
 --------
+mask_overscan = 0
+0 = Show Overscan, 1 = Mask Overscan
+
 palette = 0 
 0 = TeaTime, 1 = SYoung
 
