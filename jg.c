@@ -142,9 +142,8 @@ static const char *gamedb_sac[] = { // Super Action Controller
 };
 
 static const char *gamedb_wheel[] = { // Steering Wheel
-    //"ec72a0e3bebe07ba631a8dcb750c1591", // Destructor (USA, Europe)
-    //"dbd4f21702be17775e84b2fb6c534c94", // Dukes of Hazzard, The (USA)
-    //"bd905555983c05456ab81ea154a570b1", // Fall Guy (Europe) (Proto)
+    "ec72a0e3bebe07ba631a8dcb750c1591", // Destructor (USA, Europe)
+    "dbd4f21702be17775e84b2fb6c534c94", // Dukes of Hazzard, The (USA)
     "6f146d9bd3f64bbc006a761f59e2a1cf", // Turbo (USA, Europe)
 };
 
@@ -239,40 +238,31 @@ static uint16_t cv_input_map_wheel[] = {
 };
 
 static uint16_t jcv_input_poll_wheel(int port) {
-    uint16_t b = 0x0000;
+    uint16_t b = 0x8080; // Always preset bit 7 for both segments
 
     if (port == 0) { // Steering Wheel and Pedal on first port
-        if (input_device[0]->button[16]) { // Steer Left
+        int rel = input_device[0]->axis[port] / 3;
+        input_device[0]->axis[0] -= rel;
+
+        if (rel < 0) {
             b |= CV_INPUT_SM;
-            if (input_device[0]->button[16]++ > 2) {
-                input_device[0]->button[16] = 1;
-                jcv_z80_irq(0);
-            }
-            else {
-                jcv_z80_irq_clr();
-            }
+            jcv_z80_irq(0);
         }
-        if (input_device[0]->button[17]) { // Steer Right
+        else if (rel > 0) {
             b |= CV_INPUT_SP;
-            if (input_device[0]->button[17]++ > 2) {
-                input_device[0]->button[17] = 1;
-                jcv_z80_irq(0);
-            }
-            else {
-                jcv_z80_irq_clr();
-            }
+            jcv_z80_irq(0);
         }
 
-        if (!(input_device[0]->button[16] || input_device[0]->button[17]))
+        if (abs(input_device[0]->axis[0]) < 3)
             jcv_z80_irq_clr();
 
         // Pedal uses the same signal as the FireL on the standard paddle
-        if (input_device[0]->button[18]) b |= CV_INPUT_FL;
+        if (input_device[0]->button[0]) b |= CV_INPUT_FL;
     }
     else if (port == 1) { // Numpad and Stick on second port
-        for (int i = 0; i < NDEFS_COLECOWHEEL - 3; i++)
+        for (int i = 1; i < NDEFS_COLECOWHEEL; ++i)
             // Hardcode to input device 0 as defined in the frontend
-            if (input_device[0]->button[i]) b |= cv_input_map_wheel[i];
+            if (input_device[0]->button[i]) b |= cv_input_map_wheel[i - 1];
     }
 
     return b;
