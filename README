@@ -42,12 +42,15 @@ JollyCV currently supports the following input devices:
 
 ColecoVision Paddle
 Roller Controller
+Steering Wheel
 Super Action Controller
 
 Input Notes
 -----------
 - The Roller Controller is implemented using a mouse. It is recommended to
   assign the Fire buttons to mouse buttons.
+- The Steering Wheel is implemented using the X axis of a mouse. Buttons may
+  be assigned as usual.
 - The Super Action Controller's rollers are implemented using buttons which
   may be held down to simulate a continuous roll. It is recommended to assign
   the RollerL and RollerR input definitions to shoulder buttons on a gamepad.
@@ -71,10 +74,10 @@ Compatibility
 JollyCV is compatible with 100% of the commercially released ColecoVision
 library, and all known and freely available homebrew.
 
-Only a single game is known not to work (possibly a bad dump):
+Only a single game is known not to boot (possibly a bad dump):
 Lord of the Dungeon (USA) (Beta)
 
-Other software may require input devices that are not currently emulated.
+Super Sketch is not usable due to a lack of documentation.
 
 Porting
 -------
