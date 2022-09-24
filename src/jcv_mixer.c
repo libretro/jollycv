@@ -92,10 +92,10 @@ void jcv_mixer_deinit(void) {
         speex_resampler_destroy(resampler);
         resampler = NULL;
     }
-    
+
     if (psgbuf)
         free(psgbuf);
-    
+
     if (sgmpsgbuf)
         free(sgmpsgbuf);
 }
@@ -114,15 +114,15 @@ void jcv_mixer_resamp(size_t in_psg, size_t in_sgmpsg) {
     // Reset buffer position for both chips
     jcv_psg_reset_buffer();
     jcv_sgmpsg_reset_buffer();
-    
+
     spx_uint32_t in_len = in_psg;
-    
+
     // If the SGM is active, mix it in
     if (in_sgmpsg) {
         for (size_t i = 0; i < in_len; ++i)
             psgbuf[i] += sgmpsgbuf[i];
     }
-    
+
     spx_uint32_t outsamps = samplerate / framerate;
     err = speex_resampler_process_int(resampler, 0, (spx_int16_t*)psgbuf,
         &in_len, (spx_int16_t*)abuf, &outsamps);

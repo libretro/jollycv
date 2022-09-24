@@ -77,7 +77,7 @@ uint8_t jcv_io_rd(uint8_t port) {
         case 0xe0: { // Strobe controller ports for input state
             uint8_t p = (port & 0x02) >> 1; // Port variable for convenience
             cvsys.ctrl[p] = jcv_input_cb(p); // Call frontend for input state
-            
+
             // Return the complement of the value
             return cvsys.cseg ? // Two strobes are done for two sets of buttons
                 ~((uint8_t)(cvsys.ctrl[p] >> 8)) : // Joystick, FireL
@@ -170,11 +170,11 @@ uint8_t jcv_mem_rd(uint16_t addr) {
             rompage[2] = (addr & ((rompages >> 1) - 1)) << 14;
             rompage[3] = rompage[2] + SIZE_8K; // Second half of 16K page
         }
-        
+
         // If there are read attempts beyond the ROM's true size, return padding
         if (addr >= (romsize + SIZE_32K))
             return 0xff;
-        
+
         uint8_t page = (addr >> 13) - 4; // Find the ROM page to read from
         return romdata[rompage[page] + (addr & 0x1fff)];
     }
@@ -198,31 +198,31 @@ void jcv_mem_wr(uint16_t addr, uint8_t data) {
 int jcv_bios_load_file(const char *biospath) {
     FILE *file;
     long size;
-    
+
     if (!(file = fopen(biospath, "rb")))
         return 0;
-    
+
     // Find out the file's size
     fseek(file, 0, SEEK_END);
     size = ftell(file);
     fseek(file, 0, SEEK_SET);
-    
+
     // Make sure it is the correct size before attempting to load it
     if (size != SIZE_CVBIOS) {
         fclose(file);
         return 0;
     }
-    
+
     // Allocate memory for the BIOS
     cvbios = (uint8_t*)calloc(SIZE_CVBIOS, sizeof(uint8_t));
-    
+
     if (!fread(cvbios, SIZE_CVBIOS, 1, file)) {
         fclose(file);
         return 0;
     }
-    
+
     fclose(file);
-    
+
     bios_internal = 1;
     return 1;
 }
@@ -238,27 +238,27 @@ int jcv_bios_load(void *data, size_t size) {
 int jcv_rom_load(void *data, size_t size) {
     romdata = (uint8_t*)data; // Assign internal ROM pointer
     romsize = size; // Record the true size of the ROM data in bytes
-    
+
     if (romsize > 0x8000) { // ROM image is possibly a Mega Cart
         uint16_t hword = // First, check if this is a valid ROM image
             romdata[romsize - SIZE_16K] | (romdata[romsize - SIZE_16K+1] << 8);
         if (hword != 0xaa55 && hword != 0x55aa)
             return 0; // Fail if this not a valid ColecoVision ROM image
-        
+
         megacart = 1; // Mark the Mega Cart bit true
         rompages = (size / SIZE_8K) + (size % SIZE_8K ? 1 : 0); // Count pages
-        
+
         // The selectable banks are 16K and mapped to 0xc000 - 0xffff
         rompage[2] = 0x0000; // Map 0xc000 to the first 8K bank
         rompage[3] = SIZE_8K; // Map 0xe000 to the second 8K bank
-        
+
         // The final 16K segment of ROM is always mapped to 0x8000 - 0xbfff
         rompage[0] = romsize - SIZE_16K; // First half of final 16K bank
         rompage[1] = romsize - SIZE_8K; // Second half of final 16K bank
-        
+
         return 1;
     }
-    
+
     /* ROM data should start with one of two possible combinations of two bytes:
        0xaa, 0x55: Show the BIOS screen with game title and copyright info
        0x55, 0xaa: Jump to the code vector (start of game code), bypassing BIOS
@@ -267,16 +267,16 @@ int jcv_rom_load(void *data, size_t size) {
     uint16_t hword = romdata[1] | (romdata[0] << 8); // Header Word
     if (hword != 0xaa55 && hword != 0x55aa)
         return 0; // Fail if this not a valid ColecoVision ROM image
-    
+
     // Find out how many 8K pages of ROM data there are
     // Use modulus to discover if there is a page that is not quite 8K
     rompages = (size / SIZE_8K) + (size % SIZE_8K ? 1 : 0);
-    
+
     // Assign ROM page offsets to locations in ROM data
     // Schematic shows 4 lines for 8K ROM pages (EN_80, EN_A0, EN_C0, EN_E0)
     for (int i = 0; i < rompages; i++)
         rompage[i] = i * SIZE_8K;
-    
+
     return 1;
 }
 
@@ -289,12 +289,12 @@ void jcv_memio_init(void) {
     srand(time(NULL));
     for (int i = 0; i < SIZE_CVRAM; ++i)
         cvsys.ram[i] = rand() % 256; // Random numbers from 0-255
-    
+
     memset(cvsys.sgmram, 0xff, 0x6000);
-    
+
     cvsys.cseg = 0; // Controller Strobe Segment
     cvsys.ctrl[0] = cvsys.ctrl[1] = 0; // Reset input states to empty
-    
+
     // Set SGM RAM to disabled state
     sgm_upper = 0;
     sgm_lower = 0;
@@ -332,34 +332,34 @@ int jcv_state_load(const char *filename) {
     FILE *file;
     size_t filesize, result;
     void *sstatefile;
-    
+
     // Open the file for reading
     file = fopen(filename, "rb");
     if (!file)
         return 0;
-    
+
     // Find out the file's size
     fseek(file, 0, SEEK_END);
     filesize = ftell(file);
     fseek(file, 0, SEEK_SET);
-    
+
     // Allocate memory to read the file into
     sstatefile = (void*)calloc(filesize, sizeof(uint8_t));
     if (sstatefile == NULL)
         return 0;
-    
+
     // Read the file into memory and then close it
     result = fread(sstatefile, sizeof(uint8_t), filesize, file);
     if (result != filesize)
         return 0;
     fclose(file);
-    
+
     // File has been read, now copy it into the emulator
     jcv_state_load_raw((const void*)sstatefile);
-    
+
     // Free the allocated memory
     free(sstatefile);
-    
+
     return 1; // Success!
 }
 
@@ -386,13 +386,13 @@ int jcv_state_save(const char *filename) {
     file = fopen(filename, "wb");
     if (!file)
         return 0;
-    
+
     // Snapshot the running state and get the memory address
     uint8_t *sstate = (uint8_t*)jcv_state_save_raw();
-    
+
     // Write and close the file
     fwrite(sstate, jcv_state_size(), sizeof(uint8_t), file);
     fclose(file);
-    
+
     return 1; // Success!
 }

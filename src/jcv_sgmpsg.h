@@ -34,25 +34,25 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 typedef struct _cv_sgmpsg_t {
     uint8_t reg[16]; // 16 Read/Write 8-bit registers
     uint8_t rlatch; // Register that is currently selected
-    
+
     uint16_t tperiod[3]; // Periods for Tones A, B, and C
     uint16_t tcounter[3]; // Counters for Tones A, B, and C
     uint8_t amplitude[3]; // Amplitudes for Tones A, B, and C
-    
+
     uint8_t nperiod; // Noise Period
     uint16_t ncounter; // Noise Counter
     uint32_t nshift; // Noise Random Number Generator Shift Register (17-bit)
-    
+
     uint16_t eperiod; // Envelope Period
     uint16_t ecounter; // Envelope Counter
     uint8_t eseg; // Envelope Segment: Which half of the cycle
     uint8_t estep; // Envelope Step
     uint8_t evol; // Envelope Volume
-    
+
     uint8_t tdisable[3]; // Disable bit for Tones A, B, and C
     uint8_t ndisable[3]; // Disable bit for Noise on Channels A, B, and C
     uint8_t emode[3]; // Envelope Mode Enable bit for Tones A, B, and C
-    
+
     uint8_t sign[3]; // Signify whether the waveform is high or low
 } cv_sgmpsg_t;
 

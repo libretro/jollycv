@@ -105,26 +105,26 @@ void jcv_exec(void) {
     // Keep track of the number of samples generated this frame
     psgsamps = 0;
     sgmpsgsamps = 0;
-    
+
     // Restore the leftover cycle count
     uint32_t extcycs = jcv_z80_cyc_restore();
-    
+
     // Run scanline-based iterations of emulation until a frame is complete
     for (size_t i = 0; i < numscanlines; ++i) {
         // Set the number of cycles required to complete this scanline
         size_t reqcycs = Z80_CYC_LINE - extcycs;
-        
+
         // Count cycles for an iteration (usually one instruction)
         size_t itercycs = 0;
-        
+
         // Count the total cycles run in a scanline
         size_t linecycs = 0;
-        
+
         // Run CPU instructions until enough have been run for one scanline
         while (linecycs < reqcycs) {
             itercycs = jcv_z80_exec(); // Run a single CPU instruction
             linecycs += itercycs; // Add the number of cycles to the total
-            
+
             for (size_t s = 0; s < itercycs; ++s) { // Catch PSGs up to the CPU
                 if (++psgcycs % DIV_PSG == 0) {
                     psgsamps += jcv_psg_exec();
@@ -133,15 +133,15 @@ void jcv_exec(void) {
                 }
             }
         }
-        
+
         extcycs = linecycs - reqcycs; // Store extra cycle count
-        
+
         jcv_vdp_exec(); // Draw a scanline of pixel data
     }
-    
+
     // Resample audio and push to the frontend
     jcv_mixer_resamp(psgsamps, sgmpsgsamps);
-    
+
     // Store the leftover cycle count
     jcv_z80_cyc_store(extcycs);
 }

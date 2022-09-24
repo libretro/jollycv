@@ -48,7 +48,7 @@ static size_t bufpos = 0; // Keep track of the position in the PSG output buffer
 // Reset the Envelope step and volume depending on the currently selected shape
 static inline void jcv_sgmpsg_env_reset(void) {
     psg.estep = 0; // Reset the step counter
-    
+
     if (psg.eseg) { // Segment 1
         switch (psg.reg[13]) {
             case 8: case 11: case 13: case 14: { // Start from the top
@@ -82,10 +82,10 @@ void jcv_sgmpsg_init(void) {
     // Registers
     for (int i = 0; i < 16; ++i)
         psg.reg[i] = 0x00;
-    
+
     // Latched Register
     psg.rlatch = 0x00;
-    
+
     // Tone Periods, Tone Counters, Amplitude, Sign bits
     for (int i = 0; i < 3; ++i) {
         psg.tperiod[i] = 0x0000;
@@ -93,21 +93,21 @@ void jcv_sgmpsg_init(void) {
         psg.amplitude[i] = 0x00;
         psg.sign[i] = 0x00;
     }
-    
+
     // Noise Period, Noise Counter
     psg.nperiod = 0x00;
     psg.ncounter = 0x0000;
-    
+
     // Seed the Noise RNG Shift Register
     psg.nshift = 1;
-    
+
     // Envelope Period, Counter, Segment, Step, and Volume
     psg.eperiod = 0x0000;
     psg.ecounter = 0x0000;
     psg.eseg = 0x00;
     psg.estep = 0x00;
     psg.evol = 0x00;
-    
+
     // Enable bits for Tone, Noise, and Envelope
     for (int i = 0; i < 3; ++i) {
         psg.tdisable[i] = 0x00;
@@ -156,16 +156,16 @@ void jcv_sgmpsg_wr(uint8_t data) {
     |15 |          8-bit Parallel IO on Port B          | IO Port B Data Store
     |---|-----------------------------------------------|
     */
-    
+
     // Masks to avoid writing "Don't Care" bits
     uint8_t dcmask[16] = {
         0xff, 0x0f, 0xff, 0x0f, 0xff, 0x0f, 0x1f, 0xff,
         0x1f, 0x1f, 0x1f, 0xff, 0xff, 0x0f, 0xff, 0xff,
     };
-    
+
     // Write data to the latched register
     psg.reg[psg.rlatch] = data & dcmask[psg.rlatch];
-    
+
     switch (psg.rlatch) {
         /* Tone Periods are 12-bit values comprising 8 bits from the first
            register, 4 bits from the second register. Value is for half period.
@@ -254,7 +254,7 @@ size_t jcv_sgmpsg_exec(void) {
             psg.sign[i] ^= 1;
         }
     }
-    
+
     // Clock Noise Counter
     if (++psg.ncounter >= (psg.nperiod << 1)) {
         psg.ncounter = 0;
@@ -266,11 +266,11 @@ size_t jcv_sgmpsg_exec(void) {
         psg.nshift = (psg.nshift >> 1) |
             (((psg.nshift ^ (psg.nshift >> 3)) & 0x01) << 16);
     }
-    
+
     // Clock Envelope Counter
     if (++psg.ecounter >= (psg.eperiod << 1)) {
         psg.ecounter = 0;
-        
+
         /* Envelope Shape
            The bits from 3 to 0 represent Continue, Attack, Alternate, and Hold.
            For Continue values of 0, the bottom two bits are irrelevant, meaning
@@ -295,7 +295,7 @@ size_t jcv_sgmpsg_exec(void) {
                     --psg.evol;
             }
         }
-        
+
         // Reset and start the new Segment if this is the last Envelope Step
         if (++psg.estep >= 16) {
             if ((psg.reg[13] & 0x09) == 0x08) // Switch Envelope Segment
@@ -305,9 +305,9 @@ size_t jcv_sgmpsg_exec(void) {
             jcv_sgmpsg_env_reset();
         }
     }
-    
+
     int16_t vol = 0; // Initial output volume of this sample
-    
+
     for (int i = 0; i < 3; ++i) {
         /* Determine whether to output a volume for this channel. The logic here
            is unintuitive. From the datasheet:
@@ -323,7 +323,7 @@ size_t jcv_sgmpsg_exec(void) {
         */
         uint8_t out = (psg.tdisable[i] | psg.sign[i]) &
             (psg.ndisable[i] | (psg.nshift & 0x01));
-        
+
         /* If the envelope mode bit is set for this channel, output variable
            level amplitude (envelope step), otherwise output the fixed level
            amplitude value.
@@ -331,10 +331,10 @@ size_t jcv_sgmpsg_exec(void) {
         if (out)
             vol += psg.emode[i] ? vtable[psg.evol] : vtable[psg.amplitude[i]];
     }
-    
+
     // Add the mixed sample to the output buffer and increment the position
     psgbuf[bufpos++] = vol;
-    
+
     return 1; // Return 1, signifying that a sample has been generated
 }
 

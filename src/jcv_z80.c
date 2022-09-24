@@ -115,24 +115,24 @@ void jcv_z80_delay(uint32_t delay) {
 // Run a single Z80 instruction
 uint32_t jcv_z80_exec(void) {
     uint32_t retcyc = z80_step(&z80ctx);
-    
+
     if (delaycycs) {
         retcyc += delaycycs;
         delaycycs = 0;
     }
-    
+
     return retcyc;
 }
 
 // Run Z80 instructions until at least the requested number of cycles have run
 uint32_t jcv_z80_run(uint32_t cycles) {
     uint32_t retcyc = z80_step_n(&z80ctx, cycles);
-    
+
     if (delaycycs) {
         retcyc += delaycycs;
         delaycycs = 0;
     }
-    
+
     return retcyc;
 }
 

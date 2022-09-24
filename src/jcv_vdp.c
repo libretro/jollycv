@@ -119,26 +119,26 @@ void jcv_vdp_set_region(uint8_t region) {
 void jcv_vdp_init(void) {
     vdp.line = 0;
     vdp.dot = 0;
-    
+
     // Set VDP control register defaults
     for (int i = 0; i < 8; ++i)
         vdp.ctrl[i] = 0x00;
-    
+
     vdp.stat = 0x00; // Zero the Status register
-    
+
     memset(vdp.vram, 0x00, SIZE_VRAM); // Zero the VRAM
-    
+
     // Zero the latches and address register
     vdp.addr = 0x0000;
     vdp.dlatch = 0x00;
     vdp.wlatch = 0x00;
-    
+
     vdp.tbl_col = vdp.ctrl[3] << 6;
     vdp.tbl_pname = vdp.ctrl[2] << 10;
     vdp.tbl_pgen = vdp.ctrl[4] << 11;
     vdp.tbl_sattr = vdp.ctrl[5] << 7;
     vdp.tbl_spgen = vdp.ctrl[6] << 11;
-    
+
 }
 
 uint8_t jcv_vdp_rd_data(void) {
@@ -172,12 +172,12 @@ static void jcv_vdp_wr_reg(uint8_t rnum, uint8_t data) {
     */
     // Masks to avoid writing "Don't Care" bits
     uint8_t dcmask[8] = { 0x03, 0xfb, 0x0f, 0xff, 0x07, 0x7f, 0x07, 0xff };
-    
+
     // Save the GINT bit status before writing to a register
     const uint8_t old_gint = jcv_vdp_gint();
-    
+
     vdp.ctrl[rnum] = data & dcmask[rnum]; // Write to the register
-    
+
     // Bit shifts in cases 2-6 create a 14-bit address offset from the
     // start of VRAM, based on the value written to the register
     switch (rnum) {
@@ -224,10 +224,10 @@ static void jcv_vdp_wr_reg(uint8_t rnum, uint8_t data) {
 void jcv_vdp_wr_ctrl(uint8_t data) {
     if (vdp.wlatch) { // Second Write
         vdp.wlatch = 0; // Flip the latch back to indicate the write is done
-        
+
         uint16_t upper = (data & 0x3f) << 8; // Upper address byte
         vdp.addr = upper | vdp.dlatch; // OR the full address together
-        
+
         switch (data & 0xc0) { // Check if this is a register write or not
             case 0x00: { // Read VRAM data into the latch and increment address
                 vdp.dlatch = vdp.vram[vdp.addr]; // Read data into data latch
@@ -261,26 +261,26 @@ static void jcv_vdp_bgline(void) {
     uint32_t bg, fg; // Colour value of palette entries
     uint8_t pindex = 0; // Palette Index (upper 4 bits = fg, lower 4 bits = bg)
     uint8_t chpat = 0; // One row of pixel data (Character Pattern)
-    
+
     uint8_t srow = vdp.line >> 3; // Screen row being drawn (0 to 23, 8 high)
     uint8_t prow = vdp.line & 0x07; // Pattern row being drawn (0 to 7)
-    
+
     uint16_t offset_col; // Colour offset
     uint16_t offset_pgen; // Pattern Generator Table address offset
     uint16_t offset_pname; // Pattern Name Table address offset
-    
+
     // Screen mode
     uint8_t scrmode = ((vdp.ctrl[1] & 0x10) >> 4) | // Bit 0 (M1)
         (vdp.ctrl[0] & 0x02) | // Bit 1 (M2)
         ((vdp.ctrl[1] & 0x08) >> 1); // Bit 2 (M3)
-    
+
     /* Control Register 4, which sets the Pattern Generator address offset, has
        a special function in Mode 2. Only bit 2 (PG13) sets the address of the
        Pattern Generator, resulting in either 0x0000 or 0x2000. Shift PG13 left
        11 positions to create the 14-bit address offset.
     */
     offset_pgen = (vdp.ctrl[4] & 0x04) << 11;
-    
+
     // Special case for Text Mode
     if (scrmode == 0x01) {
         /* VDP Control Register 7
@@ -291,29 +291,29 @@ static void jcv_vdp_bgline(void) {
         */
         fg = palette[(vdp.ctrl[7] >> 4) & 0x0f];
         bg = jcv_vdp_bdcol();
-        
+
         // Draw 8 pixel left/right borders in text mode, using backdrop colour
         for (uint8_t p = 0; p < 8; ++p) {
             jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, vdp.dot++);
             jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, p + 248);
         }
-        
+
         // The screen is divided into a grid of 40 text positions aross and 24
         // down. Each of the text positions is 6 pixels wide and 8 pixels high.
         for (int i = 0; i < 40; ++i) {
             offset_pname = vdp.vram[vdp.tbl_pname + (srow * 40) + i];
             pindex = vdp.vram[vdp.tbl_pgen + (offset_pname << 3) + prow];
-            
+
             // In Text Mode, the least significant two pixels are ignored (6x8)
             // All set bits are foreground, unset bits are background
             for (uint8_t p = 0x80; p > 0x02; p >>= 1)
                 jcv_vdp_pixel(pindex & p ? fg : bg, vdp.line, vdp.dot++);
         }
-        
+
         vdp.dot = 0; // Reset the dot counter
         return; // Pixels for Text Mode are now drawn
     }
-    
+
     // Graphics 1/2 and Multicolor Modes - Info on shifts in Datasheet, 3-3
     for (int i = 0; i < 32; ++i) { // 256 pixels - 32 tiles, 8 pixels wide each
         if (scrmode == 0x00) { // Mode 0: Graphics 1
@@ -327,7 +327,7 @@ static void jcv_vdp_bgline(void) {
             offset_pname = vdp.vram[vdp.tbl_pname + (srow << 5) + i];
             offset_pname += (srow & 0x18) << 5; // Increment if required
             offset_col = vdp.tbl_col & 0x2000;
-            
+
             /* Control Register 4 bits 0 and 1 are an AND mask over the
                character number. The character number is 0 - 767 (0x2ff) and
                these two bits are ANDed over the two highest bits of this value
@@ -340,7 +340,7 @@ static void jcv_vdp_bgline(void) {
                operation.
             */
             uint16_t m1 = ((vdp.ctrl[4] & 0x03) << 8) | 0xff;
-            
+
             /* Control Register 3 has a different meaning. Only bit 7 (CT13)
                sets the Colour Table address. Somewhat like Control Register 4
                for the Pattern Generator, bits 6 - 0 are an AND mask over the
@@ -348,7 +348,7 @@ static void jcv_vdp_bgline(void) {
                from the shift operation.
             */
             uint16_t m2 = ((vdp.ctrl[3] & 0x7f) << 3) | 0x07;
-            
+
             // Use the masks here to select the proper pattern/colour offsets
             chpat = vdp.vram[offset_pgen + ((offset_pname & m1) << 3) + prow];
             pindex = vdp.vram[offset_col + ((offset_pname & m2) << 3) + prow];
@@ -358,7 +358,7 @@ static void jcv_vdp_bgline(void) {
             The address for the first byte can be calculated as follows:
             PG + (byte in PN) x 8 + (row AND 3) x 2
             Simply increment the address by one for the second byte.
-            
+
             8x8 colour block made up of 4 4x4 blocks
             -----------------------------------------
             |   7   6   5   4   |   3   2   1   0   |   One byte represents 8
@@ -371,36 +371,36 @@ static void jcv_vdp_bgline(void) {
             -----------------------------------------
             */
             offset_pname = vdp.vram[vdp.tbl_pname + (srow << 5) + i];
-            
+
             // Address of the colour offset, incremented by 1 for bottom 4 rows
             offset_col = offset_pgen + (offset_pname << 3) +
                 ((srow & 0x03) << 1) + (vdp.line & 0x04 ? 1 : 0);
-            
+
             pindex = vdp.vram[offset_col]; // Palette index
-            
+
             // fg for left, bg for right - reusing variables for convenience
             fg = pindex >> 4 ? palette[pindex >> 4] : jcv_vdp_bdcol();
             bg = pindex & 0x0f ? palette[pindex & 0x0f] : jcv_vdp_bdcol();
-            
+
             // Draw left and right background data
             for (uint8_t p = 0; p < 4; ++p)
                 jcv_vdp_pixel(fg, vdp.line, vdp.dot++);
-            
+
             for (uint8_t p = 0; p < 4; ++p)
                 jcv_vdp_pixel(bg, vdp.line, vdp.dot++);
-            
+
             continue; // Pixels are already drawn, skip the rest of the loop
         }
-        
+
         // Set foreground and background values, if 0 use the backdrop colour
         bg = pindex & 0x0f ? palette[pindex & 0x0f] : jcv_vdp_bdcol();
         fg = pindex >> 4 ? palette[pindex >> 4] : jcv_vdp_bdcol();
-        
+
         // Draw pattern data starting from the leftmost pixel
         for (uint8_t p = 0x80; p > 0x00; p >>= 1)
             jcv_vdp_pixel(chpat & p ? fg : bg, vdp.line, vdp.dot++);
     }
-    
+
     vdp.dot = 0; // Reset the dot counter
 }
 
@@ -408,13 +408,13 @@ static void jcv_vdp_bgline(void) {
 static void jcv_vdp_sprline(void) {
     uint8_t sprmag = vdp.ctrl[1] & 0x01; // Sprites are magnified (doubled)
     uint8_t sprsize = vdp.ctrl[1] & 0x02 ? 16 : 8; // 16x16 if SI bit set
-    
+
     uint8_t numspr = 0;
-    
+
     // Buffer palette entry data for this line
     uint8_t linebuf[CV_VDP_WIDTH];
     memset(linebuf, 0x00, CV_VDP_WIDTH);
-    
+
     /* Buffer sprite coincidence data (collision)
        This has to be handled separately from pixel data because the palette
        entry for an active pixel may be 0 (transparent). In this case it is
@@ -422,7 +422,7 @@ static void jcv_vdp_sprline(void) {
     */
     uint8_t cbuf[CV_VDP_WIDTH];
     memset(cbuf, 0x00, CV_VDP_WIDTH);
-    
+
     for (uint8_t i = 0; i < 32; ++i) {
         /* Sprite Attribute Table Entry - Datasheet 2-25
         -------------------------------------
@@ -445,20 +445,20 @@ static void jcv_vdp_sprline(void) {
         int x = vdp.vram[vdp.tbl_sattr + (i * 4) + 1];
         uint8_t pname = vdp.vram[vdp.tbl_sattr + (i * 4) + 2];
         uint8_t c = vdp.vram[vdp.tbl_sattr + (i * 4) + 3];
-        
+
         // These bits are set every iteration regardless, but are only relevant
         // when the 5S bit is also set.
         vdp.stat &= ~0x1f; // Clear the FS bits (Fifth Sprite, 0-31)
         vdp.stat |= i & 0x1f; // Set FS bits to the current sprite index
-        
+
         if (c & 0x80) // EC bit is set, reduce X by 32 pixels (Early Clock)
             x -= 32; // Allows sprites to be partially displayed on the left
-        
+
         // If Y is 208, that sprite and all following sprites in the table are
         // not displayed. This is a Y value with a special meaning.
         if (y == 208)
             break;
-        
+
         /* Wrap Y index if required - Datasheet says that a vertical
            displacement value of -31 to 0 allows a sprite to bleed in from the
            top edge of the backdrop. In this case it appears that 224 is equal
@@ -466,40 +466,40 @@ static void jcv_vdp_sprline(void) {
         */
         if (y > 224)
             y -= 256;
-        
+
         /* Y index needs to be offset by 1. Datasheet says a value of -1 puts
            the sprite "butted up at the top of the screen, touching the backdrop
            area".
         */
         ++y;
-        
+
         // If no rows of the sprite are actually on the scanline in question,
         // this iteration is finished.
         if ((y > vdp.line) || ((y + (sprsize << sprmag)) <= vdp.line))
             continue;
-        
+
         if (++numspr == 5) { // There can only be 4 sprites per scanline
             vdp.stat |= 0x40; // Set the 5S bit (Fifth Sprite detected)
             break; // We're done here, so break the loop
         }
-        
+
         // In the case of 16x16, to calculate the address in the Sprite
         // Generator table: ((pattern name) AND 252) x 8.
         if (sprsize == 16)
             pname &= 0xfc; // Do the masking here and the multiplication below
-        
+
         // Calculate which row of the sprite pattern needs to be drawn
         int srow = vdp.line - y;
-        
+
         // If it's magnified, divide the row in half so it will be drawn twice
         srow >>= sprmag;
-        
+
         /* In the case of 8x8 sprites, there are 8 bytes for the sprite pattern,
            and there are 256 patterns in the sprite generator table.
            So simply multiply the sprite pattern by 8 to get the address.
         */
         uint8_t sppat = vdp.vram[vdp.tbl_spgen + (pname << 3) + srow];
-        
+
         /* 16x16 Sprites - Datasheet 2-21
         ---------------------------------
         |  Quadrant A   |  Quadrant C   |   For 16x16 sprites, draw the pattern
@@ -513,17 +513,17 @@ static void jcv_vdp_sprline(void) {
         |     0x0f      |     0x1f      |
         ---------------------------------
         */
-        
+
         // Loop through the sprite's pixel data - use shifts for magnification
         for (int p = 0; p < (sprsize << sprmag); ++p) {
             // Move to next iteration if the pixel is off screen, or empty
             if (((x + p) < -sprsize) || ((x + p) >= CV_VDP_WIDTH) || (c == 0))
                 continue;
-            
+
             // Handle the second pattern byte of 16x16 sprites
             if ((sprsize == 16) && (p == (8 << sprmag)))
                 sppat = vdp.vram[(vdp.tbl_spgen + (pname << 3) + srow) | 0x10];
-            
+
             // Check if a pixel needs to be drawn for this bit
             if (sppat & (0x80 >> ((p >> sprmag) & 7))) {
                 // Set the C flag if a pixel has been drawn here already
@@ -531,14 +531,14 @@ static void jcv_vdp_sprline(void) {
                     vdp.stat |= 0x20;
                 else if (x + p >= 0) { // Otherwise draw a new pixel
                     linebuf[x + p] = c & 0x0f;
-                    
+
                     // Set collision data even if palette entry is transparent
                     cbuf[x + p] = 1;
                 }
             }
         }
     }
-    
+
     // Draw values to the line
     for (int i = 0; i < CV_VDP_WIDTH; ++i)
         if (linebuf[i]) // Draw non-transparent pixels
@@ -556,17 +556,17 @@ void jcv_vdp_exec(void) {
         for (int i = 0; i < CV_VDP_WIDTH; ++i) // Blank line: backdrop colour
             jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, i);
     }
-    
+
     // Increment the line number
     ++vdp.line;
-    
+
     if (vdp.line == CV_VDP_HEIGHT) { // Enter VBLANK
         // Save the state of the Status Register INT bit
         uint8_t old_int = jcv_vdp_int();
-        
+
         // Set the INT bit on the Status Register
         vdp.stat |= 0x80;
-        
+
         /* Fire NMI if Register 1 GINT is set and Status Register INT was clear
            before entering VBLANK. This prevents the NMI from being fired if
            we're already in the interrupt service routine, and a read of the
@@ -575,7 +575,7 @@ void jcv_vdp_exec(void) {
         if (jcv_vdp_gint() && !old_int)
             jcv_z80_nmi();
     }
-    
+
     // Start on the next frame when the end of this one is reached
     if (vdp.line == numscanlines)
         vdp.line = 0;

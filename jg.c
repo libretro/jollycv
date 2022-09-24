@@ -152,10 +152,10 @@ static uint16_t cv_input_map[] = {
 
 static uint16_t jcv_input_poll(int port) {
     uint16_t b = 0x8080; // Always preset bit 7 for both segments
-    
+
     for (int i = 0; i < NDEFS_COLECOPAD; i++)
         if (input_device[port]->button[i]) b |= cv_input_map[i];
-    
+
     return b;
 }
 
@@ -169,10 +169,10 @@ static uint16_t cv_input_map_sac[] = {
 
 static uint16_t jcv_input_poll_sac(int port) {
     uint16_t b = 0x0000;
-    
+
     for (int i = 0; i < NDEFS_COLECOSAC - 2; i++)
         if (input_device[port]->button[i]) b |= cv_input_map_sac[i];
-    
+
     // Speed Rollers
     if (input_device[port]->button[20]) {
         b |= CV_INPUT_SP;
@@ -194,10 +194,10 @@ static uint16_t jcv_input_poll_sac(int port) {
             jcv_z80_irq_clr();
         }
     }
-    
+
     if (!(input_device[0]->button[20] || input_device[0]->button[21]))
         jcv_z80_irq_clr();
-    
+
     return b;
 }
 
@@ -210,7 +210,7 @@ static uint16_t cv_input_map_wheel[] = {
 
 static uint16_t jcv_input_poll_wheel(int port) {
     uint16_t b = 0x0000;
-    
+
     if (port == 0) { // Steering Wheel and Pedal on first port
         if (input_device[0]->button[16]) { // Steer Left
             b |= CV_INPUT_SM;
@@ -232,10 +232,10 @@ static uint16_t jcv_input_poll_wheel(int port) {
                 jcv_z80_irq_clr();
             }
         }
-        
+
         if (!(input_device[0]->button[16] || input_device[0]->button[17]))
             jcv_z80_irq_clr();
-        
+
         // Pedal uses the same signal as the FireL on the standard paddle
         if (input_device[0]->button[18]) b |= CV_INPUT_FL;
     }
@@ -244,7 +244,7 @@ static uint16_t jcv_input_poll_wheel(int port) {
             // Hardcode to input device 0 as defined in the frontend
             if (input_device[0]->button[i]) b |= cv_input_map_wheel[i];
     }
-    
+
     return b;
 }
 
@@ -298,11 +298,11 @@ int jg_game_load(void) {
         if (!jcv_bios_load_file(biospath))
             jg_cb_log(JG_LOG_ERR, "Failed to load bios %s\n", biospath);
     }
-    
+
     // Load the ROM
     if (!jcv_rom_load(gameinfo.data, gameinfo.size))
         return 0;
-    
+
     // Set the samples per frame and frame timing depending on region
     if (settings_jcv[REGION].val) { // PAL mode
         vidinfo.aspect = ASPECT_PAL;
@@ -312,31 +312,31 @@ int jg_game_load(void) {
     else { // NTSC mode
         jg_cb_frametime(FRAMERATE);
     }
-    
+
     // Check game databases and set up input devices
     for (size_t i = 0; i < (sizeof(gamedb_sac) / sizeof(const char*)); i++) {
         if (!strcmp(gamedb_sac[i], gameinfo.md5)) {
             inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_SAC);
             inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_SAC);
-            
+
             jcv_input_set_callback(&jcv_input_poll_sac);
             return 1;
         }
     }
-    
+
     for (size_t i = 0; i < (sizeof(gamedb_wheel) / sizeof(const char*)); i++) {
         if (!strcmp(gamedb_wheel[i], gameinfo.md5)) {
             inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_WHEEL);
-            
+
             jcv_input_set_callback(&jcv_input_poll_wheel);
             return 1;
         }
     }
-    
+
     // If there are no special input devices, use defaults
     inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_PAD);
     inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_PAD);
-    
+
     return 1;
 }
 
