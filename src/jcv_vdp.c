@@ -302,7 +302,7 @@ static void jcv_vdp_bgline(void) {
         bg = jcv_vdp_bdcol();
 
         // Draw 8 pixel left/right borders in text mode, using backdrop colour
-        for (uint8_t p = 0; p < 8; ++p) {
+        for (int p = 0; p < 8; ++p) {
             jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, vdp.dot++);
             jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, p + 248);
         }
@@ -315,7 +315,7 @@ static void jcv_vdp_bgline(void) {
 
             // In Text Mode, the least significant two pixels are ignored (6x8)
             // All set bits are foreground, unset bits are background
-            for (uint8_t p = 0x80; p > 0x02; p >>= 1)
+            for (int p = 0x80; p > 0x02; p >>= 1)
                 jcv_vdp_pixel(pindex & p ? fg : bg, vdp.line, vdp.dot++);
         }
 
@@ -396,10 +396,10 @@ static void jcv_vdp_bgline(void) {
             bg = pindex & 0x0f ? palette[pindex & 0x0f] : jcv_vdp_bdcol();
 
             // Draw left and right background data
-            for (uint8_t p = 0; p < 4; ++p)
+            for (int p = 0; p < 4; ++p)
                 jcv_vdp_pixel(fg, vdp.line, vdp.dot++);
 
-            for (uint8_t p = 0; p < 4; ++p)
+            for (int p = 0; p < 4; ++p)
                 jcv_vdp_pixel(bg, vdp.line, vdp.dot++);
 
             continue; // Pixels are already drawn, skip the rest of the loop
@@ -410,7 +410,7 @@ static void jcv_vdp_bgline(void) {
         fg = pindex >> 4 ? palette[pindex >> 4] : jcv_vdp_bdcol();
 
         // Draw pattern data starting from the leftmost pixel
-        for (uint8_t p = 0x80; p > 0x00; p >>= 1)
+        for (int p = 0x80; p > 0x00; p >>= 1)
             jcv_vdp_pixel(chpat & p ? fg : bg, vdp.line, vdp.dot++);
     }
 
@@ -440,7 +440,7 @@ static void jcv_vdp_sprline(void) {
     uint8_t cbuf[CV_VDP_WIDTH];
     memset(cbuf, 0x00, CV_VDP_WIDTH);
 
-    for (uint8_t i = 0; i < 32; ++i) {
+    for (int i = 0; i < 32; ++i) {
         /* Sprite Attribute Table Entry - Datasheet 2-25
         -------------------------------------
         |   7   6   5   4   3   2   1   0   | Bit Position
