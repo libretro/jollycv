@@ -274,7 +274,7 @@ int jcv_rom_load(void *data, size_t size) {
 
     // Assign ROM page offsets to locations in ROM data
     // Schematic shows 4 lines for 8K ROM pages (EN_80, EN_A0, EN_C0, EN_E0)
-    for (int i = 0; i < rompages; i++)
+    for (int i = 0; i < rompages; ++i)
         rompage[i] = i * SIZE_8K;
 
     return 1;
