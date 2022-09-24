@@ -87,14 +87,26 @@ static jg_inputstate_t *input_device[NUMINPUTS];
 
 // Emulator settings
 static jg_setting_t settings_jcv[] = {
-    { "mask_overscan", "0 = Show Overscan, 1 = Mask Overscan", "", 0, 0, 1, 1 },
-    { "palette", "0 = TeaTime, 1 = SYoung", "", 0, 0, 1, 0 },
-    { "rsqual", "N = Resampler Quality", "", 3, 0, 10, 1 },
-    { "region",
-      "0 = NTSC, 1 = PAL",
-      "",
-      REGION_NTSC, REGION_NTSC, REGION_PAL, 1
+    { "mask_overscan", "Mask Overscan",
+      "0 = Show Overscan, 1 = Mask Overscan",
+      "Show or Mask Overscan regions bordering the rendered gameplay area",
+      0, 0, 1, 1
     },
+    { "palette", "Colour Palette",
+      "0 = TeaTime, 1 = SYoung",
+      "Select either the beautiful or widely used colour palette",
+      0, 0, 1, 0
+    },
+    { "rsqual", "Resampler Quality",
+      "N = Resampler Quality",
+      "Quality level for the internal resampler",
+      3, 0, 10, 1
+    },
+    { "region", "Region",
+      "0 = NTSC, 1 = PAL",
+      "Select the region",
+      REGION_NTSC, REGION_NTSC, REGION_PAL, 1
+    }
 };
 
 enum {
