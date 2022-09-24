@@ -86,6 +86,7 @@ static jg_inputstate_t *input_device[NUMINPUTS];
 
 // Emulator settings
 static jg_setting_t settings_jcv[] = {
+    { "mask_overscan", "0 = Show Overscan, 1 = Mask Overscan", "", 0, 0, 1, 1 },
     { "palette", "0 = TeaTime, 1 = SYoung", "", 0, 0, 1, 0 },
     { "rsqual", "N = Resampler Quality", "", 3, 0, 10, 1 },
     { "region",
@@ -96,6 +97,7 @@ static jg_setting_t settings_jcv[] = {
 };
 
 enum {
+    MASKOVERSCAN,
     PALETTE,
     RSQUAL,
     REGION,
@@ -409,6 +411,13 @@ jg_setting_t* jg_get_settings(size_t *numsettings) {
 
 void jg_setup_video(void) {
     jcv_vdp_set_buffer(vidinfo.buf);
+
+    if (settings_jcv[MASKOVERSCAN].val) {
+        vidinfo.w = CV_VDP_WIDTH;
+        vidinfo.h = CV_VDP_HEIGHT;
+        vidinfo.x = vidinfo.y = CV_VDP_OVERSCAN;
+        vidinfo.aspect = 4.0/3.0;
+    }
 }
 
 void jg_setup_audio(void) {
