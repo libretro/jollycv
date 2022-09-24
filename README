@@ -41,7 +41,16 @@ Input Devices
 JollyCV currently supports the following input devices:
 
 ColecoVision Paddle
+Roller Controller
 Super Action Controller
+
+Input Notes
+-----------
+- The Roller Controller is implemented using a mouse. It is recommended to
+  assign the Fire buttons to mouse buttons.
+- The Super Action Controller's rollers are implemented using buttons which
+  may be held down to simulate a continuous roll. It is recommended to assign
+  the RollerL and RollerR input definitions to shoulder buttons on a gamepad.
 
 Settings
 --------
