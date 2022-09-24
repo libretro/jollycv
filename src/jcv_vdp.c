@@ -86,9 +86,15 @@ static inline uint32_t jcv_vdp_bdcol(void) {
     return palette[vdp.ctrl[7] & 0x0f];
 }
 
+// Draw a line of backdrop colour
+static inline void jcv_vdp_bdline(int line) {
+    for (int i = 0; i < CV_VDP_WIDTH_OVERSCAN; ++i)
+        vbuf[(line * CV_VDP_WIDTH_OVERSCAN) + i] = jcv_vdp_bdcol();
+}
+
 // Draw a single pixel onto the canvas
 static inline void jcv_vdp_pixel(uint32_t c, int line, int dot) {
-    vbuf[(line * CV_VDP_WIDTH) + dot] = c;
+    vbuf[((line + CV_VDP_OVERSCAN) * CV_VDP_WIDTH_OVERSCAN) + dot] = c;
 }
 
 // Set the video output buffer to be written to
@@ -280,6 +286,10 @@ static void jcv_vdp_bgline(void) {
     */
     offset_pgen = (vdp.ctrl[4] & 0x04) << 11;
 
+    // Draw left overscan
+    for (int i = 0; i < CV_VDP_OVERSCAN; ++i)
+        jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, vdp.dot++);
+
     // Special case for Text Mode
     if (scrmode == 0x01) {
         /* VDP Control Register 7
@@ -308,6 +318,10 @@ static void jcv_vdp_bgline(void) {
             for (uint8_t p = 0x80; p > 0x02; p >>= 1)
                 jcv_vdp_pixel(pindex & p ? fg : bg, vdp.line, vdp.dot++);
         }
+
+        // Draw right overscan
+        for (int i = 0; i < CV_VDP_OVERSCAN; ++i)
+            jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, vdp.dot++);
 
         vdp.dot = 0; // Reset the dot counter
         return; // Pixels for Text Mode are now drawn
@@ -399,6 +413,10 @@ static void jcv_vdp_bgline(void) {
         for (uint8_t p = 0x80; p > 0x00; p >>= 1)
             jcv_vdp_pixel(chpat & p ? fg : bg, vdp.line, vdp.dot++);
     }
+
+    // Draw right overscan
+    for (int i = 0; i < CV_VDP_OVERSCAN; ++i)
+        jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, vdp.dot++);
 
     vdp.dot = 0; // Reset the dot counter
 }
@@ -541,7 +559,7 @@ static void jcv_vdp_sprline(void) {
     // Draw values to the line
     for (int i = 0; i < CV_VDP_WIDTH; ++i)
         if (linebuf[i]) // Draw non-transparent pixels
-            jcv_vdp_pixel(palette[linebuf[i]], vdp.line, i);
+            jcv_vdp_pixel(palette[linebuf[i]], vdp.line, i + CV_VDP_OVERSCAN);
 }
 
 // Draw a scanline to the canvas
@@ -552,8 +570,7 @@ void jcv_vdp_exec(void) {
             jcv_vdp_sprline(); // Draw sprites
     }
     else if (vdp.line < CV_VDP_HEIGHT) {
-        for (int i = 0; i < CV_VDP_WIDTH; ++i) // Blank line: backdrop colour
-            jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, i);
+        jcv_vdp_bdline(vdp.line + CV_VDP_OVERSCAN);
     }
 
     // Increment the line number
@@ -576,8 +593,15 @@ void jcv_vdp_exec(void) {
     }
 
     // Start on the next frame when the end of this one is reached
-    if (vdp.line == numscanlines)
+    if (vdp.line == numscanlines) {
         vdp.line = 0;
+
+        // Draw backdrop colour on the vertical overscan lines
+        for (int i = 0; i < CV_VDP_OVERSCAN; ++i) {
+            jcv_vdp_bdline(i);
+            jcv_vdp_bdline(i + CV_VDP_HEIGHT + CV_VDP_OVERSCAN);
+        }
+    }
 }
 
 void jcv_vdp_state_load(uint8_t *st) {
