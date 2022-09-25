@@ -286,10 +286,6 @@ static void jcv_vdp_bgline(void) {
     */
     offset_pgen = (vdp.ctrl[4] & 0x04) << 11;
 
-    // Draw left overscan
-    for (int i = 0; i < CV_VDP_OVERSCAN; ++i)
-        jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, vdp.dot++);
-
     // Special case for Text Mode
     if (scrmode == 0x01) {
         /* VDP Control Register 7
@@ -301,10 +297,10 @@ static void jcv_vdp_bgline(void) {
         fg = palette[(vdp.ctrl[7] >> 4) & 0x0f];
         bg = jcv_vdp_bdcol();
 
-        // Draw 8 pixel left/right borders in text mode, using backdrop colour
-        for (int p = 0; p < 8; ++p) {
+        // Draw 16 pixel left/right borders in text mode, using backdrop colour
+        for (int p = 0; p < CV_VDP_OVERSCAN << 1; ++p) {
             jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, vdp.dot++);
-            jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, p + 248);
+            jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, p + 256);
         }
 
         // The screen is divided into a grid of 40 text positions aross and 24
@@ -319,13 +315,13 @@ static void jcv_vdp_bgline(void) {
                 jcv_vdp_pixel(pindex & p ? fg : bg, vdp.line, vdp.dot++);
         }
 
-        // Draw right overscan
-        for (int i = 0; i < CV_VDP_OVERSCAN; ++i)
-            jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, vdp.dot++);
-
         vdp.dot = 0; // Reset the dot counter
         return; // Pixels for Text Mode are now drawn
     }
+
+    // Draw left overscan
+    for (int i = 0; i < CV_VDP_OVERSCAN; ++i)
+        jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, vdp.dot++);
 
     // Graphics 1/2 and Multicolor Modes - Info on shifts in Datasheet, 3-3
     for (int i = 0; i < 32; ++i) { // 256 pixels - 32 tiles, 8 pixels wide each
