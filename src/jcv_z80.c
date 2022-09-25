@@ -92,19 +92,14 @@ void jcv_z80_reset(void) {
     jcv_z80_init();
 }
 
-// Clear the Interrupt line
-void jcv_z80_irq_clr(void) {
-    z80_clr_int(&z80ctx);
-}
-
 // Generate an Interrupt
 void jcv_z80_irq(uint8_t data) {
-    z80_gen_int(&z80ctx, data);
+    z80_pulse_irq(&z80ctx, data);
 }
 
 // Generate a Non-Maskable Interrupt
 void jcv_z80_nmi(void) {
-    z80_gen_nmi(&z80ctx);
+    z80_pulse_nmi(&z80ctx);
 }
 
 // Delay the Z80's execution by a requested number of cycles
@@ -163,11 +158,11 @@ void jcv_z80_state_load(uint8_t *st) {
     z80ctx.r  = jcv_serial_pop8(st);
     z80ctx.iff_delay = jcv_serial_pop8(st);
     z80ctx.interrupt_mode = jcv_serial_pop8(st);
-    z80ctx.int_data = jcv_serial_pop8(st);
+    z80ctx.irq_data = jcv_serial_pop8(st);
     z80ctx.iff1 = jcv_serial_pop8(st);
     z80ctx.iff2 = jcv_serial_pop8(st);
     z80ctx.halted = jcv_serial_pop8(st);
-    z80ctx.int_pending = jcv_serial_pop8(st);
+    z80ctx.irq_pending = jcv_serial_pop8(st);
     z80ctx.nmi_pending = jcv_serial_pop8(st);
 }
 
@@ -198,10 +193,10 @@ void jcv_z80_state_save(uint8_t *st) {
     jcv_serial_push8(st, z80ctx.r);
     jcv_serial_push8(st, z80ctx.iff_delay);
     jcv_serial_push8(st, z80ctx.interrupt_mode);
-    jcv_serial_push8(st, z80ctx.int_data);
+    jcv_serial_push8(st, z80ctx.irq_data);
     jcv_serial_push8(st, z80ctx.iff1);
     jcv_serial_push8(st, z80ctx.iff2);
     jcv_serial_push8(st, z80ctx.halted);
-    jcv_serial_push8(st, z80ctx.int_pending);
+    jcv_serial_push8(st, z80ctx.irq_pending);
     jcv_serial_push8(st, z80ctx.nmi_pending);
 }

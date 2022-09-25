@@ -191,9 +191,6 @@ static uint16_t jcv_input_poll_roller(int port) {
         jcv_z80_irq(0);
     }
 
-    if (abs(input_device[0]->axis[0]) < 4 && abs(input_device[0]->axis[1]) < 4)
-        jcv_z80_irq_clr();
-
     return b;
 }
 
@@ -206,7 +203,7 @@ static uint16_t cv_input_map_sac[] = {
 };
 
 static uint16_t jcv_input_poll_sac(int port) {
-    uint16_t b = 0x0000;
+    uint16_t b = 0x8080; // Always preset bit 7 for both segments
 
     for (int i = 0; i < NDEFS_COLECOSAC - 2; ++i)
         if (input_device[port]->button[i]) b |= cv_input_map_sac[i];
@@ -214,27 +211,18 @@ static uint16_t jcv_input_poll_sac(int port) {
     // Speed Rollers
     if (input_device[port]->button[20]) {
         b |= CV_INPUT_SP;
-        if (input_device[port]->button[20]++ > 2) {
+        if (input_device[port]->button[20]++ > 1) {
             input_device[port]->button[20] = 1;
             jcv_z80_irq(0);
-        }
-        else {
-            jcv_z80_irq_clr();
         }
     }
     if (input_device[port]->button[21]) {
         b |= CV_INPUT_SM;
-        if (input_device[port]->button[21]++ > 2) {
+        if (input_device[port]->button[21]++ > 1) {
             input_device[port]->button[21] = 1;
             jcv_z80_irq(0);
         }
-        else {
-            jcv_z80_irq_clr();
-        }
     }
-
-    if (!(input_device[0]->button[20] || input_device[0]->button[21]))
-        jcv_z80_irq_clr();
 
     return b;
 }
@@ -261,9 +249,6 @@ static uint16_t jcv_input_poll_wheel(int port) {
             b |= CV_INPUT_SP;
             jcv_z80_irq(0);
         }
-
-        if (abs(input_device[0]->axis[0]) < 3)
-            jcv_z80_irq_clr();
 
         // Pedal uses the same signal as the FireL on the standard paddle
         if (input_device[0]->button[0]) b |= CV_INPUT_FL;
