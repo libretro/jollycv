@@ -125,10 +125,7 @@ enum {
     "a31facd8adc1134942d9f4102dd3fa9f", // Victory (Europe)
 };*/
 
-// Some games have optional support (Centipede, Omega Race)
 static const char *gamedb_roller[] = { // Roller Controller
-    //"25ef922aa95b246d6894f5c4c5b29c97", // Centipede (USA)
-    //"28ed941c2746d50e62dd3acd29c7675e", // Omega Race (USA, Europe)
     "7cdc148dff40389fa1ad012d4734ceed", // Slither (USA, Europe)
     "a31facd8adc1134942d9f4102dd3fa9f", // Victory (Europe)
     "200aa603996bfd2734e353098ebe8dd5", // Victory (USA)
