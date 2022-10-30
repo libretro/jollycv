@@ -38,7 +38,7 @@ system-wide using the "install" target specified in the Makefile.
 
 Input Devices
 -------------
-JollyCV currently supports the following input devices:
+JollyCV supports the following input devices:
 
 ColecoVision Paddle
 Roller Controller
@@ -77,7 +77,8 @@ library, and all known and freely available homebrew.
 Only a single game is known not to boot (possibly a bad dump):
 Lord of the Dungeon (USA) (Beta)
 
-Super Sketch is not usable due to a lack of documentation.
+Super Sketch boots, but is not usable due to a lack of documentation on the
+Super Sketch Pad.
 
 Porting
 -------
