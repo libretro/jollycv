@@ -179,8 +179,8 @@ static uint16_t jcv_input_poll_roller(int port) {
     for (int i = 0; i < NDEFS_COLECOPAD; ++i)
         if (input_device[port]->button[i]) b |= cv_input_map[i];
 
-    int rel = input_device[0]->axis[port] / 4;
-    input_device[0]->axis[port] -= rel;
+    int rel = input_device[0]->rel[port] / 4;
+    input_device[0]->rel[port] -= rel;
 
     if (rel < 0) {
         b |= port ? CV_INPUT_SP : CV_INPUT_SM;
@@ -238,8 +238,8 @@ static uint16_t jcv_input_poll_wheel(int port) {
     uint16_t b = 0x8080; // Always preset bit 7 for both segments
 
     if (port == 0) { // Steering Wheel and Pedal on first port
-        int rel = input_device[0]->axis[port] / 3;
-        input_device[0]->axis[0] -= rel;
+        int rel = input_device[0]->rel[port] / 3;
+        input_device[0]->rel[0] -= rel;
 
         if (rel < 0) {
             b |= CV_INPUT_SM;
