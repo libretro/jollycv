@@ -405,8 +405,8 @@ void jg_rehash(void) {
     jcv_vdp_set_palette(settings_jcv[PALETTE].val);
 }
 
-void jg_input_audio(int port, const int16_t *buf, size_t numsamps) {
-    if (port || buf || numsamps) { }
+void jg_data_push(uint32_t type, int port, const void *ptr, size_t size) {
+    if (type || port || ptr || size) { }
 }
 
 jg_coreinfo_t* jg_get_coreinfo(const char *sys) {
