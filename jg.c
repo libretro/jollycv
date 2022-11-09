@@ -87,6 +87,12 @@ static jg_inputstate_t *input_device[NUMINPUTS];
 
 // Emulator settings
 static jg_setting_t settings_jcv[] = {
+    { "input", "Input Devices",
+      "0 = Auto, 1 = ColecoVision Paddle, 2 = Super Action Controller, "
+      "3 = Roller Controller, 4 = Steering Wheel",
+      "Select the devices plugged into the control ports",
+      0, 0, 3, JG_SETTING_INPUT
+    },
     { "mask_overscan", "Mask Overscan",
       "0 = Show Overscan, 1 = Mask Overscan",
       "Show or Mask Overscan regions bordering the rendered gameplay area",
@@ -110,6 +116,7 @@ static jg_setting_t settings_jcv[] = {
 };
 
 enum {
+    INPUT,
     MASKOVERSCAN,
     PALETTE,
     RSQUAL,
@@ -131,10 +138,6 @@ static const char *gamedb_roller[] = { // Roller Controller
     "200aa603996bfd2734e353098ebe8dd5", // Victory (USA)
 };
 
-/*static const char *gamedb_sketchpad[] = { // Only one game seems to use this
-    "a46d20d65533ed979933fc1cfe6c0ad7", // Super Sketch - Sketch Master (USA)
-};*/
-
 static const char *gamedb_sac[] = { // Super Action Controller
     "4520ee5d8d0fcf151a3332966f7ebda0", // Front Line (USA, Europe)
     "d145de191e3f694c7f0920787ccbda48",
@@ -149,6 +152,10 @@ static const char *gamedb_sac[] = { // Super Action Controller
     "8aabed060476fde3cc706c6463f02980", // Super Action Football (Europe)
     "bee90a110d14b29d2e64f0ff0f303bc6", // Super Action Football (USA)
 };
+
+/*static const char *gamedb_sketchpad[] = { // Only one game seems to use this
+    "a46d20d65533ed979933fc1cfe6c0ad7", // Super Sketch - Sketch Master (USA)
+};*/
 
 static const char *gamedb_wheel[] = { // Steering Wheel
     "ec72a0e3bebe07ba631a8dcb750c1591", // Destructor (USA, Europe)
@@ -262,6 +269,60 @@ static uint16_t jcv_input_poll_wheel(int port) {
     return b;
 }
 
+static void jcv_input_setup(void) {
+    int itype = settings_jcv[INPUT].val;
+
+    if (!itype) {
+        for (size_t i = 0; i < (sizeof(gamedb_sac) / sizeof(char*)); ++i) {
+            if (!strcmp(gamedb_sac[i], gameinfo.md5)) {
+                itype = 2;
+                break;
+            }
+        }
+
+        // Check game databases and set up input devices
+        for (size_t i = 0; i < (sizeof(gamedb_roller) / sizeof(char*)); ++i) {
+            if (!strcmp(gamedb_roller[i], gameinfo.md5)) {
+                itype = 3;
+                break;
+            }
+        }
+
+        for (size_t i = 0; i < (sizeof(gamedb_wheel) / sizeof(char*)); ++i) {
+            if (!strcmp(gamedb_wheel[i], gameinfo.md5)) {
+                itype = 4;
+            }
+        }
+    }
+
+    switch (itype) {
+        default: case 0: case 1: {
+            inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_PAD);
+            inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_PAD);
+            jcv_input_set_callback(&jcv_input_poll);
+            break;
+        }
+        case 2: {
+            inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_SAC);
+            inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_SAC);
+            jcv_input_set_callback(&jcv_input_poll_sac);
+            break;
+        }
+        case 3: {
+            inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_ROLLER);
+            inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_ROLLER);
+            jcv_input_set_callback(&jcv_input_poll_roller);
+            break;
+        }
+        case 4: {
+            inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_WHEEL);
+            inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_UNCONNECTED);
+            jcv_input_set_callback(&jcv_input_poll_wheel);
+            break;
+        }
+    }
+}
+
 void jg_set_cb_audio(jg_cb_audio_t func) {
     jg_cb_audio = func;
 }
@@ -327,39 +388,7 @@ int jg_game_load(void) {
         jg_cb_frametime(FRAMERATE);
     }
 
-    // Check game databases and set up input devices
-    for (size_t i = 0; i < (sizeof(gamedb_roller) / sizeof(const char*)); ++i) {
-        if (!strcmp(gamedb_roller[i], gameinfo.md5)) {
-            inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_ROLLER);
-            inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_ROLLER);
-
-            jcv_input_set_callback(&jcv_input_poll_roller);
-            return 1;
-        }
-    }
-
-    for (size_t i = 0; i < (sizeof(gamedb_sac) / sizeof(const char*)); ++i) {
-        if (!strcmp(gamedb_sac[i], gameinfo.md5)) {
-            inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_SAC);
-            inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_SAC);
-
-            jcv_input_set_callback(&jcv_input_poll_sac);
-            return 1;
-        }
-    }
-
-    for (size_t i = 0; i < (sizeof(gamedb_wheel) / sizeof(const char*)); ++i) {
-        if (!strcmp(gamedb_wheel[i], gameinfo.md5)) {
-            inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_WHEEL);
-
-            jcv_input_set_callback(&jcv_input_poll_wheel);
-            return 1;
-        }
-    }
-
-    // If there are no special input devices, use defaults
-    inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_PAD);
-    inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_PAD);
+    jcv_input_setup();
 
     return 1;
 }
@@ -403,6 +432,7 @@ void jg_cheat_set(const char *code) {
 
 void jg_rehash(void) {
     jcv_vdp_set_palette(settings_jcv[PALETTE].val);
+    jcv_input_setup();
 }
 
 void jg_data_push(uint32_t type, int port, const void *ptr, size_t size) {
