@@ -123,6 +123,53 @@ enum {
     REGION,
 };
 
+typedef struct _dbentry_t {
+    const char *md5; int type;
+} dbentry_t;
+
+static dbentry_t gamedb[] = {
+    // Super Action Controller
+    // Front Line (USA, Europe)
+        { "4520ee5d8d0fcf151a3332966f7ebda0", JG_COLECO_SAC },
+    // Front Line (USA, Europe) (Green Version)
+        { "d145de191e3f694c7f0920787ccbda48", JG_COLECO_SAC },
+    // Rocky - Super Action Boxing (USA, Europe)
+        { "d35fdb81f4a733925b0a33dfb53d9d78", JG_COLECO_SAC },
+    // Spy Hunter (USA)
+        { "f96a21f920e889d1e21abbf00f4d381d", JG_COLECO_SAC },
+    // Spy Hunter (USA) (Beta)
+        { "7da9f2fda17e1e34a41b180d1ceb0c37", JG_COLECO_SAC },
+    // Star Trek - Strategic Operations Simulator (USA)
+        { "45006eaf52ee16ddcadd1dca68b265c8", JG_COLECO_SAC },
+    // Super Action Baseball (USA)
+        { "4c4b25a93301e59b86decb0df7a0ee51", JG_COLECO_SAC },
+    // Super Action Football (Europe)
+        { "8aabed060476fde3cc706c6463f02980", JG_COLECO_SAC },
+    // Super Action Football (USA)
+        { "bee90a110d14b29d2e64f0ff0f303bc6", JG_COLECO_SAC },
+
+    // Roller Controller
+    // Slither (USA, Europe)
+        { "7cdc148dff40389fa1ad012d4734ceed", JG_COLECO_ROLLER },
+    // Victory (Europe)
+        { "a31facd8adc1134942d9f4102dd3fa9f", JG_COLECO_ROLLER },
+    // Victory (USA)
+        { "200aa603996bfd2734e353098ebe8dd5", JG_COLECO_ROLLER },
+
+    // Steering Wheel
+    // Destructor (USA, Europe)
+        { "ec72a0e3bebe07ba631a8dcb750c1591", JG_COLECO_WHEEL },
+    // Dukes of Hazzard, The (USA)
+        { "dbd4f21702be17775e84b2fb6c534c94", JG_COLECO_WHEEL },
+    // Turbo (USA, Europe)
+        { "6f146d9bd3f64bbc006a761f59e2a1cf", JG_COLECO_WHEEL },
+
+    // Super Sketch
+    // Super Sketch - Sketch Master (USA)
+    //    { "a46d20d65533ed979933fc1cfe6c0ad7", JG_COLECO_SKETCH },
+    
+};
+
 // There may be more PAL-only releases, but many dumps marked as "Europe" are
 // actually worldwide releases - for now, don't use this list for anything
 /*static const char *gamedb_pal[] = { // PAL games
@@ -131,37 +178,6 @@ enum {
     "8aabed060476fde3cc706c6463f02980", // Super Action Football (Europe)
     "a31facd8adc1134942d9f4102dd3fa9f", // Victory (Europe)
 };*/
-
-static const char *gamedb_roller[] = { // Roller Controller
-    "7cdc148dff40389fa1ad012d4734ceed", // Slither (USA, Europe)
-    "a31facd8adc1134942d9f4102dd3fa9f", // Victory (Europe)
-    "200aa603996bfd2734e353098ebe8dd5", // Victory (USA)
-};
-
-static const char *gamedb_sac[] = { // Super Action Controller
-    "4520ee5d8d0fcf151a3332966f7ebda0", // Front Line (USA, Europe)
-    "d145de191e3f694c7f0920787ccbda48",
-        // Front Line (USA, Europe) (Green Version)
-    "d35fdb81f4a733925b0a33dfb53d9d78",
-        // Rocky - Super Action Boxing (USA, Europe)
-    "f96a21f920e889d1e21abbf00f4d381d", // Spy Hunter (USA)
-    "7da9f2fda17e1e34a41b180d1ceb0c37", // Spy Hunter (USA) (Beta)
-    "45006eaf52ee16ddcadd1dca68b265c8",
-        // Star Trek - Strategic Operations Simulator (USA)
-    "4c4b25a93301e59b86decb0df7a0ee51", // Super Action Baseball (USA)
-    "8aabed060476fde3cc706c6463f02980", // Super Action Football (Europe)
-    "bee90a110d14b29d2e64f0ff0f303bc6", // Super Action Football (USA)
-};
-
-/*static const char *gamedb_sketchpad[] = { // Only one game seems to use this
-    "a46d20d65533ed979933fc1cfe6c0ad7", // Super Sketch - Sketch Master (USA)
-};*/
-
-static const char *gamedb_wheel[] = { // Steering Wheel
-    "ec72a0e3bebe07ba631a8dcb750c1591", // Destructor (USA, Europe)
-    "dbd4f21702be17775e84b2fb6c534c94", // Dukes of Hazzard, The (USA)
-    "6f146d9bd3f64bbc006a761f59e2a1cf", // Turbo (USA, Europe)
-};
 
 // ColecoVision Paddle
 static uint16_t cv_input_map[] = {
@@ -271,50 +287,43 @@ static uint16_t jcv_input_poll_wheel(int port) {
 
 static void jcv_input_setup(void) {
     int itype = settings_jcv[INPUT].val;
+    int imap[] = {
+        JG_COLECO_PAD, JG_COLECO_PAD, JG_COLECO_SAC,
+        JG_COLECO_ROLLER, JG_COLECO_WHEEL
+    };
 
     if (!itype) {
-        for (size_t i = 0; i < (sizeof(gamedb_sac) / sizeof(char*)); ++i) {
-            if (!strcmp(gamedb_sac[i], gameinfo.md5)) {
-                itype = 2;
+        for (size_t i = 0; i < (sizeof(gamedb) / sizeof(dbentry_t)); ++i) {
+            if (!strcmp(gamedb[i].md5, gameinfo.md5)) {
+                itype = gamedb[i].type;
                 break;
-            }
-        }
-
-        // Check game databases and set up input devices
-        for (size_t i = 0; i < (sizeof(gamedb_roller) / sizeof(char*)); ++i) {
-            if (!strcmp(gamedb_roller[i], gameinfo.md5)) {
-                itype = 3;
-                break;
-            }
-        }
-
-        for (size_t i = 0; i < (sizeof(gamedb_wheel) / sizeof(char*)); ++i) {
-            if (!strcmp(gamedb_wheel[i], gameinfo.md5)) {
-                itype = 4;
             }
         }
     }
+    else {
+        itype = imap[itype];
+    }
 
     switch (itype) {
-        default: case 0: case 1: {
+        default: case 0: case JG_COLECO_PAD: {
             inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_PAD);
             inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_PAD);
             jcv_input_set_callback(&jcv_input_poll);
             break;
         }
-        case 2: {
+        case JG_COLECO_SAC: {
             inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_SAC);
             inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_SAC);
             jcv_input_set_callback(&jcv_input_poll_sac);
             break;
         }
-        case 3: {
+        case JG_COLECO_ROLLER: {
             inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_ROLLER);
             inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_ROLLER);
             jcv_input_set_callback(&jcv_input_poll_roller);
             break;
         }
-        case 4: {
+        case JG_COLECO_WHEEL: {
             inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_WHEEL);
             inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_UNCONNECTED);
             jcv_input_set_callback(&jcv_input_poll_wheel);
