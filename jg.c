@@ -88,9 +88,9 @@ static jg_inputstate_t *input_device[NUMINPUTS];
 // Emulator settings
 static jg_setting_t settings_jcv[] = {
     { "input", "Input Devices",
-      "0 = Auto, 1 = ColecoVision Paddle, 2 = Super Action Controller, "
-      "3 = Roller Controller, 4 = Steering Wheel",
-      "Select the devices plugged into the control ports",
+      "0 = Auto, 1 = ColecoVision Paddle, 2 = Roller Controller, "
+      "3 = Super Action Controller, 4 = Super Sketch, 5 = Steering Wheel",
+      "Select the desired input device(s)",
       0, 0, 3, JG_SETTING_INPUT
     },
     { "mask_overscan", "Mask Overscan",
@@ -165,9 +165,8 @@ static dbentry_t gamedb[] = {
         { "6f146d9bd3f64bbc006a761f59e2a1cf", JG_COLECO_WHEEL },
 
     // Super Sketch
-    // Super Sketch - Sketch Master (USA)
-    //    { "a46d20d65533ed979933fc1cfe6c0ad7", JG_COLECO_SKETCH },
-    
+    //Super Sketch - Sketch Master (USA)
+        { "a46d20d65533ed979933fc1cfe6c0ad7", JG_COLECO_SKETCH },
 };
 
 // There may be more PAL-only releases, but many dumps marked as "Europe" are
@@ -287,10 +286,6 @@ static uint16_t jcv_input_poll_wheel(int port) {
 
 static void jcv_input_setup(void) {
     int itype = settings_jcv[INPUT].val;
-    int imap[] = {
-        JG_COLECO_PAD, JG_COLECO_PAD, JG_COLECO_SAC,
-        JG_COLECO_ROLLER, JG_COLECO_WHEEL
-    };
 
     if (!itype) {
         for (size_t i = 0; i < (sizeof(gamedb) / sizeof(dbentry_t)); ++i) {
@@ -300,9 +295,6 @@ static void jcv_input_setup(void) {
             }
         }
     }
-    else {
-        itype = imap[itype];
-    }
 
     switch (itype) {
         default: case 0: case JG_COLECO_PAD: {
@@ -311,16 +303,23 @@ static void jcv_input_setup(void) {
             jcv_input_set_callback(&jcv_input_poll);
             break;
         }
+        case JG_COLECO_ROLLER: {
+            inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_ROLLER);
+            inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_ROLLER);
+            jcv_input_set_callback(&jcv_input_poll_roller);
+            break;
+        }
         case JG_COLECO_SAC: {
             inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_SAC);
             inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_SAC);
             jcv_input_set_callback(&jcv_input_poll_sac);
             break;
         }
-        case JG_COLECO_ROLLER: {
-            inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_ROLLER);
-            inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_ROLLER);
-            jcv_input_set_callback(&jcv_input_poll_roller);
+        case JG_COLECO_SKETCH: {
+            inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_UNCONNECTED);
+            inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_UNCONNECTED);
+            jcv_input_set_callback(&jcv_input_poll);
+            jg_cb_log(JG_LOG_WRN, "Super Sketch not supported\n");
             break;
         }
         case JG_COLECO_WHEEL: {
