@@ -1,7 +1,7 @@
 JollyCV
 -------
-JollyCV is an emulator for the ColecoVision, including support for the
-Super Game Module.
+JollyCV is a highly accurate emulator for the ColecoVision, including support
+for the Super Game Module.
 
 JollyCV was the first emulator written specifically for The Jolly Good API.
 It is designed to document the ColecoVision for educational purposes through
