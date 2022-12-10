@@ -194,6 +194,12 @@ static uint16_t jcv_input_poll(int port) {
     return b;
 }
 
+// Unconnected Port
+static uint16_t jcv_input_poll_null(int port) {
+    if (port) { }
+    return 0x8080;
+}
+
 // ColecoVision Roller Controller
 static uint16_t jcv_input_poll_roller(int port) {
     uint16_t b = 0x8080; // Always preset bit 7 for both segments
@@ -318,7 +324,7 @@ static void jcv_input_setup(void) {
         case JG_COLECO_SKETCH: {
             inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_UNCONNECTED);
             inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_UNCONNECTED);
-            jcv_input_set_callback(&jcv_input_poll);
+            jcv_input_set_callback(&jcv_input_poll_null);
             jg_cb_log(JG_LOG_WRN, "Super Sketch not supported\n");
             break;
         }
