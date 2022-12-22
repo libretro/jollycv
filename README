@@ -85,10 +85,9 @@ Porting
 JollyCV was written in standards compliant ISO C11 and should be extremely
 portable. Though it was written for The Jolly Good API, it was done in a
 manner that allows it to be used easily in multi-emulator frameworks or
-standalone binaries for many potential platforms. If a new fork is created
-with significant modifications, a clear indication that it is not officially
-supported should be made, either by changing the name of the project or
-by appending to it. Please be an honest person and respect the licenses that
+standalone binaries for many potential platforms. If a fork is created with
+significant modifications, it is requested that a clear indication of fork
+status is made. Please be an honest person and respect the licenses that
 apply to the software.
 
 Documentation
