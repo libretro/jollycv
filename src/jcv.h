@@ -36,7 +36,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define REGION_NTSC 0
 #define REGION_PAL 1
 
-#define VERSION "1.0.0"
+#define VERSION "1.0.1"
 
 void jcv_set_region(uint8_t);
 void jcv_init(void);
