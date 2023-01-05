@@ -59,16 +59,16 @@ static jg_coreinfo_t coreinfo = {
 };
 
 static jg_videoinfo_t vidinfo = {
-    JG_PIXFMT_XRGB8888,     // pixfmt
-    CV_VDP_WIDTH_OVERSCAN,  // wmax
-    CV_VDP_HEIGHT_OVERSCAN, // hmax
-    CV_VDP_WIDTH_OVERSCAN,  // w
-    CV_VDP_HEIGHT_OVERSCAN, // h
-    0,                      // x
-    0,                      // y
-    CV_VDP_WIDTH_OVERSCAN,  // p
-    272.0/208.0,            // aspect
-    NULL                    // buf
+    JG_PIXFMT_XRGB8888,         // pixfmt
+    CV_VDP_WIDTH_OVERSCAN,      // wmax
+    CV_VDP_HEIGHT_OVERSCAN,     // hmax
+    CV_VDP_WIDTH_OVERSCAN - 12, // w
+    CV_VDP_HEIGHT_OVERSCAN,     // h
+    6,                          // x
+    0,                          // y
+    CV_VDP_WIDTH_OVERSCAN,      // p
+    4.0/3.0,                    // aspect
+    NULL                        // buf
 };
 
 static jg_audioinfo_t audinfo = {
@@ -482,7 +482,6 @@ void jg_setup_video(void) {
         vidinfo.w = CV_VDP_WIDTH;
         vidinfo.h = CV_VDP_HEIGHT;
         vidinfo.x = vidinfo.y = CV_VDP_OVERSCAN;
-        vidinfo.aspect = 4.0/3.0;
     }
 }
 
