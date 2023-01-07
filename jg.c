@@ -96,7 +96,7 @@ static jg_setting_t settings_jcv[] = {
     { "mask_overscan", "Mask Overscan",
       "0 = Show Overscan, 1 = Mask Overscan",
       "Show or Mask Overscan regions bordering the rendered gameplay area",
-      0, 0, 1, 1
+      0, 0, 1, JG_SETTING_RESTART
     },
     { "palette", "Colour Palette",
       "0 = TeaTime, 1 = SYoung",
@@ -106,12 +106,12 @@ static jg_setting_t settings_jcv[] = {
     { "rsqual", "Resampler Quality",
       "N = Resampler Quality",
       "Quality level for the internal resampler",
-      3, 0, 10, 1
+      3, 0, 10, JG_SETTING_RESTART
     },
     { "region", "Region",
       "0 = NTSC, 1 = PAL",
       "Select the region",
-      REGION_NTSC, REGION_NTSC, REGION_PAL, 1
+      REGION_NTSC, REGION_NTSC, REGION_PAL, JG_SETTING_RESTART
     }
 };
 
