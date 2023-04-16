@@ -1,6 +1,7 @@
 SOURCEDIR := $(abspath $(patsubst %/,%,$(dir $(abspath $(lastword \
 	$(MAKEFILE_LIST))))))
 
+AR ?= ar
 CC ?= cc
 CFLAGS ?= -O2
 FLAGS := -std=c11 -Wall -Wextra -Wshadow -Wmissing-prototypes -pedantic
@@ -11,8 +12,6 @@ PKG_CONFIG ?= pkg-config
 CFLAGS_JG := $(shell $(PKG_CONFIG) --cflags jg)
 
 INCLUDES := -I$(SRCDIR) -I$(SRCDIR)/z80
-PIC := -fPIC
-SHARED := $(PIC)
 
 NAME := jollycv
 PREFIX ?= /usr/local
@@ -20,18 +19,28 @@ LIBDIR ?= $(PREFIX)/lib
 DATAROOTDIR ?= $(PREFIX)/share
 DOCDIR ?= $(DATAROOTDIR)/doc/$(NAME)
 
+BUILD_STATIC ?= 0
 USE_VENDORED_SPEEXDSP ?= 0
 
-UNAME := $(shell uname -s)
-ifeq ($(UNAME), Darwin)
-	SHARED += -dynamiclib
-	TARGET := $(NAME).dylib
-else ifeq ($(OS), Windows_NT)
-	SHARED += -shared
-	TARGET := $(NAME).dll
+ifneq ($(BUILD_STATIC), 0)
+	LINK = $(strip $(AR) rcs $@ $^ $(LIBS))
+	PIC :=
+	TARGET := lib$(NAME).a
 else
-	SHARED += -shared
-	TARGET := $(NAME).so
+	LINK = $(strip $(CC) $^ $(LDFLAGS) $(LIBS) $(SHARED) -o $@)
+	PIC := -fPIC
+	SHARED := $(PIC)
+	UNAME := $(shell uname -s)
+	ifeq ($(UNAME), Darwin)
+		SHARED += -dynamiclib
+		TARGET := $(NAME).dylib
+	else ifeq ($(OS), Windows_NT)
+		SHARED += -shared
+		TARGET := $(NAME).dll
+	else
+		SHARED += -shared
+		TARGET := $(NAME).so
+	endif
 endif
 
 CSRCS := z80/z80.c \
@@ -101,7 +110,7 @@ $(OBJDIR)/.tag:
 
 $(NAME)/$(TARGET): $(OBJS)
 	@mkdir -p $(NAME)
-	$(CC) $^ $(LDFLAGS) $(LIBS) $(SHARED) -o $@
+	$(LINK)
 
 clean:
 	rm -rf $(OBJDIR) $(NAME)

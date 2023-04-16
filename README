@@ -18,6 +18,7 @@ Make sure you have The Jolly Good API's header files installed. If you did
 not install them, you will be required to include their path in CFLAGS.
 
 Options:
+  BUILD_STATIC - Set to a non-zero value to build a static archive.
   USE_VENDORED_SPEEXDSP - Set to a non-zero value to use vendored SpeexDSP.
 
 Linux:
