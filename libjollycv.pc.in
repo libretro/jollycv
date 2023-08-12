@@ -1,0 +1,9 @@
+prefix=@PREFIX@
+exec_prefix=@EXEC_PREFIX@
+libdir=@LIBDIR@
+
+Name: libjollycv
+Description: JollyCV is a highly accurate emulator for the ColecoVision, including support for the Super Game Module.
+Version: 1.0.1
+URL: https://gitlab.com/jgemu/jollycv
+Libs: -L${libdir}/jollygood -ljollycv

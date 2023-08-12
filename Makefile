@@ -1,6 +1,12 @@
 SOURCEDIR := $(abspath $(patsubst %/,%,$(dir $(abspath $(lastword \
 	$(MAKEFILE_LIST))))))
 
+# https://semver.org/
+VERSION_MAJOR := 1
+VERSION_MINOR := 0
+VERSION_PATCH := 1
+VERSION := $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)
+
 AR ?= ar
 CC ?= cc
 CFLAGS ?= -O2
@@ -12,36 +18,52 @@ PKG_CONFIG ?= pkg-config
 CFLAGS_JG := $(shell $(PKG_CONFIG) --cflags jg)
 
 INCLUDES := -I$(SRCDIR) -I$(SRCDIR)/z80
+PIC := -fPIC
+SHARED := $(PIC)
 
 NAME := jollycv
 PREFIX ?= /usr/local
-LIBDIR ?= $(PREFIX)/lib
+EXEC_PREFIX ?= $(PREFIX)
+LIBDIR ?= $(EXEC_PREFIX)/lib
 DATAROOTDIR ?= $(PREFIX)/share
 DOCDIR ?= $(DATAROOTDIR)/doc/$(NAME)
 
-BUILD_STATIC ?= 0
+LIBPATH := $(LIBDIR)/jollygood
+PKGCONFLIBDIR := $(shell $(SOURCEDIR)/pkgconf.sh "$(EXEC_PREFIX)" "$(LIBDIR)")
+
+ifeq ($(PREFIX), $(EXEC_PREFIX))
+	PKGCONFEXECDIR := $${prefix}
+else
+	PKGCONFEXECDIR := $(EXEC_PREFIX)
+endif
+
+DISABLE_MODULE ?= 0
+ENABLE_SHARED ?= 0
+ENABLE_STATIC ?= 0
+ENABLE_STATIC_JG ?= 0
 USE_VENDORED_SPEEXDSP ?= 0
 
-ifneq ($(BUILD_STATIC), 0)
-	LINK = $(strip $(AR) rcs $@ $^ $(LIBS))
-	PIC :=
-	TARGET := lib$(NAME).a
+UNAME := $(shell uname -s)
+ifeq ($(UNAME), Darwin)
+	LIBRARY := $(NAME).dylib
+	SHARED += -dynamiclib
+else ifeq ($(OS), Windows_NT)
+	LIBRARY := $(NAME).dll
+	SHARED += -shared
 else
-	LINK = $(strip $(CC) $^ $(LDFLAGS) $(LIBS) $(SHARED) -o $@)
-	PIC := -fPIC
-	SHARED := $(PIC)
-	UNAME := $(shell uname -s)
-	ifeq ($(UNAME), Darwin)
-		SHARED += -dynamiclib
-		TARGET := $(NAME).dylib
-	else ifeq ($(OS), Windows_NT)
-		SHARED += -shared
-		TARGET := $(NAME).dll
-	else
-		SHARED += -shared
-		TARGET := $(NAME).so
-	endif
+	LIBRARY := $(NAME).so
+	SHARED += -shared
 endif
+
+LIB_PC := lib$(NAME).pc
+LIB_SHARED := lib$(LIBRARY)
+LIB_STATIC := lib$(NAME).a
+LIB_STATIC_JG := lib$(NAME)-jg.a
+LIB_MAJOR := $(LIB_SHARED).$(VERSION_MAJOR)
+LIB_VERSION := $(LIB_SHARED).$(VERSION)
+
+REQUIRES_PRIVATE := Requires.private:
+SONAME := -Wl,-soname,$(LIB_MAJOR)
 
 CSRCS := z80/z80.c \
 	jcv.c \
@@ -51,14 +73,16 @@ CSRCS := z80/z80.c \
 	jcv_serial.c \
 	jcv_sgmpsg.c \
 	jcv_vdp.c \
-	jcv_z80.c \
-	jg.c
+	jcv_z80.c
+
+JGSRCS := jg.c
 
 ifneq ($(USE_VENDORED_SPEEXDSP), 0)
 	CFLAGS_SPEEXDSP := -I$(DEPDIR)
 	LIBS_SPEEXDSP :=
 	CSRCS += speex/resample.c
 else
+	REQUIRES_PRIVATE += speexdsp
 	CFLAGS_SPEEXDSP := $(shell $(PKG_CONFIG) --cflags speexdsp)
 	LIBS_SPEEXDSP := $(shell $(PKG_CONFIG) --libs speexdsp)
 endif
@@ -73,21 +97,58 @@ OBJDIR := objs
 
 # List of object files
 OBJS := $(patsubst %,$(OBJDIR)/%,$(CSRCS:.c=.o))
+OBJS_JG := $(patsubst %,$(OBJDIR)/%,$(JGSRCS:.c=.o))
+OBJS_JG_STATIC := $(patsubst %,$(OBJDIR)/%,$(JGSRCS:.c=-static.o))
+
+# Library targets
+TARGET :=
+TARGET_MODULE := $(NAME)/$(LIBRARY)
+TARGET_SHARED := $(OBJDIR)/$(LIB_VERSION)
+TARGET_STATIC := $(OBJDIR)/$(LIB_STATIC)
+TARGET_STATIC_JG := $(NAME)/$(LIB_STATIC_JG)
+
+ifeq ($(DISABLE_MODULE), 0)
+	TARGET += $(TARGET_MODULE)
+endif
+
+ifneq ($(ENABLE_SHARED), 0)
+	TARGET += $(OBJDIR)/$(LIB_MAJOR) $(OBJDIR)/$(LIB_SHARED)
+endif
+
+ifneq ($(ENABLE_STATIC), 0)
+	TARGET += $(TARGET_STATIC)
+	OBJS_SHARED := $(TARGET_STATIC)
+else
+	OBJS_SHARED := $(OBJS)
+endif
+
+ifneq ($(ENABLE_STATIC_JG), 0)
+	TARGET += $(TARGET_STATIC_JG)
+endif
+
+ifneq ($(ENABLE_SHARED), 0)
+	ENABLE_PKGCONF := 1
+else ifneq ($(ENABLE_STATIC), 0)
+	ENABLE_PKGCONF := 1
+else
+	ENABLE_PKGCONF := 0
+endif
 
 # Compiler command
-COMPILE = $(strip $(1) $(CPPFLAGS) $(PIC) $(2) -c $< -o $@)
+COMPILE = $(strip $(1) $(CPPFLAGS) $(2) -c $< -o $@)
 COMPILE_C = $(call COMPILE, $(CC) $(CFLAGS), $(1))
 
 # Info command
 COMPILE_INFO = $(info $(subst $(SOURCEDIR)/,,$(1)))
 
 # Core commands
-BUILD_JG = $(call COMPILE_C, $(FLAGS) $(INCLUDES) $(CFLAGS_JG))
+BUILD_JG = $(call COMPILE_C, $(FLAGS) $(INCLUDES) $(CFLAGS_JG) $(PIC))
+BUILD_JG_STATIC = $(call COMPILE_C, $(FLAGS) $(INCLUDES) $(CFLAGS_JG))
 BUILD_MAIN = $(call COMPILE_C, $(FLAGS) $(INCLUDES))
 
 .PHONY: all clean install install-strip uninstall
 
-all: $(NAME)/$(TARGET)
+all: $(TARGET)
 
 # Rules
 $(OBJDIR)/%.o: $(DEPDIR)/%.c $(OBJDIR)/.tag
@@ -102,21 +163,57 @@ $(OBJDIR)/%.o: $(SOURCEDIR)/%.c $(OBJDIR)/.tag
 	$(call COMPILE_INFO, $(BUILD_JG))
 	@$(BUILD_JG)
 
+$(OBJDIR)/%-static.o: $(SOURCEDIR)/%.c $(OBJDIR)/.tag
+	$(call COMPILE_INFO, $(BUILD_JG_STATIC))
+	@$(BUILD_JG_STATIC)
+
 $(OBJDIR)/.tag:
 	@mkdir -p -- $(patsubst %,$(OBJDIR)/%,$(MKDIRS))
 	@touch $@
 
-$(NAME)/$(TARGET): $(OBJS)
+$(TARGET_MODULE): $(OBJS_JG) $(OBJS_SHARED)
 	@mkdir -p $(NAME)
-	$(LINK)
+	$(strip $(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(SHARED))
+
+$(TARGET_SHARED): $(OBJS_SHARED)
+	$(strip $(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(SHARED) $(SONAME))
+
+$(TARGET_STATIC): $(OBJS)
+	$(strip $(AR) rcs $@ $^)
+
+$(TARGET_STATIC_JG): $(OBJS_JG_STATIC) $(OBJS_SHARED)
+	@mkdir -p $(NAME)
+	$(strip $(AR) rcs $@ $^)
+
+$(OBJDIR)/$(LIB_MAJOR) $(OBJDIR)/$(LIB_SHARED): $(TARGET_SHARED)
+	ln -s $(LIB_VERSION) $@
 
 clean:
 	rm -rf $(OBJDIR) $(NAME)
 
 install: all
 	@mkdir -p $(DESTDIR)$(DOCDIR)
-	@mkdir -p $(DESTDIR)$(LIBDIR)/jollygood
-	cp $(NAME)/$(TARGET) $(DESTDIR)$(LIBDIR)/jollygood/
+	@mkdir -p $(DESTDIR)$(LIBPATH)
+ifneq ($(ENABLE_PKGCONF), 0)
+	@mkdir -p $(DESTDIR)$(LIBDIR)/pkgconfig
+endif
+ifeq ($(DISABLE_MODULE), 0)
+	cp $(TARGET_MODULE) $(DESTDIR)$(LIBPATH)/
+endif
+ifneq ($(ENABLE_SHARED), 0)
+	cp $(TARGET_SHARED) $(DESTDIR)$(LIBPATH)/
+	ln -sf $(LIB_VERSION) $(DESTDIR)$(LIBPATH)/$(LIB_MAJOR)
+	ln -sf $(LIB_VERSION) $(DESTDIR)$(LIBPATH)/$(LIB_SHARED)
+endif
+ifneq ($(ENABLE_STATIC), 0)
+	cp $(TARGET_STATIC) $(DESTDIR)$(LIBPATH)/
+endif
+ifneq ($(ENABLE_PKGCONF), 0)
+	sed -e 's|@PREFIX@|$(PREFIX)|' -e 's|@EXEC_PREFIX@|$(PKGCONFEXECDIR)|' \
+		-e 's|@LIBDIR@|$(PKGCONFLIBDIR)|' -e '/URL:/a\' \
+		-e '$(REQUIRES_PRIVATE)' $(SOURCEDIR)/$(LIB_PC).in \
+		> $(DESTDIR)$(LIBDIR)/pkgconfig/$(LIB_PC)
+endif
 	cp $(SRCDIR)/z80/LICENSE $(DESTDIR)$(DOCDIR)/LICENSE-z80
 	cp $(SOURCEDIR)/LICENSE $(DESTDIR)$(DOCDIR)
 	cp $(SOURCEDIR)/README $(DESTDIR)$(DOCDIR)
@@ -125,8 +222,18 @@ ifneq ($(USE_VENDORED_SPEEXDSP), 0)
 endif
 
 install-strip: install
-	strip $(DESTDIR)$(LIBDIR)/jollygood/$(TARGET)
+ifeq ($(DISABLE_MODULE), 0)
+	strip $(DESTDIR)$(LIBPATH)/$(LIBRARY)
+endif
+ifneq ($(ENABLE_SHARED), 0)
+	strip $(DESTDIR)$(LIBPATH)/$(LIB_VERSION)
+endif
 
 uninstall:
 	rm -rf $(DESTDIR)$(DOCDIR)
-	rm -f $(DESTDIR)$(LIBDIR)/jollygood/$(TARGET)
+	rm -f $(DESTDIR)$(LIBPATH)/$(LIBRARY)
+	rm -f $(DESTDIR)$(LIBPATH)/$(LIB_STATIC)
+	rm -f $(DESTDIR)$(LIBPATH)/$(LIB_SHARED)
+	rm -f $(DESTDIR)$(LIBPATH)/$(LIB_MAJOR)
+	rm -f $(DESTDIR)$(LIBPATH)/$(LIB_VERSION)
+	rm -f $(DESTDIR)$(LIBDIR)/pkgconfig/$(LIB_PC)
