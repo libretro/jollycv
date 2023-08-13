@@ -118,6 +118,9 @@ endif
 
 ifneq ($(ENABLE_SHARED), 0)
 	TARGET += $(OBJDIR)/$(LIB_MAJOR) $(OBJDIR)/$(LIB_SHARED)
+	LIBS_MODULE := -L$(OBJDIR) -ljollycv
+else
+	LIBS_MODULE :=
 endif
 
 ifneq ($(ENABLE_STATIC), 0)
@@ -132,10 +135,13 @@ ifneq ($(ENABLE_STATIC_JG), 0)
 endif
 
 ifneq ($(ENABLE_SHARED), 0)
+	OBJS_MODULE := $(OBJDIR)/$(LIB_MAJOR)
 	ENABLE_PKGCONF := 1
 else ifneq ($(ENABLE_STATIC), 0)
+	OBJS_MODULE := $(OBJS_SHARED)
 	ENABLE_PKGCONF := 1
 else
+	OBJS_MODULE := $(OBJS)
 	ENABLE_PKGCONF := 0
 endif
 
@@ -176,9 +182,9 @@ $(OBJDIR)/.tag:
 	@mkdir -p -- $(patsubst %,$(OBJDIR)/%,$(MKDIRS))
 	@touch $@
 
-$(TARGET_MODULE): $(OBJS_JG) $(OBJS_SHARED)
+$(TARGET_MODULE): $(OBJS_JG) $(OBJS_MODULE)
 	@mkdir -p $(NAME)
-	$(strip $(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(SHARED))
+	$(strip $(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(LIBS_MODULE) $(SHARED))
 
 $(TARGET_SHARED): $(OBJS_SHARED)
 	$(strip $(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(SHARED) $(SONAME))
@@ -198,7 +204,11 @@ clean:
 
 install: all
 	@mkdir -p $(DESTDIR)$(DOCDIR)
+ifeq ($(DISABLE_MODULE), 0)
 	@mkdir -p $(DESTDIR)$(LIBPATH)
+else
+	@mkdir -p $(DESTDIR)$(LIBDIR)
+endif
 ifneq ($(ENABLE_PKGCONF), 0)
 	@mkdir -p $(DESTDIR)$(LIBDIR)/pkgconfig
 endif
@@ -206,12 +216,12 @@ ifeq ($(DISABLE_MODULE), 0)
 	cp $(TARGET_MODULE) $(DESTDIR)$(LIBPATH)/
 endif
 ifneq ($(ENABLE_SHARED), 0)
-	cp $(TARGET_SHARED) $(DESTDIR)$(LIBPATH)/
-	cp -P $(OBJDIR)/$(LIB_MAJOR) $(DESTDIR)$(LIBPATH)/
-	cp -P $(OBJDIR)/$(LIB_SHARED) $(DESTDIR)$(LIBPATH)/
+	cp $(TARGET_SHARED) $(DESTDIR)$(LIBDIR)/
+	cp -P $(OBJDIR)/$(LIB_MAJOR) $(DESTDIR)$(LIBDIR)/
+	cp -P $(OBJDIR)/$(LIB_SHARED) $(DESTDIR)$(LIBDIR)/
 endif
 ifneq ($(ENABLE_STATIC), 0)
-	cp $(TARGET_STATIC) $(DESTDIR)$(LIBPATH)/
+	cp $(TARGET_STATIC) $(DESTDIR)$(LIBDIR)/
 endif
 ifneq ($(ENABLE_PKGCONF), 0)
 	sed -e 's|@PREFIX@|$(PREFIX)|' -e 's|@EXEC_PREFIX@|$(PKGCONFEXECDIR)|' \
@@ -231,14 +241,14 @@ ifeq ($(DISABLE_MODULE), 0)
 	strip $(DESTDIR)$(LIBPATH)/$(LIBRARY)
 endif
 ifneq ($(ENABLE_SHARED), 0)
-	strip $(DESTDIR)$(LIBPATH)/$(LIB_VERSION)
+	strip $(DESTDIR)$(LIBDIR)/$(LIB_VERSION)
 endif
 
 uninstall:
 	rm -rf $(DESTDIR)$(DOCDIR)
 	rm -f $(DESTDIR)$(LIBPATH)/$(LIBRARY)
-	rm -f $(DESTDIR)$(LIBPATH)/$(LIB_STATIC)
-	rm -f $(DESTDIR)$(LIBPATH)/$(LIB_SHARED)
-	rm -f $(DESTDIR)$(LIBPATH)/$(LIB_MAJOR)
-	rm -f $(DESTDIR)$(LIBPATH)/$(LIB_VERSION)
+	rm -f $(DESTDIR)$(LIBDIR)/$(LIB_STATIC)
+	rm -f $(DESTDIR)$(LIBDIR)/$(LIB_SHARED)
+	rm -f $(DESTDIR)$(LIBDIR)/$(LIB_MAJOR)
+	rm -f $(DESTDIR)$(LIBDIR)/$(LIB_VERSION)
 	rm -f $(DESTDIR)$(LIBDIR)/pkgconfig/$(LIB_PC)
