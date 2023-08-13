@@ -46,24 +46,30 @@ USE_VENDORED_SPEEXDSP ?= 0
 UNAME := $(shell uname -s)
 ifeq ($(UNAME), Darwin)
 	LIBRARY := $(NAME).dylib
-	SHARED += -dynamiclib
 else ifeq ($(OS), Windows_NT)
 	LIBRARY := $(NAME).dll
-	SHARED += -shared
 else
 	LIBRARY := $(NAME).so
-	SHARED += -shared
 endif
 
 LIB_PC := lib$(NAME).pc
 LIB_SHARED := lib$(LIBRARY)
 LIB_STATIC := lib$(NAME).a
 LIB_STATIC_JG := lib$(NAME)-jg.a
-LIB_MAJOR := $(LIB_SHARED).$(VERSION_MAJOR)
-LIB_VERSION := $(LIB_SHARED).$(VERSION)
+
+ifeq ($(UNAME), Darwin)
+	LIB_MAJOR := lib$(NAME).$(VERSION_MAJOR).dylib
+	LIB_VERSION := lib$(NAME).$(VERSION).dylib
+	SHARED += -dynamiclib
+	SONAME := -Wl,-install_name,$(LIB_MAJOR)
+else
+	LIB_MAJOR := $(LIB_SHARED).$(VERSION_MAJOR)
+	LIB_VERSION := $(LIB_SHARED).$(VERSION)
+	SHARED += -shared
+	SONAME := -Wl,-soname,$(LIB_MAJOR)
+endif
 
 REQUIRES_PRIVATE := Requires.private:
-SONAME := -Wl,-soname,$(LIB_MAJOR)
 
 CSRCS := z80/z80.c \
 	jcv.c \
