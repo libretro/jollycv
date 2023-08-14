@@ -68,6 +68,10 @@ else
 	SONAME := -Wl,-soname,$(LIB_MAJOR)
 endif
 
+ifeq ($(UNAME), Linux)
+	UNDEFINED := -Wl,--no-undefined
+endif
+
 REQUIRES_PRIVATE := Requires.private:
 
 CSRCS := z80/z80.c \
@@ -184,10 +188,10 @@ $(OBJDIR)/.tag:
 
 $(TARGET_MODULE): $(OBJS_JG) $(OBJS_MODULE)
 	@mkdir -p $(NAME)
-	$(strip $(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(LIBS_MODULE) $(SHARED))
+	$(strip $(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(LIBS_MODULE) $(UNDEFINED) $(SHARED))
 
 $(TARGET_SHARED): $(OBJS)
-	$(strip $(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(SHARED) $(SONAME))
+	$(strip $(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(UNDEFINED) $(SHARED) $(SONAME))
 
 $(TARGET_STATIC): $(OBJS)
 	$(strip $(AR) rcs $@ $^)
