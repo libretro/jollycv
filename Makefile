@@ -186,7 +186,7 @@ $(TARGET_MODULE): $(OBJS_JG) $(OBJS_MODULE)
 	@mkdir -p $(NAME)
 	$(strip $(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(LIBS_MODULE) $(SHARED))
 
-$(TARGET_SHARED): $(OBJS_SHARED)
+$(TARGET_SHARED): $(OBJS)
 	$(strip $(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(SHARED) $(SONAME))
 
 $(TARGET_STATIC): $(OBJS)
