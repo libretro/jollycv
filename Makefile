@@ -131,7 +131,7 @@ else
 endif
 
 ifneq ($(ENABLE_STATIC_JG), 0)
-	TARGET += $(TARGET_STATIC_JG)
+	TARGET += $(NAME)/jg-static.mk
 endif
 
 ifneq ($(ENABLE_SHARED), 0)
@@ -195,6 +195,9 @@ $(TARGET_STATIC): $(OBJS)
 $(TARGET_STATIC_JG): $(OBJS_JG_STATIC) $(OBJS_SHARED)
 	@mkdir -p $(NAME)
 	$(strip $(AR) rcs $@ $^)
+
+$(NAME)/jg-static.mk: $(TARGET_STATIC_JG)
+	@printf '%s\n%s\n' 'NAME := $(NAME)' 'LIBS_STATIC := $(LIBS)' > $@
 
 $(OBJDIR)/$(LIB_MAJOR) $(OBJDIR)/$(LIB_SHARED): $(TARGET_SHARED)
 	ln -s $(LIB_VERSION) $@
