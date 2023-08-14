@@ -29,7 +29,7 @@ DATAROOTDIR ?= $(PREFIX)/share
 DOCDIR ?= $(DATAROOTDIR)/doc/$(NAME)
 
 LIBPATH := $(LIBDIR)/jollygood
-PKGCONFLIBDIR := $(shell $(SOURCEDIR)/pkgconf.sh "$(EXEC_PREFIX)" "$(LIBDIR)")
+PKGCONFLIBDIR := $(shell $(SOURCEDIR)/lib/pkgconf.sh "$(EXEC_PREFIX)" "$(LIBDIR)")
 
 ifeq ($(PREFIX), $(EXEC_PREFIX))
 	PKGCONFEXECDIR := $${prefix}
@@ -222,7 +222,7 @@ ifneq ($(ENABLE_PKGCONF), 0)
 	@mkdir -p $(DESTDIR)$(LIBDIR)/pkgconfig
 	sed -e 's|@PREFIX@|$(PREFIX)|' -e 's|@EXEC_PREFIX@|$(PKGCONFEXECDIR)|' \
 		-e 's|@LIBDIR@|$(PKGCONFLIBDIR)|' -e '/URL:/a\' \
-		-e '$(REQUIRES_PRIVATE)' $(SOURCEDIR)/$(LIB_PC).in \
+		-e '$(REQUIRES_PRIVATE)' $(SOURCEDIR)/lib/$(LIB_PC).in \
 		> $(DESTDIR)$(LIBDIR)/pkgconfig/$(LIB_PC)
 endif
 ifneq ($(ENABLE_SHARED), 0)
