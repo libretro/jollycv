@@ -59,17 +59,13 @@ LIB_STATIC := lib$(NAME).a
 ifeq ($(UNAME), Darwin)
 	LIB_MAJOR := lib$(NAME).$(VERSION_MAJOR).dylib
 	LIB_VERSION := lib$(NAME).$(VERSION).dylib
-	SHARED += -dynamiclib
+	SHARED += -dynamiclib -Wl,-undefined,error
 	SONAME := -Wl,-install_name,$(LIB_MAJOR)
 else
 	LIB_MAJOR := $(LIB_SHARED).$(VERSION_MAJOR)
 	LIB_VERSION := $(LIB_SHARED).$(VERSION)
-	SHARED += -shared
+	SHARED += -shared -Wl,--no-undefined
 	SONAME := -Wl,-soname,$(LIB_MAJOR)
-endif
-
-ifeq ($(UNAME), Linux)
-	UNDEFINED := -Wl,--no-undefined
 endif
 
 REQUIRES_PRIVATE := Requires.private:
@@ -107,7 +103,6 @@ OBJDIR := objs
 # List of object files
 OBJS := $(patsubst %,$(OBJDIR)/%,$(CSRCS:.c=.o))
 OBJS_JG := $(patsubst %,$(OBJDIR)/%,$(JGSRCS:.c=.o))
-OBJS_JG_STATIC := $(patsubst %,$(OBJDIR)/%,$(JGSRCS:.c=-static.o))
 
 # Library targets
 TARGET :=
@@ -150,15 +145,14 @@ else
 endif
 
 # Compiler command
-COMPILE = $(strip $(1) $(CPPFLAGS) $(2) -c $< -o $@)
+COMPILE = $(strip $(1) $(CPPFLAGS) $(PIC) $(2) -c $< -o $@)
 COMPILE_C = $(call COMPILE, $(CC) $(CFLAGS), $(1))
 
 # Info command
 COMPILE_INFO = $(info $(subst $(SOURCEDIR)/,,$(1)))
 
 # Core commands
-BUILD_JG = $(call COMPILE_C, $(FLAGS) $(INCLUDES) $(CFLAGS_JG) $(PIC))
-BUILD_JG_STATIC = $(call COMPILE_C, $(FLAGS) $(INCLUDES) $(CFLAGS_JG))
+BUILD_JG = $(call COMPILE_C, $(FLAGS) $(INCLUDES) $(CFLAGS_JG))
 BUILD_MAIN = $(call COMPILE_C, $(FLAGS) $(INCLUDES))
 
 .PHONY: all clean install install-strip uninstall
@@ -178,25 +172,21 @@ $(OBJDIR)/%.o: $(SOURCEDIR)/%.c $(OBJDIR)/.tag
 	$(call COMPILE_INFO, $(BUILD_JG))
 	@$(BUILD_JG)
 
-$(OBJDIR)/%-static.o: $(SOURCEDIR)/%.c $(OBJDIR)/.tag
-	$(call COMPILE_INFO, $(BUILD_JG_STATIC))
-	@$(BUILD_JG_STATIC)
-
 $(OBJDIR)/.tag:
 	@mkdir -p -- $(patsubst %,$(OBJDIR)/%,$(MKDIRS))
 	@touch $@
 
 $(TARGET_MODULE): $(OBJS_JG) $(OBJS_MODULE)
 	@mkdir -p $(NAME)
-	$(strip $(CC) -o $@ $< $(LDFLAGS) $(LIBS_MODULE) $(LIBS) $(UNDEFINED) $(SHARED))
+	$(strip $(CC) -o $@ $< $(LDFLAGS) $(LIBS_MODULE) $(LIBS) $(SHARED))
 
 $(TARGET_SHARED): $(OBJS)
-	$(strip $(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(UNDEFINED) $(SHARED) $(SONAME))
+	$(strip $(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(SHARED) $(SONAME))
 
 $(TARGET_STATIC): $(OBJS)
 	$(strip $(AR) rcs $@ $^)
 
-$(TARGET_STATIC_JG): $(OBJS_JG_STATIC) $(OBJS_SHARED)
+$(TARGET_STATIC_JG): $(OBJS_JG) $(OBJS_SHARED)
 	@mkdir -p $(NAME)
 	$(strip $(AR) rcs $@ $^)
 
