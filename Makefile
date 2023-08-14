@@ -205,7 +205,8 @@ $(TARGET_STATIC_JG): $(OBJS_JG_STATIC) $(OBJS_SHARED)
 	$(strip $(AR) rcs $@ $^)
 
 $(NAME)/jg-static.mk: $(TARGET_STATIC_JG)
-	@printf '%s\n%s\n' 'NAME := $(NAME)' 'LIBS_STATIC := $(LIBS)' > $@
+	@printf '%s\n%s\n%s\n' 'NAME := $(NAME)' 'ASSETS :=' \
+		'LIBS_STATIC := $(LIBS)' > $@
 
 $(OBJDIR)/$(LIB_MAJOR) $(OBJDIR)/$(LIB_SHARED): $(TARGET_SHARED)
 	ln -s $(LIB_VERSION) $@
