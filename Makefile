@@ -120,18 +120,18 @@ ifeq ($(DISABLE_MODULE), 0)
 	TARGET += $(TARGET_MODULE)
 endif
 
-ifneq ($(ENABLE_SHARED), 0)
-	TARGET += $(OBJDIR)/$(LIB_MAJOR) $(OBJDIR)/$(LIB_SHARED)
-	LIBS_MODULE := -L$(OBJDIR) -ljollycv
-else
-	LIBS_MODULE :=
-endif
-
 ifneq ($(ENABLE_STATIC), 0)
 	TARGET += $(TARGET_STATIC)
 	OBJS_SHARED := $(TARGET_STATIC)
 else
 	OBJS_SHARED := $(OBJS)
+endif
+
+ifneq ($(ENABLE_SHARED), 0)
+	TARGET += $(OBJDIR)/$(LIB_MAJOR) $(OBJDIR)/$(LIB_SHARED)
+	LIBS_MODULE := -L$(OBJDIR) -ljollycv
+else
+	LIBS_MODULE := $(OBJS_SHARED)
 endif
 
 ifneq ($(ENABLE_STATIC_JG), 0)
@@ -188,11 +188,7 @@ $(OBJDIR)/.tag:
 
 $(TARGET_MODULE): $(OBJS_JG) $(OBJS_MODULE)
 	@mkdir -p $(NAME)
-ifneq ($(ENABLE_SHARED), 0)
-	$(strip $(CC) -o $@ $< $(LDFLAGS) $(LIBS) $(LIBS_MODULE) $(UNDEFINED) $(SHARED))
-else
-	$(strip $(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(LIBS_MODULE) $(UNDEFINED) $(SHARED))
-endif
+	$(strip $(CC) -o $@ $< $(LDFLAGS) $(LIBS_MODULE) $(LIBS) $(UNDEFINED) $(SHARED))
 
 $(TARGET_SHARED): $(OBJS)
 	$(strip $(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(UNDEFINED) $(SHARED) $(SONAME))
