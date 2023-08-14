@@ -218,14 +218,16 @@ install: all
 	@mkdir -p $(DESTDIR)$(DOCDIR)
 ifeq ($(DISABLE_MODULE), 0)
 	@mkdir -p $(DESTDIR)$(LIBPATH)
-else
+	cp $(TARGET_MODULE) $(DESTDIR)$(LIBPATH)/
+else ifeq ($(ENABLE_PKGCONF), 0)
 	@mkdir -p $(DESTDIR)$(LIBDIR)
 endif
 ifneq ($(ENABLE_PKGCONF), 0)
 	@mkdir -p $(DESTDIR)$(LIBDIR)/pkgconfig
-endif
-ifeq ($(DISABLE_MODULE), 0)
-	cp $(TARGET_MODULE) $(DESTDIR)$(LIBPATH)/
+	sed -e 's|@PREFIX@|$(PREFIX)|' -e 's|@EXEC_PREFIX@|$(PKGCONFEXECDIR)|' \
+		-e 's|@LIBDIR@|$(PKGCONFLIBDIR)|' -e '/URL:/a\' \
+		-e '$(REQUIRES_PRIVATE)' $(SOURCEDIR)/$(LIB_PC).in \
+		> $(DESTDIR)$(LIBDIR)/pkgconfig/$(LIB_PC)
 endif
 ifneq ($(ENABLE_SHARED), 0)
 	cp $(TARGET_SHARED) $(DESTDIR)$(LIBDIR)/
@@ -234,12 +236,6 @@ ifneq ($(ENABLE_SHARED), 0)
 endif
 ifneq ($(ENABLE_STATIC), 0)
 	cp $(TARGET_STATIC) $(DESTDIR)$(LIBDIR)/
-endif
-ifneq ($(ENABLE_PKGCONF), 0)
-	sed -e 's|@PREFIX@|$(PREFIX)|' -e 's|@EXEC_PREFIX@|$(PKGCONFEXECDIR)|' \
-		-e 's|@LIBDIR@|$(PKGCONFLIBDIR)|' -e '/URL:/a\' \
-		-e '$(REQUIRES_PRIVATE)' $(SOURCEDIR)/$(LIB_PC).in \
-		> $(DESTDIR)$(LIBDIR)/pkgconfig/$(LIB_PC)
 endif
 	cp $(SRCDIR)/z80/LICENSE $(DESTDIR)$(DOCDIR)/LICENSE-z80
 	cp $(SOURCEDIR)/LICENSE $(DESTDIR)$(DOCDIR)
