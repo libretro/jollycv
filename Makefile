@@ -188,7 +188,11 @@ $(OBJDIR)/.tag:
 
 $(TARGET_MODULE): $(OBJS_JG) $(OBJS_MODULE)
 	@mkdir -p $(NAME)
+ifneq ($(ENABLE_SHARED), 0)
+	$(strip $(CC) -o $@ $< $(LDFLAGS) $(LIBS) $(LIBS_MODULE) $(UNDEFINED) $(SHARED))
+else
 	$(strip $(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(LIBS_MODULE) $(UNDEFINED) $(SHARED))
+endif
 
 $(TARGET_SHARED): $(OBJS)
 	$(strip $(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(UNDEFINED) $(SHARED) $(SONAME))
