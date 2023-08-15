@@ -184,11 +184,11 @@ $(TARGET_SHARED): $(OBJS)
 	$(strip $(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(SHARED) $(SONAME))
 
 $(TARGET_STATIC): $(OBJS)
-	$(strip $(AR) rcs $@ $^)
+	$(AR) rcs $@ $^
 
 $(TARGET_STATIC_JG): $(OBJS_JG) $(OBJS_SHARED)
 	@mkdir -p $(NAME)
-	$(strip $(AR) rcs $@ $^)
+	$(AR) rcs $@ $^
 
 $(NAME)/jg-static.mk: $(TARGET_STATIC_JG)
 	@printf '%s\n%s\n%s\n' 'NAME := $(NAME)' 'ASSETS :=' \
