@@ -144,6 +144,16 @@ else
 	ENABLE_PKGCONF := 0
 endif
 
+ifeq ($(DISABLE_MODULE), 0)
+	ENABLE_LIB := 1
+else ifneq ($(ENABLE_SHARED), 0)
+	ENABLE_LIB := 1
+else ifneq ($(ENABLE_STATIC), 0)
+	ENABLE_LIB := 1
+else
+	ENABLE_LIB := 0
+endif
+
 # Compiler command
 COMPILE = $(strip $(1) $(CPPFLAGS) $(PIC) $(2) -c $< -o $@)
 COMPILE_C = $(call COMPILE, $(CC) $(CFLAGS), $(1))
@@ -200,6 +210,7 @@ $(OBJDIR)/$(LIB_MAJOR) $(OBJDIR)/$(LIB_SHARED): $(TARGET_SHARED)
 clean:
 	rm -rf $(OBJDIR) $(NAME)
 
+ifneq ($(ENABLE_LIB), 0)
 install: all
 	@mkdir -p $(DESTDIR)$(DOCDIR)
 ifeq ($(DISABLE_MODULE), 0)
@@ -236,6 +247,12 @@ ifeq ($(DISABLE_MODULE), 0)
 endif
 ifneq ($(ENABLE_SHARED), 0)
 	strip $(DESTDIR)$(LIBDIR)/$(LIB_VERSION)
+endif
+else
+install: all
+	@echo 'Nothing to install'
+
+install-strip: install
 endif
 
 uninstall:
