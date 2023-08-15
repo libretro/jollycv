@@ -1,6 +1,9 @@
 SOURCEDIR := $(abspath $(patsubst %/,%,$(dir $(abspath $(lastword \
 	$(MAKEFILE_LIST))))))
 
+DESCRIPTION := JollyCV is a highly accurate emulator for the ColecoVision, \
+	including support for the Super Game Module.
+
 # https://semver.org/
 VERSION_MAJOR := 1
 VERSION_MINOR := 0
@@ -222,8 +225,10 @@ endif
 ifneq ($(ENABLE_PKGCONF), 0)
 	@mkdir -p $(DESTDIR)$(LIBDIR)/pkgconfig
 	sed -e 's|@PREFIX@|$(PREFIX)|' -e 's|@EXEC_PREFIX@|$(PKGCONFEXECDIR)|' \
-		-e 's|@LIBDIR@|$(PKGCONFLIBDIR)|' -e '/URL:/a\' \
-		-e '$(REQUIRES_PRIVATE)' $(SOURCEDIR)/lib/$(LIB_PC).in \
+		-e 's|@LIBDIR@|$(PKGCONFLIBDIR)|' -e 's|@VERSION@|$(VERSION)|' \
+		-e 's|@NAME@|$(NAME)|' -e 's|@DESCRIPTION@|$(DESCRIPTION)|' \
+		-e '/URL:/a\' -e '$(REQUIRES_PRIVATE)' \
+		$(SOURCEDIR)/lib/$(LIB_PC).in \
 		> $(DESTDIR)$(LIBDIR)/pkgconfig/$(LIB_PC)
 endif
 ifneq ($(ENABLE_SHARED), 0)
