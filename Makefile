@@ -98,6 +98,12 @@ endif
 INCLUDES += $(CFLAGS_SPEEXDSP)
 LIBS := $(LIBS_SPEEXDSP)
 
+# Icons
+ICONS := $(wildcard $(SOURCEDIR)/icons/*.png) $(SOURCEDIR)/icons/$(NAME).svg
+
+ICONS_BASE := $(notdir $(ICONS))
+ICONS_TARGET := $(ICONS_BASE:%=$(NAME)/icons/%)
+
 # Object dirs
 MKDIRS := speex z80
 
@@ -133,7 +139,7 @@ else
 endif
 
 ifneq ($(ENABLE_STATIC_JG), 0)
-	TARGET += $(NAME)/jg-static.mk
+	TARGET += $(ICONS_TARGET) $(NAME)/jg-static.mk
 endif
 
 ifneq ($(ENABLE_SHARED), 0)
@@ -203,9 +209,13 @@ $(TARGET_STATIC_JG): $(OBJS_JG) $(OBJS_SHARED)
 	@mkdir -p $(NAME)
 	$(AR) rcs $@ $^
 
+$(ICONS_TARGET): $(ICONS)
+	@mkdir -p $(NAME)/icons
+	@cp $(subst $(NAME)/icons,$(SOURCEDIR)/icons,$@) $(NAME)/icons/
+
 $(NAME)/jg-static.mk: $(TARGET_STATIC_JG)
-	@printf '%s\n%s\n%s\n' 'NAME := $(NAME)' 'ASSETS :=' \
-		'LIBS_STATIC := $(strip $(LIBS))' > $@
+	@printf '%s\n%s\n%s\n%s\n' 'NAME := $(NAME)' 'ASSETS :=' \
+		'ICONS := $(ICONS_BASE)' 'LIBS_STATIC := $(strip $(LIBS))' > $@
 
 $(OBJDIR)/$(LIB_MAJOR) $(OBJDIR)/$(LIB_SHARED): $(TARGET_SHARED)
 	ln -s $(LIB_VERSION) $@
