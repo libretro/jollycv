@@ -98,6 +98,11 @@ endif
 INCLUDES += $(CFLAGS_SPEEXDSP)
 LIBS := $(LIBS_SPEEXDSP)
 
+# Desktop File
+DESKTOP := $(NAME).desktop
+
+DESKTOP_TARGET := $(NAME)/$(DESKTOP)
+
 # Icons
 ICONS := $(wildcard $(SOURCEDIR)/icons/*.png) $(SOURCEDIR)/icons/$(NAME).svg
 
@@ -139,7 +144,7 @@ else
 endif
 
 ifneq ($(ENABLE_STATIC_JG), 0)
-	TARGET += $(ICONS_TARGET) $(NAME)/jg-static.mk
+	TARGET += $(DESKTOP_TARGET) $(ICONS_TARGET) $(NAME)/jg-static.mk
 endif
 
 ifneq ($(ENABLE_SHARED), 0)
@@ -208,6 +213,10 @@ $(TARGET_STATIC): $(OBJS)
 $(TARGET_STATIC_JG): $(OBJS_JG) $(OBJS_SHARED)
 	@mkdir -p $(NAME)
 	$(AR) rcs $@ $^
+
+$(DESKTOP_TARGET): $(SOURCEDIR)/$(DESKTOP)
+	@mkdir -p $(NAME)
+	@cp $< $@
 
 $(ICONS_TARGET): $(ICONS)
 	@mkdir -p $(NAME)/icons

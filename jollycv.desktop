@@ -1,0 +1,18 @@
+# https://www.freedesktop.org/wiki/Specifications/desktop-entry-spec/
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=jollycv
+GenericName=ColecoVision Emulator
+NoDisplay=true
+Comment=Emulate the ColecoVision
+Icon=jollycv
+TryExec=jollycv
+Exec=jollycv %f
+Terminal=false
+# ColecoVision .rom files identify as application/x-ibm-rom
+#MimeType=
+Categories=Game;Emulator;
+Keywords=emulator;
+StartupNotify=false
+StartupWMClass=jollycv
