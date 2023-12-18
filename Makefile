@@ -138,7 +138,7 @@ endif
 
 ifneq ($(ENABLE_SHARED), 0)
 	TARGET += $(OBJDIR)/$(LIB_MAJOR) $(OBJDIR)/$(LIB_SHARED)
-	LIBS_MODULE := -L$(OBJDIR) -ljollycv
+	LIBS_MODULE := -L$(OBJDIR) -l$(NAME)
 else
 	LIBS_MODULE := $(OBJS_SHARED)
 endif
@@ -192,6 +192,7 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c $(OBJDIR)/.tag
 	$(call COMPILE_INFO, $(BUILD_MAIN))
 	@$(BUILD_MAIN)
 
+# Shim rules
 $(OBJDIR)/%.o: $(SOURCEDIR)/%.c $(OBJDIR)/.tag
 	$(call COMPILE_INFO, $(BUILD_JG))
 	@$(BUILD_JG)
