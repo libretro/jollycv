@@ -1,6 +1,9 @@
 SOURCEDIR := $(abspath $(patsubst %/,%,$(dir $(abspath $(lastword \
 	$(MAKEFILE_LIST))))))
 
+NAME := jollycv
+JGNAME := $(NAME)
+
 DESCRIPTION := JollyCV is a highly accurate emulator for the ColecoVision, \
 	including support for the Super Game Module.
 
@@ -10,28 +13,15 @@ VERSION_MINOR := 0
 VERSION_PATCH := 1
 VERSION := $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)
 
-AR ?= ar
-CC ?= cc
 CFLAGS ?= -O2
 FLAGS := -std=c11 -Wall -Wextra -Wshadow -Wmissing-prototypes -pedantic
 DEPDIR := $(SOURCEDIR)/deps
 SRCDIR := $(SOURCEDIR)/src
 
-PKG_CONFIG ?= pkg-config
-CFLAGS_JG := $(shell $(PKG_CONFIG) --cflags jg)
-
 INCLUDES := -I$(SRCDIR) -I$(SRCDIR)/z80
-PIC := -fPIC
-SHARED := $(PIC)
 
-NAME := jollycv
-PREFIX ?= /usr/local
-EXEC_PREFIX ?= $(PREFIX)
-LIBDIR ?= $(EXEC_PREFIX)/lib
-DATAROOTDIR ?= $(PREFIX)/share
-DOCDIR ?= $(DATAROOTDIR)/doc/$(NAME)
+include $(SOURCEDIR)/jg.mk
 
-LIBPATH := $(LIBDIR)/jollygood
 PKGCONFLIBDIR := $(shell $(SOURCEDIR)/lib/pkgconf.sh "$(EXEC_PREFIX)" "$(LIBDIR)")
 
 ifeq ($(PREFIX), $(EXEC_PREFIX))
@@ -40,20 +30,9 @@ else
 	PKGCONFEXECDIR := $(EXEC_PREFIX)
 endif
 
-DISABLE_MODULE ?= 0
 ENABLE_SHARED ?= 0
 ENABLE_STATIC ?= 0
-ENABLE_STATIC_JG ?= 0
 USE_VENDORED_SPEEXDSP ?= 0
-
-UNAME := $(shell uname -s)
-ifeq ($(UNAME), Darwin)
-	LIBRARY := $(NAME).dylib
-else ifeq ($(OS), Windows_NT)
-	LIBRARY := $(NAME).dll
-else
-	LIBRARY := $(NAME).so
-endif
 
 LIB_PC := lib$(NAME).pc
 LIB_SHARED := lib$(LIBRARY)
@@ -62,12 +41,10 @@ LIB_STATIC := lib$(NAME).a
 ifeq ($(UNAME), Darwin)
 	LIB_MAJOR := lib$(NAME).$(VERSION_MAJOR).dylib
 	LIB_VERSION := lib$(NAME).$(VERSION).dylib
-	SHARED += -dynamiclib -Wl,-undefined,error
 	SONAME := -Wl,-install_name,$(LIB_MAJOR)
 else
 	LIB_MAJOR := $(LIB_SHARED).$(VERSION_MAJOR)
 	LIB_VERSION := $(LIB_SHARED).$(VERSION)
-	SHARED += -shared -Wl,--no-undefined
 	SONAME := -Wl,-soname,$(LIB_MAJOR)
 endif
 
@@ -98,36 +75,16 @@ endif
 INCLUDES += $(CFLAGS_SPEEXDSP)
 LIBS := $(LIBS_SPEEXDSP)
 
-# Desktop File
-DESKTOP := $(NAME).desktop
-
-DESKTOP_TARGET := $(NAME)/$(DESKTOP)
-
-# Icons
-ICONS := $(wildcard $(SOURCEDIR)/icons/*.png) $(SOURCEDIR)/icons/$(NAME).svg
-
-ICONS_BASE := $(notdir $(ICONS))
-ICONS_TARGET := $(ICONS_BASE:%=$(NAME)/icons/%)
-
 # Object dirs
 MKDIRS := speex z80
-
-OBJDIR := objs
 
 # List of object files
 OBJS := $(patsubst %,$(OBJDIR)/%,$(CSRCS:.c=.o))
 OBJS_JG := $(patsubst %,$(OBJDIR)/%,$(JGSRCS:.c=.o))
 
 # Library targets
-TARGET :=
-TARGET_MODULE := $(NAME)/$(LIBRARY)
 TARGET_SHARED := $(OBJDIR)/$(LIB_VERSION)
 TARGET_STATIC := $(OBJDIR)/$(LIB_STATIC)
-TARGET_STATIC_JG := $(NAME)/lib$(NAME)-jg.a
-
-ifeq ($(DISABLE_MODULE), 0)
-	TARGET += $(TARGET_MODULE)
-endif
 
 ifneq ($(ENABLE_STATIC), 0)
 	TARGET += $(TARGET_STATIC)
@@ -141,10 +98,6 @@ ifneq ($(ENABLE_SHARED), 0)
 	LIBS_MODULE := -L$(OBJDIR) -l$(NAME)
 else
 	LIBS_MODULE := $(OBJS_SHARED)
-endif
-
-ifneq ($(ENABLE_STATIC_JG), 0)
-	TARGET += $(DESKTOP_TARGET) $(ICONS_TARGET) $(NAME)/jg-static.mk
 endif
 
 ifneq ($(ENABLE_SHARED), 0)
@@ -167,13 +120,6 @@ else ifneq ($(ENABLE_STATIC), 0)
 else
 	ENABLE_LIB := 0
 endif
-
-# Compiler command
-COMPILE = $(strip $(1) $(CPPFLAGS) $(PIC) $(2) -c $< -o $@)
-COMPILE_C = $(call COMPILE, $(CC) $(CFLAGS), $(1))
-
-# Info command
-COMPILE_INFO = $(info $(subst $(SOURCEDIR)/,,$(1)))
 
 # Core commands
 BUILD_JG = $(call COMPILE_C, $(FLAGS) $(INCLUDES) $(CFLAGS_JG))
@@ -224,7 +170,7 @@ $(ICONS_TARGET): $(ICONS)
 	@cp $(subst $(NAME)/icons,$(SOURCEDIR)/icons,$@) $(NAME)/icons/
 
 $(NAME)/jg-static.mk: $(TARGET_STATIC_JG)
-	@printf '%s\n%s\n%s\n%s\n' 'NAME := $(NAME)' 'ASSETS :=' \
+	@printf '%s\n%s\n%s\n%s\n' 'NAME := $(JGNAME)' 'ASSETS :=' \
 		'ICONS := $(ICONS_BASE)' 'LIBS_STATIC := $(strip $(LIBS))' > $@
 
 $(OBJDIR)/$(LIB_MAJOR) $(OBJDIR)/$(LIB_SHARED): $(TARGET_SHARED)
