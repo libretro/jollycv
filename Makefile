@@ -131,16 +131,16 @@ all: $(TARGET)
 
 # Rules
 $(OBJDIR)/%.o: $(DEPDIR)/%.c $(OBJDIR)/.tag
-	$(call COMPILE_INFO, $(BUILD_MAIN))
+	$(call COMPILE_INFO,$(BUILD_MAIN))
 	@$(BUILD_MAIN)
 
 $(OBJDIR)/%.o: $(SRCDIR)/%.c $(OBJDIR)/.tag
-	$(call COMPILE_INFO, $(BUILD_MAIN))
+	$(call COMPILE_INFO,$(BUILD_MAIN))
 	@$(BUILD_MAIN)
 
 # Shim rules
 $(OBJDIR)/%.o: $(SOURCEDIR)/%.c $(OBJDIR)/.tag
-	$(call COMPILE_INFO, $(BUILD_JG))
+	$(call COMPILE_INFO,$(BUILD_JG))
 	@$(BUILD_JG)
 
 $(OBJDIR)/.tag:
