@@ -194,7 +194,7 @@ ifneq ($(ENABLE_PKGCONF), 0)
 		-e 's|@LIBDIR@|$(PKGCONFLIBDIR)|' -e 's|@VERSION@|$(VERSION)|' \
 		-e 's|@NAME@|$(NAME)|' -e 's|@DESCRIPTION@|$(DESCRIPTION)|' \
 		-e '/URL:/a\' -e '$(REQUIRES_PRIVATE)' \
-		$(SOURCEDIR)/lib/$(LIB_PC).in \
+		$(SOURCEDIR)/lib/pkgconf.pc.in \
 		> $(DESTDIR)$(LIBDIR)/pkgconfig/$(LIB_PC)
 endif
 ifneq ($(ENABLE_SHARED), 0)
