@@ -11,44 +11,16 @@ DESCRIPTION := JollyCV is a highly accurate emulator for the ColecoVision, \
 VERSION_MAJOR := 1
 VERSION_MINOR := 0
 VERSION_PATCH := 1
-VERSION := $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)
 
 CFLAGS ?= -O2
 FLAGS := -std=c11 -Wall -Wextra -Wshadow -Wmissing-prototypes -pedantic
 DEPDIR := $(SOURCEDIR)/deps
 SRCDIR := $(SOURCEDIR)/src
-
 INCLUDES := -I$(SRCDIR) -I$(SRCDIR)/z80
 
-include $(SOURCEDIR)/jg.mk
-
-PKGCONFLIBDIR := $(shell $(SOURCEDIR)/lib/pkgconf.sh "$(EXEC_PREFIX)" "$(LIBDIR)")
-
-ifeq ($(PREFIX), $(EXEC_PREFIX))
-	PKGCONFEXECDIR := $${prefix}
-else
-	PKGCONFEXECDIR := $(EXEC_PREFIX)
-endif
-
-ENABLE_SHARED ?= 0
-ENABLE_STATIC ?= 0
 USE_VENDORED_SPEEXDSP ?= 0
 
-LIB_PC := lib$(NAME).pc
-LIB_SHARED := lib$(LIBRARY)
-LIB_STATIC := lib$(NAME).a
-
-ifeq ($(UNAME), Darwin)
-	LIB_MAJOR := lib$(NAME).$(VERSION_MAJOR).dylib
-	LIB_VERSION := lib$(NAME).$(VERSION).dylib
-	SONAME := -Wl,-install_name,$(LIB_MAJOR)
-else
-	LIB_MAJOR := $(LIB_SHARED).$(VERSION_MAJOR)
-	LIB_VERSION := $(LIB_SHARED).$(VERSION)
-	SONAME := -Wl,-soname,$(LIB_MAJOR)
-endif
-
-REQUIRES_PRIVATE := Requires.private:
+include $(SOURCEDIR)/jg.mk
 
 CSRCS := z80/z80.c \
 	jcv.c \
@@ -81,45 +53,6 @@ MKDIRS := speex z80
 # List of object files
 OBJS := $(patsubst %,$(OBJDIR)/%,$(CSRCS:.c=.o))
 OBJS_JG := $(patsubst %,$(OBJDIR)/%,$(JGSRCS:.c=.o))
-
-# Library targets
-TARGET_SHARED := $(OBJDIR)/$(LIB_VERSION)
-TARGET_STATIC := $(OBJDIR)/$(LIB_STATIC)
-
-ifneq ($(ENABLE_STATIC), 0)
-	TARGET += $(TARGET_STATIC)
-	OBJS_SHARED := $(TARGET_STATIC)
-else
-	OBJS_SHARED := $(OBJS)
-endif
-
-ifneq ($(ENABLE_SHARED), 0)
-	TARGET += $(OBJDIR)/$(LIB_MAJOR) $(OBJDIR)/$(LIB_SHARED)
-	LIBS_MODULE := -L$(OBJDIR) -l$(NAME)
-else
-	LIBS_MODULE := $(OBJS_SHARED)
-endif
-
-ifneq ($(ENABLE_SHARED), 0)
-	OBJS_MODULE := $(OBJDIR)/$(LIB_MAJOR)
-	ENABLE_PKGCONF := 1
-else ifneq ($(ENABLE_STATIC), 0)
-	OBJS_MODULE := $(OBJS_SHARED)
-	ENABLE_PKGCONF := 1
-else
-	OBJS_MODULE := $(OBJS)
-	ENABLE_PKGCONF := 0
-endif
-
-ifeq ($(DISABLE_MODULE), 0)
-	ENABLE_LIB := 1
-else ifneq ($(ENABLE_SHARED), 0)
-	ENABLE_LIB := 1
-else ifneq ($(ENABLE_STATIC), 0)
-	ENABLE_LIB := 1
-else
-	ENABLE_LIB := 0
-endif
 
 # Core commands
 BUILD_JG = $(call COMPILE_C, $(FLAGS) $(INCLUDES) $(CFLAGS_JG))
@@ -190,9 +123,13 @@ else ifeq ($(ENABLE_PKGCONF), 0)
 endif
 ifneq ($(ENABLE_PKGCONF), 0)
 	@mkdir -p $(DESTDIR)$(LIBDIR)/pkgconfig
-	sed -e 's|@PREFIX@|$(PREFIX)|' -e 's|@EXEC_PREFIX@|$(PKGCONFEXECDIR)|' \
-		-e 's|@LIBDIR@|$(PKGCONFLIBDIR)|' -e 's|@VERSION@|$(VERSION)|' \
-		-e 's|@NAME@|$(NAME)|' -e 's|@DESCRIPTION@|$(DESCRIPTION)|' \
+	sed -e 's|@PREFIX@|$(PREFIX)|' \
+		-e 's|@EXEC_PREFIX@|$(PKGCONFEXECDIR)|' \
+		-e 's|@LIBDIR@|$(PKGCONFLIBDIR)|' \
+		-e 's|@INCLUDEDIR@|$(PKGCONFINCDIR)|' \
+		-e 's|@VERSION@|$(VERSION)|' \
+		-e 's|@DESCRIPTION@|$(DESCRIPTION)|' \
+		-e 's|@NAME@|$(NAME)|' -e 's|@JGNAME@|$(JGNAME)|' \
 		-e '/URL:/a\' -e '$(REQUIRES_PRIVATE)' \
 		$(SOURCEDIR)/lib/pkgconf.pc.in \
 		> $(DESTDIR)$(LIBDIR)/pkgconfig/$(LIB_PC)

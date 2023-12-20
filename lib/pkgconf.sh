@@ -3,17 +3,18 @@
 set -eu
 
 prefix="$1"
-libdir="$2"
+pkgdir="$2"
+exedir="${3:-}"
 
-case "$libdir" in
+case "$pkgdir" in
   "$prefix"* )
-    lib_path="\${exec_prefix}${libdir#$prefix}"
+    pkg_path="\${${exedir}prefix}${pkgdir#$prefix}"
   ;;
   * )
-    lib_path="$libdir"
+    pkg_path="$pkgdir"
   ;;
 esac
 
-printf %s\\n "$lib_path"
+printf %s\\n "$pkg_path"
 
 exit 0
