@@ -144,6 +144,10 @@ COMPILE_INFO = $(info $(subst $(SOURCEDIR)/,,$(1)))
 override .DEFAULT_GOAL := all
 override PHONY := all clean install install-strip uninstall $(TARGET_INSTALL)
 
+$(OBJDIR)/.tag:
+	@mkdir -p -- $(if $(MKDIRS),$(MKDIRS:%=$(OBJDIR)/%),$(OBJDIR))
+	@touch $@
+
 install-data: all
 
 install-library: all
