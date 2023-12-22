@@ -8,14 +8,7 @@ CC ?= cc
 CXX ?= c++
 CC_FOR_BUILD ?= $(CC)
 CXX_FOR_BUILD ?= $(CXX)
-
-VERSION := $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)
-
 PKG_CONFIG ?= pkg-config
-CFLAGS_JG := $(shell $(PKG_CONFIG) --cflags jg)
-
-PIC := -fPIC
-SHARED := $(PIC)
 
 PREFIX ?= /usr/local
 EXEC_PREFIX ?= $(PREFIX)
@@ -25,61 +18,71 @@ DATAROOTDIR ?= $(PREFIX)/share
 DATADIR ?= $(DATAROOTDIR)
 DOCDIR ?= $(DATAROOTDIR)/doc/$(NAME)
 
-INCPATH := $(INCLUDEDIR)/$(JGNAME)
-LIBPATH := $(LIBDIR)/jollygood
-OBJDIR := objs
+CFLAGS_JG = $(shell $(PKG_CONFIG) --cflags jg)
 
-LIBS_PRIVATE := Libs.private:
-REQUIRES_PRIVATE := Requires.private:
+override VERSION := $(VERSION_MAJOR).$(VERSION_MINOR).$(VERSION_PATCH)
 
-PKGCONF_SH := $(wildcard $(SOURCEDIR)/lib/pkgconf.sh)
+override PIC := -fPIC
+override SHARED := $(PIC)
+
+override INCPATH := $(INCLUDEDIR)/$(JGNAME)
+override LIBPATH := $(LIBDIR)/jollygood
+override OBJDIR := objs
+
+override LIBS_PRIVATE := Libs.private:
+override REQUIRES_PRIVATE := Requires.private:
+
+override PKGCONF_SH := $(wildcard $(SOURCEDIR)/lib/pkgconf.sh)
 
 ifneq ($(PKGCONF_SH),)
-	PKGCONFLIBDIR := $(shell $(PKGCONF_SH) "$(EXEC_PREFIX)" "$(LIBDIR)" exec_)
-	PKGCONFINCDIR := $(shell $(PKGCONF_SH) "$(PREFIX)" "$(INCLUDEDIR)")
+	override PKGCONFLIBDIR := \
+		$(shell $(PKGCONF_SH) "$(EXEC_PREFIX)" "$(LIBDIR)" exec_)
+	override PKGCONFINCDIR := \
+		$(shell $(PKGCONF_SH) "$(PREFIX)" "$(INCLUDEDIR)")
 endif
 
 ifeq ($(PREFIX), $(EXEC_PREFIX))
-	PKGCONFEXECDIR := $${prefix}
+	override PKGCONFEXECDIR := $${prefix}
 else
-	PKGCONFEXECDIR := $(EXEC_PREFIX)
+	override PKGCONFEXECDIR := $(EXEC_PREFIX)
 endif
 
 UNAME := $(shell uname -s)
 ifeq ($(UNAME), Darwin)
-	LIBRARY := $(NAME).dylib
+	override LIBRARY := $(NAME).dylib
 else ifeq ($(OS), Windows_NT)
-	LIBRARY := $(NAME).dll
+	override LIBRARY := $(NAME).dll
 else
-	LIBRARY := $(NAME).so
+	override LIBRARY := $(NAME).so
 endif
 
-LIB_PC := lib$(NAME).pc
-LIB_SHARED := lib$(LIBRARY)
-LIB_STATIC := lib$(NAME).a
+override LIB_PC := lib$(NAME).pc
+override LIB_SHARED := lib$(LIBRARY)
+override LIB_STATIC := lib$(NAME).a
 
 ifeq ($(UNAME), Darwin)
-	LIB_MAJOR := lib$(NAME).$(VERSION_MAJOR).dylib
-	LIB_VERSION := lib$(NAME).$(VERSION).dylib
-	SHARED += -dynamiclib -Wl,-undefined,error
-	SONAME := -Wl,-install_name,$(LIB_MAJOR)
+	override LIB_MAJOR := lib$(NAME).$(VERSION_MAJOR).dylib
+	override LIB_VERSION := lib$(NAME).$(VERSION).dylib
+	override SHARED += -dynamiclib -Wl,-undefined,error
+	override SONAME := -Wl,-install_name,$(LIB_MAJOR)
 else
-	LIB_MAJOR := $(LIB_SHARED).$(VERSION_MAJOR)
-	LIB_VERSION := $(LIB_SHARED).$(VERSION)
-	SHARED += -shared -Wl,--no-undefined
-	SONAME := -Wl,-soname,$(LIB_MAJOR)
+	override LIB_MAJOR := $(LIB_SHARED).$(VERSION_MAJOR)
+	override LIB_VERSION := $(LIB_SHARED).$(VERSION)
+	override SHARED += -shared -Wl,--no-undefined
+	override SONAME := -Wl,-soname,$(LIB_MAJOR)
 endif
 
 # Desktop File
-DESKTOP := $(JGNAME).desktop
+override DESKTOP := $(JGNAME).desktop
 
-DESKTOP_TARGET := $(NAME)/$(DESKTOP)
+override DESKTOP_TARGET := $(NAME)/$(DESKTOP)
 
 # Icons
-ICONS := $(wildcard $(SOURCEDIR)/icons/*.png $(SOURCEDIR)/icons/$(NAME).svg)
+override ICONS := $(wildcard $(SOURCEDIR)/icons/*.png \
+	$(SOURCEDIR)/icons/$(NAME).svg)
 
-ICONS_BASE := $(notdir $(ICONS))
-ICONS_TARGET := $(ICONS_BASE:%=$(NAME)/icons/%)
+override ICONS_BASE := $(notdir $(ICONS))
+override ICONS_TARGET := $(ICONS_BASE:%=$(NAME)/icons/%)
 
 # Library targets
 override TARGET :=
@@ -132,14 +135,14 @@ else
 endif
 
 # Compiler commands
-COMPILE = $(strip $(1) $(CPPFLAGS) $(PIC) $(2) -c $< -o $@)
-COMPILE_C = $(call COMPILE, $(CC) $(CFLAGS), $(1))
-COMPILE_CXX = $(call COMPILE, $(CXX) $(CXXFLAGS), $(1))
-COMPILE_C_BUILD = $(strip $(CC_FOR_BUILD) $(1) $< -o $@)
-COMPILE_CXX_BUILD = $(strip $(CXX_FOR_BUILD) $(1) $< -o $@)
+override COMPILE = $(strip $(1) $(CPPFLAGS) $(PIC) $(2) -c $< -o $@)
+override COMPILE_C = $(call COMPILE, $(CC) $(CFLAGS), $(1))
+override COMPILE_CXX = $(call COMPILE, $(CXX) $(CXXFLAGS), $(1))
+override COMPILE_C_BUILD = $(strip $(CC_FOR_BUILD) $(1) $< -o $@)
+override COMPILE_CXX_BUILD = $(strip $(CXX_FOR_BUILD) $(1) $< -o $@)
 
 # Info command
-COMPILE_INFO = $(info $(subst $(SOURCEDIR)/,,$(1)))
+override COMPILE_INFO = $(info $(subst $(SOURCEDIR)/,,$(1)))
 
 override .DEFAULT_GOAL := all
 override PHONY := all clean install install-strip uninstall $(TARGET_INSTALL)

@@ -39,7 +39,7 @@ ifneq ($(USE_VENDORED_SPEEXDSP), 0)
 	LIBS_SPEEXDSP :=
 	CSRCS += speex/resample.c
 else
-	REQUIRES_PRIVATE += speexdsp
+	override REQUIRES_PRIVATE += speexdsp
 	CFLAGS_SPEEXDSP := $(shell $(PKG_CONFIG) --cflags speexdsp)
 	LIBS_SPEEXDSP := $(shell $(PKG_CONFIG) --libs speexdsp)
 endif
