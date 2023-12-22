@@ -58,7 +58,7 @@ OBJS_JG := $(patsubst %,$(OBJDIR)/%,$(JGSRCS:.c=.o))
 BUILD_JG = $(call COMPILE_C, $(FLAGS) $(INCLUDES) $(CFLAGS_JG))
 BUILD_MAIN = $(call COMPILE_C, $(FLAGS) $(INCLUDES))
 
-.PHONY: all clean install install-strip uninstall
+.PHONY: $(PHONY)
 
 all: $(TARGET)
 
@@ -102,7 +102,7 @@ $(ICONS_TARGET): $(ICONS)
 	@mkdir -p $(NAME)/icons
 	@cp $(subst $(NAME)/icons,$(SOURCEDIR)/icons,$@) $(NAME)/icons/
 
-$(NAME)/jg-static.mk: $(TARGET_STATIC_JG)
+$(TARGET_STATIC_MK): $(TARGET_STATIC_JG)
 	@printf '%s\n%s\n%s\n%s\n' 'NAME := $(JGNAME)' 'ASSETS :=' \
 		'ICONS := $(ICONS_BASE)' 'LIBS_STATIC := $(strip $(LIBS))' > $@
 
@@ -112,45 +112,13 @@ $(OBJDIR)/$(LIB_MAJOR) $(OBJDIR)/$(LIB_SHARED): $(TARGET_SHARED)
 clean:
 	rm -rf $(OBJDIR) $(NAME)
 
-ifneq ($(ENABLE_INSTALL), 0)
-install: all
+install-docs: all
 	@mkdir -p $(DESTDIR)$(DOCDIR)
-ifeq ($(DISABLE_MODULE), 0)
-	@mkdir -p $(DESTDIR)$(LIBPATH)
-	cp $(TARGET_MODULE) $(DESTDIR)$(LIBPATH)/
-else ifeq ($(ENABLE_LIBRARY), 0)
-	@mkdir -p $(DESTDIR)$(LIBDIR)
-endif
-ifneq ($(ENABLE_LIBRARY), 0)
-	@mkdir -p $(DESTDIR)$(LIBDIR)/pkgconfig
-	sed -e 's|@PREFIX@|$(PREFIX)|' \
-		-e 's|@EXEC_PREFIX@|$(PKGCONFEXECDIR)|' \
-		-e 's|@LIBDIR@|$(PKGCONFLIBDIR)|' \
-		-e 's|@INCLUDEDIR@|$(PKGCONFINCDIR)|' \
-		-e 's|@VERSION@|$(VERSION)|' \
-		-e 's|@DESCRIPTION@|$(DESCRIPTION)|' \
-		-e 's|@NAME@|$(NAME)|' -e 's|@JGNAME@|$(JGNAME)|' \
-		-e '/URL:/a\' -e '$(REQUIRES_PRIVATE)' \
-		$(SOURCEDIR)/lib/pkgconf.pc.in \
-		> $(DESTDIR)$(LIBDIR)/pkgconfig/$(LIB_PC)
-endif
-ifneq ($(ENABLE_SHARED), 0)
-	cp $(TARGET_SHARED) $(DESTDIR)$(LIBDIR)/
-	cp -P $(OBJDIR)/$(LIB_MAJOR) $(DESTDIR)$(LIBDIR)/
-	cp -P $(OBJDIR)/$(LIB_SHARED) $(DESTDIR)$(LIBDIR)/
-endif
-ifneq ($(ENABLE_STATIC), 0)
-	cp $(TARGET_STATIC) $(DESTDIR)$(LIBDIR)/
-endif
 	cp $(SRCDIR)/z80/LICENSE $(DESTDIR)$(DOCDIR)/LICENSE-z80
 	cp $(SOURCEDIR)/LICENSE $(DESTDIR)$(DOCDIR)
 	cp $(SOURCEDIR)/README $(DESTDIR)$(DOCDIR)
 ifneq ($(USE_VENDORED_SPEEXDSP), 0)
 	cp $(DEPDIR)/speex/COPYING $(DESTDIR)$(DOCDIR)/COPYING-speexdsp
-endif
-else
-install: all
-	@echo 'Nothing to install'
 endif
 
 uninstall:

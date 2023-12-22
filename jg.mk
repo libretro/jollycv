@@ -29,7 +29,7 @@ INCPATH := $(INCLUDEDIR)/$(JGNAME)
 LIBPATH := $(LIBDIR)/jollygood
 OBJDIR := objs
 
-LIBS_PRIVATE := Libs.private: $(LIBS)
+LIBS_PRIVATE := Libs.private:
 REQUIRES_PRIVATE := Requires.private:
 
 PKGCONF_SH := $(wildcard $(SOURCEDIR)/lib/pkgconf.sh)
@@ -82,51 +82,53 @@ ICONS_BASE := $(notdir $(ICONS))
 ICONS_TARGET := $(ICONS_BASE:%=$(NAME)/icons/%)
 
 # Library targets
-TARGET :=
-TARGET_MODULE := $(NAME)/$(LIBRARY)
-TARGET_SHARED := $(OBJDIR)/$(LIB_VERSION)
-TARGET_STATIC := $(OBJDIR)/$(LIB_STATIC)
-TARGET_STATIC_JG := $(NAME)/lib$(NAME)-jg.a
+override TARGET :=
+override TARGET_INSTALL := install-data install-docs install-library
+override TARGET_MODULE := $(NAME)/$(LIBRARY)
+override TARGET_SHARED := $(OBJDIR)/$(LIB_VERSION)
+override TARGET_STATIC := $(OBJDIR)/$(LIB_STATIC)
+override TARGET_STATIC_JG := $(NAME)/lib$(NAME)-jg.a
+override TARGET_STATIC_MK := $(NAME)/jg-static.mk
 
 ifeq ($(DISABLE_MODULE), 0)
-	TARGET += $(TARGET_MODULE)
+	override TARGET += $(TARGET_MODULE)
 endif
 
 ifneq ($(ENABLE_STATIC), 0)
-	TARGET += $(TARGET_STATIC)
-	OBJS_SHARED := $(TARGET_STATIC)
+	override TARGET += $(TARGET_STATIC)
+	override OBJS_SHARED := $(TARGET_STATIC)
 else
-	OBJS_SHARED = $(OBJS)
+	override OBJS_SHARED = $(OBJS)
 endif
 
 ifneq ($(ENABLE_SHARED), 0)
-	TARGET += $(OBJDIR)/$(LIB_MAJOR) $(OBJDIR)/$(LIB_SHARED)
-	LIBS_MODULE := -L$(OBJDIR) -l$(NAME)
+	override TARGET += $(OBJDIR)/$(LIB_MAJOR) $(OBJDIR)/$(LIB_SHARED)
+	override LIBS_MODULE := -L$(OBJDIR) -l$(NAME)
 else
-	LIBS_MODULE = $(OBJS_SHARED)
+	override LIBS_MODULE = $(OBJS_SHARED)
 endif
 
 ifneq ($(ENABLE_STATIC_JG), 0)
-	TARGET += $(DESKTOP_TARGET) $(ICONS_TARGET) $(NAME)/jg-static.mk
+	override TARGET += $(DESKTOP_TARGET) $(ICONS_TARGET) $(TARGET_STATIC_MK)
 endif
 
 ifneq ($(ENABLE_SHARED), 0)
-	OBJS_MODULE := $(OBJDIR)/$(LIB_MAJOR) $(OBJDIR)/$(LIB_SHARED)
+	override OBJS_MODULE := $(OBJDIR)/$(LIB_MAJOR) $(OBJDIR)/$(LIB_SHARED)
 else ifneq ($(ENABLE_STATIC), 0)
-	OBJS_MODULE := $(OBJS_SHARED)
+	override OBJS_MODULE := $(OBJS_SHARED)
 else
-	OBJS_MODULE = $(OBJS)
+	override OBJS_MODULE = $(OBJS)
 endif
 
 ifneq (,$(filter-out 0,$(ENABLE_SHARED) $(ENABLE_STATIC)))
-	ENABLE_INSTALL := 1
-	ENABLE_LIBRARY := 1
+	override ENABLE_INSTALL := 1
+	override ENABLE_LIBRARY := 1
 else ifeq ($(DISABLE_MODULE), 0)
-	ENABLE_INSTALL := 1
-	ENABLE_LIBRARY := 0
+	override ENABLE_INSTALL := 1
+	override ENABLE_LIBRARY := 0
 else
-	ENABLE_INSTALL := 0
-	ENABLE_LIBRARY := 0
+	override ENABLE_INSTALL := 0
+	override ENABLE_LIBRARY := 0
 endif
 
 # Compiler commands
@@ -140,6 +142,44 @@ COMPILE_CXX_BUILD = $(strip $(CXX_FOR_BUILD) $(1) $< -o $@)
 COMPILE_INFO = $(info $(subst $(SOURCEDIR)/,,$(1)))
 
 override .DEFAULT_GOAL := all
+override PHONY := all clean install install-strip uninstall $(TARGET_INSTALL)
+
+install-data: all
+
+install-library: all
+ifeq ($(DISABLE_MODULE), 0)
+	@mkdir -p $(DESTDIR)$(LIBPATH)
+	cp $(TARGET_MODULE) $(DESTDIR)$(LIBPATH)/
+endif
+ifneq ($(ENABLE_LIBRARY), 0)
+	@mkdir -p $(DESTDIR)$(LIBDIR)/pkgconfig
+ifneq ($(ENABLE_SHARED), 0)
+	cp $(TARGET_SHARED) $(DESTDIR)$(LIBDIR)/
+	cp -P $(OBJDIR)/$(LIB_MAJOR) $(DESTDIR)$(LIBDIR)/
+	cp -P $(OBJDIR)/$(LIB_SHARED) $(DESTDIR)$(LIBDIR)/
+endif
+ifneq ($(ENABLE_STATIC), 0)
+	cp $(TARGET_STATIC) $(DESTDIR)$(LIBDIR)/
+endif
+	sed -e 's|@PREFIX@|$(PREFIX)|' \
+		-e 's|@EXEC_PREFIX@|$(PKGCONFEXECDIR)|' \
+		-e 's|@LIBDIR@|$(PKGCONFLIBDIR)|' \
+		-e 's|@INCLUDEDIR@|$(PKGCONFINCDIR)|' \
+		-e 's|@VERSION@|$(VERSION)|' \
+		-e 's|@DESCRIPTION@|$(DESCRIPTION)|' \
+		-e 's|@NAME@|$(NAME)|' -e 's|@JGNAME@|$(JGNAME)|' \
+		-e '/Libs:/a\' -e '$(LIBS_PRIVATE)' \
+		-e '/URL:/a\' -e '$(REQUIRES_PRIVATE)' \
+		$(SOURCEDIR)/lib/pkgconf.pc.in \
+		> $(DESTDIR)$(LIBDIR)/pkgconfig/$(LIB_PC)
+endif
+
+ifneq ($(ENABLE_INSTALL), 0)
+install: $(TARGET_INSTALL)
+else
+install: all
+	@echo 'Nothing to install'
+endif
 
 install-strip: install
 ifeq ($(DISABLE_MODULE), 0)
