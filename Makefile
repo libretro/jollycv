@@ -20,6 +20,9 @@ INCLUDES := -I$(SRCDIR) -I$(SRCDIR)/z80
 
 USE_VENDORED_SPEEXDSP ?= 0
 
+override INSTALL_DATA := 0
+override INSTALL_SHARED := 1
+
 include $(SOURCEDIR)/jg.mk
 
 CSRCS := z80/z80.c \
@@ -113,12 +116,3 @@ install-docs: all
 ifneq ($(USE_VENDORED_SPEEXDSP), 0)
 	cp $(DEPDIR)/speex/COPYING $(DESTDIR)$(DOCDIR)/COPYING-speexdsp
 endif
-
-uninstall:
-	rm -rf $(DESTDIR)$(DOCDIR)
-	rm -f $(DESTDIR)$(LIBPATH)/$(LIBRARY)
-	rm -f $(DESTDIR)$(LIBDIR)/$(LIB_STATIC)
-	rm -f $(DESTDIR)$(LIBDIR)/$(LIB_SHARED)
-	rm -f $(DESTDIR)$(LIBDIR)/$(LIB_MAJOR)
-	rm -f $(DESTDIR)$(LIBDIR)/$(LIB_VERSION)
-	rm -f $(DESTDIR)$(LIBDIR)/pkgconfig/$(LIB_PC)

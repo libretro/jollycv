@@ -198,3 +198,21 @@ endif
 ifneq ($(ENABLE_SHARED), 0)
 	strip $(DESTDIR)$(LIBDIR)/$(LIB_VERSION)
 endif
+
+uninstall::
+	rm -f $(DESTDIR)$(LIBPATH)/$(LIBRARY)
+	rm -rf $(DESTDIR)$(DOCDIR)
+
+ifneq ($(INSTALL_DATA), 0)
+uninstall::
+	rm -rf $(DESTDIR)$(DATADIR)/jollygood/$(NAME)
+endif
+
+ifneq ($(INSTALL_SHARED), 0)
+uninstall::
+	rm -f $(DESTDIR)$(LIBDIR)/$(LIB_STATIC)
+	rm -f $(DESTDIR)$(LIBDIR)/$(LIB_SHARED)
+	rm -f $(DESTDIR)$(LIBDIR)/$(LIB_MAJOR)
+	rm -f $(DESTDIR)$(LIBDIR)/$(LIB_VERSION)
+	rm -f $(DESTDIR)$(LIBDIR)/pkgconfig/$(LIB_PC)
+endif
