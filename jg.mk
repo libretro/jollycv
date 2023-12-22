@@ -148,6 +148,9 @@ $(OBJDIR)/.tag:
 	@mkdir -p -- $(if $(MKDIRS),$(MKDIRS:%=$(OBJDIR)/%),$(OBJDIR))
 	@touch $@
 
+clean::
+	rm -rf $(OBJDIR) $(NAME)
+
 install-data: all
 
 install-library: all

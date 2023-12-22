@@ -105,9 +105,6 @@ $(TARGET_STATIC_MK): $(TARGET_STATIC_JG)
 $(OBJDIR)/$(LIB_MAJOR) $(OBJDIR)/$(LIB_SHARED): $(TARGET_SHARED)
 	ln -s $(LIB_VERSION) $@
 
-clean:
-	rm -rf $(OBJDIR) $(NAME)
-
 install-docs: all
 	@mkdir -p $(DESTDIR)$(DOCDIR)
 	cp $(SRCDIR)/z80/LICENSE $(DESTDIR)$(DOCDIR)/LICENSE-z80
