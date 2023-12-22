@@ -148,19 +148,9 @@ endif
 ifneq ($(USE_VENDORED_SPEEXDSP), 0)
 	cp $(DEPDIR)/speex/COPYING $(DESTDIR)$(DOCDIR)/COPYING-speexdsp
 endif
-
-install-strip: install
-ifeq ($(DISABLE_MODULE), 0)
-	strip $(DESTDIR)$(LIBPATH)/$(LIBRARY)
-endif
-ifneq ($(ENABLE_SHARED), 0)
-	strip $(DESTDIR)$(LIBDIR)/$(LIB_VERSION)
-endif
 else
 install: all
 	@echo 'Nothing to install'
-
-install-strip: install
 endif
 
 uninstall:

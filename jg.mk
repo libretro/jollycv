@@ -138,3 +138,13 @@ COMPILE_CXX_BUILD = $(strip $(CXX_FOR_BUILD) $(1) $< -o $@)
 
 # Info command
 COMPILE_INFO = $(info $(subst $(SOURCEDIR)/,,$(1)))
+
+override .DEFAULT_GOAL := all
+
+install-strip: install
+ifeq ($(DISABLE_MODULE), 0)
+	strip $(DESTDIR)$(LIBPATH)/$(LIBRARY)
+endif
+ifneq ($(ENABLE_SHARED), 0)
+	strip $(DESTDIR)$(LIBDIR)/$(LIB_VERSION)
+endif
