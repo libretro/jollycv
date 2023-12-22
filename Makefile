@@ -112,16 +112,16 @@ $(OBJDIR)/$(LIB_MAJOR) $(OBJDIR)/$(LIB_SHARED): $(TARGET_SHARED)
 clean:
 	rm -rf $(OBJDIR) $(NAME)
 
-ifneq ($(ENABLE_LIB), 0)
+ifneq ($(ENABLE_INSTALL), 0)
 install: all
 	@mkdir -p $(DESTDIR)$(DOCDIR)
 ifeq ($(DISABLE_MODULE), 0)
 	@mkdir -p $(DESTDIR)$(LIBPATH)
 	cp $(TARGET_MODULE) $(DESTDIR)$(LIBPATH)/
-else ifeq ($(ENABLE_PKGCONF), 0)
+else ifeq ($(ENABLE_LIBRARY), 0)
 	@mkdir -p $(DESTDIR)$(LIBDIR)
 endif
-ifneq ($(ENABLE_PKGCONF), 0)
+ifneq ($(ENABLE_LIBRARY), 0)
 	@mkdir -p $(DESTDIR)$(LIBDIR)/pkgconfig
 	sed -e 's|@PREFIX@|$(PREFIX)|' \
 		-e 's|@EXEC_PREFIX@|$(PKGCONFEXECDIR)|' \
