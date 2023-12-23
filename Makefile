@@ -93,14 +93,6 @@ $(TARGET_STATIC_JG): $(OBJS_JG) $(OBJS_SHARED)
 	@mkdir -p $(NAME)
 	$(AR) rcs $@ $^
 
-$(DESKTOP_TARGET): $(SOURCEDIR)/$(DESKTOP)
-	@mkdir -p $(NAME)
-	@cp $< $@
-
-$(ICONS_TARGET): $(ICONS)
-	@mkdir -p $(NAME)/icons
-	@cp $(subst $(NAME)/icons,$(SOURCEDIR)/icons,$@) $(NAME)/icons/
-
 $(TARGET_STATIC_MK): $(TARGET_STATIC_JG)
 	@printf '%s\n%s\n%s\n%s\n' 'NAME := $(JGNAME)' 'ASSETS :=' \
 		'ICONS := $(ICONS_BASE)' 'LIBS_STATIC := $(strip $(LIBS))' > $@
