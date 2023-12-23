@@ -16,7 +16,9 @@ CFLAGS ?= -O2
 FLAGS := -std=c11 -Wall -Wextra -Wshadow -Wmissing-prototypes -pedantic
 DEPDIR := $(SOURCEDIR)/deps
 SRCDIR := $(SOURCEDIR)/src
-INCLUDES := -I$(SRCDIR) -I$(SRCDIR)/z80
+
+INCLUDES := -I$(SRCDIR)/z80
+INCLUDES_JG := -I$(SRCDIR)
 
 USE_VENDORED_SPEEXDSP ?= 0
 
@@ -58,7 +60,7 @@ OBJS := $(patsubst %,$(OBJDIR)/%,$(CSRCS:.c=.o))
 OBJS_JG := $(patsubst %,$(OBJDIR)/%,$(JGSRCS:.c=.o))
 
 # Core commands
-BUILD_JG = $(call COMPILE_C, $(FLAGS) $(INCLUDES) $(CFLAGS_JG))
+BUILD_JG = $(call COMPILE_C, $(FLAGS) $(INCLUDES_JG) $(CFLAGS_JG))
 BUILD_MAIN = $(call COMPILE_C, $(FLAGS) $(INCLUDES))
 
 .PHONY: $(PHONY)
