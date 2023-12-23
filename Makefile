@@ -20,12 +20,15 @@ SRCDIR := $(SOURCEDIR)/src
 INCLUDES := -I$(SRCDIR)/z80
 INCLUDES_JG := -I$(SRCDIR)
 
-USE_VENDORED_SPEEXDSP ?= 0
+LIBS :=
 
 override INSTALL_DATA := 0
 override INSTALL_SHARED := 1
 
-include $(SOURCEDIR)/jg.mk
+include $(SOURCEDIR)/mk/jg.mk
+
+# Object dirs
+MKDIRS := z80
 
 CSRCS := z80/z80.c \
 	jcv.c \
@@ -39,21 +42,10 @@ CSRCS := z80/z80.c \
 
 JGSRCS := jg.c
 
-ifneq ($(USE_VENDORED_SPEEXDSP), 0)
-	CFLAGS_SPEEXDSP := -I$(DEPDIR)
-	LIBS_SPEEXDSP :=
-	CSRCS += speex/resample.c
-else
-	override REQUIRES_PRIVATE += speexdsp
-	CFLAGS_SPEEXDSP := $(shell $(PKG_CONFIG) --cflags speexdsp)
-	LIBS_SPEEXDSP := $(shell $(PKG_CONFIG) --libs speexdsp)
-endif
+include $(SOURCEDIR)/mk/speexdsp.mk
 
 INCLUDES += $(CFLAGS_SPEEXDSP)
-LIBS := $(LIBS_SPEEXDSP)
-
-# Object dirs
-MKDIRS := speex z80
+LIBS += $(LIBS_SPEEXDSP)
 
 # List of object files
 OBJS := $(patsubst %,$(OBJDIR)/%,$(CSRCS:.c=.o))
