@@ -13,6 +13,7 @@ VERSION_MINOR := 0
 VERSION_PATCH := 1
 
 CFLAGS ?= -O2
+
 FLAGS := -std=c11 -Wall -Wextra -Wshadow -Wmissing-prototypes -pedantic
 DEPDIR := $(SOURCEDIR)/deps
 SRCDIR := $(SOURCEDIR)/src
@@ -90,9 +91,6 @@ $(TARGET_STATIC_JG): $(OBJS_JG) $(OBJS_SHARED)
 $(TARGET_STATIC_MK): $(TARGET_STATIC_JG)
 	@printf '%s\n%s\n%s\n%s\n' 'NAME := $(JGNAME)' 'ASSETS :=' \
 		'ICONS := $(ICONS_BASE)' 'LIBS_STATIC := $(strip $(LIBS))' > $@
-
-$(OBJDIR)/$(LIB_MAJOR) $(OBJDIR)/$(LIB_SHARED): $(TARGET_SHARED)
-	ln -s $(LIB_VERSION) $@
 
 install-docs: all
 	@mkdir -p $(DESTDIR)$(DOCDIR)
