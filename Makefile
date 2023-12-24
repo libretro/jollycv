@@ -23,6 +23,8 @@ INCLUDES_JG := -I$(SRCDIR)
 
 LIBS :=
 
+DOCS := LICENSE README
+
 override INSTALL_DATA := 0
 override INSTALL_SHARED := 1
 
@@ -92,11 +94,5 @@ $(TARGET_STATIC_MK): $(TARGET_STATIC_JG)
 	@printf '%s\n%s\n%s\n%s\n' 'NAME := $(JGNAME)' 'ASSETS :=' \
 		'ICONS := $(ICONS_BASE)' 'LIBS_STATIC := $(strip $(LIBS))' > $@
 
-install-docs: all
-	@mkdir -p $(DESTDIR)$(DOCDIR)
+install-docs::
 	cp $(SRCDIR)/z80/LICENSE $(DESTDIR)$(DOCDIR)/LICENSE-z80
-	cp $(SOURCEDIR)/LICENSE $(DESTDIR)$(DOCDIR)
-	cp $(SOURCEDIR)/README $(DESTDIR)$(DOCDIR)
-ifneq ($(USE_VENDORED_SPEEXDSP), 0)
-	cp $(DEPDIR)/speex/COPYING $(DESTDIR)$(DOCDIR)/COPYING-speexdsp
-endif

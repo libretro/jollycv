@@ -6,6 +6,9 @@ ifneq ($(USE_VENDORED_SPEEXDSP), 0)
 	override LIBS_PRIVATE += $(LIBS_SPEEXDSP)
 	MKDIRS += deps/speex
 	CSRCS += deps/speex/resample.c
+
+install-docs::
+	cp $(DEPDIR)/speex/COPYING $(DESTDIR)$(DOCDIR)/COPYING-speexdsp
 else
 	override REQUIRES_PRIVATE += speexdsp
 	CFLAGS_SPEEXDSP = $(shell $(PKG_CONFIG) --cflags speexdsp)

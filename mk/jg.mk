@@ -171,6 +171,14 @@ clean::
 
 install-data: all
 
+install-docs:: all
+	@mkdir -p $(DESTDIR)$(DOCDIR)
+ifneq ($(DOCS),)
+	for i in $(DOCS); do \
+		cp $(SOURCEDIR)/$$i $(DESTDIR)$(DOCDIR); \
+	done
+endif
+
 install-library: all
 ifeq ($(DISABLE_MODULE), 0)
 	@mkdir -p $(DESTDIR)$(LIBPATH)
