@@ -3,6 +3,7 @@ USE_VENDORED_SPEEXDSP ?= 0
 ifneq ($(USE_VENDORED_SPEEXDSP), 0)
 	CFLAGS_SPEEXDSP := -I$(DEPDIR)
 	LIBS_SPEEXDSP :=  $(if $(findstring -lm,$(LIBS)),,-lm)
+	override LIBS_PRIVATE += $(LIBS_SPEEXDSP)
 	MKDIRS += deps/speex
 	CSRCS += deps/speex/resample.c
 else
