@@ -63,6 +63,8 @@ BUILD_MAIN = $(call COMPILE_C, $(FLAGS) $(INCLUDES))
 
 all: $(TARGET)
 
+include $(SOURCEDIR)/mk/rules.mk
+
 # Rules
 $(OBJDIR)/%.o: $(DEPDIR)/%.c $(OBJDIR)/.tag
 	$(call COMPILE_INFO,$(BUILD_MAIN))
@@ -76,20 +78,6 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.c $(OBJDIR)/.tag
 $(OBJDIR)/%.o: $(SOURCEDIR)/%.c $(OBJDIR)/.tag
 	$(call COMPILE_INFO,$(BUILD_JG))
 	@$(BUILD_JG)
-
-$(TARGET_MODULE): $(OBJS_JG) $(OBJS_MODULE)
-	@mkdir -p $(NAME)
-	$(LINK_MODULE)
-
-$(TARGET_SHARED): $(OBJS)
-	$(LINK_SHARED)
-
-$(TARGET_STATIC): $(OBJS)
-	$(AR) rcs $@ $^
-
-$(TARGET_STATIC_JG): $(OBJS_JG) $(OBJS_SHARED)
-	@mkdir -p $(NAME)
-	$(AR) rcs $@ $^
 
 $(TARGET_STATIC_MK): $(TARGET_STATIC_JG)
 	@printf '%s\n%s\n%s\n%s\n' 'NAME := $(JGNAME)' 'ASSETS :=' \
