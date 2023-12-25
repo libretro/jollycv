@@ -25,13 +25,19 @@ LIBS :=
 
 DOCS := LICENSE README
 
+# Object dirs
+MKDIRS := z80
+
 override INSTALL_DATA := 0
 override INSTALL_SHARED := 1
 
 include $(SOURCEDIR)/mk/jg.mk
+include $(SOURCEDIR)/mk/speexdsp.mk
 
-# Object dirs
-MKDIRS := z80
+INCLUDES += $(CFLAGS_SPEEXDSP)
+LIBS += $(LIBS_SPEEXDSP)
+
+LINKER := $(CC)
 
 CSRCS := z80/z80.c \
 	jcv.c \
@@ -45,13 +51,8 @@ CSRCS := z80/z80.c \
 
 JGSRCS := jg.c
 
-include $(SOURCEDIR)/mk/speexdsp.mk
-
-INCLUDES += $(CFLAGS_SPEEXDSP)
-LIBS += $(LIBS_SPEEXDSP)
-
 # List of object files
-OBJS := $(patsubst %,$(OBJDIR)/%,$(CSRCS:.c=.o))
+OBJS := $(patsubst %,$(OBJDIR)/%,$(CSRCS:.c=.o) $(OBJS_SPEEXDSP))
 OBJS_JG := $(patsubst %,$(OBJDIR)/%,$(JGSRCS:.c=.o))
 
 # Core commands
@@ -78,10 +79,10 @@ $(OBJDIR)/%.o: $(SOURCEDIR)/%.c $(OBJDIR)/.tag
 
 $(TARGET_MODULE): $(OBJS_JG) $(OBJS_MODULE)
 	@mkdir -p $(NAME)
-	$(strip $(CC) -o $@ $< $(LDFLAGS) $(LIBS_MODULE) $(LIBS) $(SHARED))
+	$(LINK_MODULE)
 
 $(TARGET_SHARED): $(OBJS)
-	$(strip $(CC) -o $@ $^ $(LDFLAGS) $(LIBS) $(SHARED) $(SONAME))
+	$(LINK_SHARED)
 
 $(TARGET_STATIC): $(OBJS)
 	$(AR) rcs $@ $^
