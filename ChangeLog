@@ -1,3 +1,8 @@
+Version 1.?.?
+-------------
+ - Build improvements
+ - Support Activision style PCBs
+
 Version 1.0.1
 -------------
  - Create a null input callback for Super Sketch
