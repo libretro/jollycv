@@ -7,11 +7,6 @@ JGNAME := $(NAME)
 DESCRIPTION := JollyCV is a highly accurate emulator for the ColecoVision, \
 	including support for the Super Game Module.
 
-# https://semver.org/
-VERSION_MAJOR := 1
-VERSION_MINOR := 0
-VERSION_PATCH := 1
-
 CFLAGS ?= -O2
 
 FLAGS := -std=c11 -Wall -Wextra -Wshadow -Wmissing-prototypes -pedantic
@@ -31,6 +26,7 @@ MKDIRS := z80
 override INSTALL_DATA := 0
 override INSTALL_SHARED := 1
 
+include $(SOURCEDIR)/version.h
 include $(SOURCEDIR)/mk/jg.mk
 include $(SOURCEDIR)/mk/speexdsp.mk
 
