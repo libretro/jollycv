@@ -79,9 +79,5 @@ $(OBJDIR)/%.o: $(SOURCEDIR)/%.c $(OBJDIR)/.tag
 	$(call COMPILE_INFO,$(BUILD_JG))
 	@$(BUILD_JG)
 
-$(TARGET_STATIC_MK): $(TARGET_STATIC_JG)
-	@printf '%s\n%s\n%s\n%s\n' 'NAME := $(JGNAME)' 'ASSETS :=' \
-		'ICONS := $(ICONS_BASE)' 'LIBS_STATIC := $(strip $(LIBS))' > $@
-
 install-docs::
 	cp $(SRCDIR)/z80/LICENSE $(DESTDIR)$(DOCDIR)/LICENSE-z80
