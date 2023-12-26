@@ -54,9 +54,16 @@ static size_t romsize = 0; // Size of the ROM in bytes
 static uint8_t rompages = 0; // Number of 8K ROM pages
 static uint32_t rompage[4]; // Offsets to the start of 8K ROM pages
 
-static uint8_t megacart = 0; // Mark whether the cart is a Mega Cart or not
+// Cartridge Types
+static unsigned carttype = 0; // Cartridge Type
+
+// Super Game Module RAM
 static uint8_t sgm_upper = 0; // Enable upper 24K SGM RAM
 static uint8_t sgm_lower = 0; // Enable lower 8K SGM RAM - replaces BIOS mapping
+
+// Activision PCBs with EEPROM
+static uint8_t sda = 0;
+static uint8_t scl = 0;
 
 static cv_sys_t cvsys; // ColecoVision System Context
 
@@ -162,13 +169,25 @@ uint8_t jcv_mem_rd(uint16_t addr) {
         return cvsys.ram[addr & 0x3ff];
     }
     else { // Cartridge ROM from 0x8000 to 0xffff
-        if (megacart && addr >= 0xffc0) { // Select new 16K bank on Mega Carts
-            /* Divide the number of pages by 2 because we are dealing with 16K
-               banks vs 8K banks. Subtract 1 because page numbers are
-               zero-indexed. Shift left 14 to create the offset into ROM data.
+        if (carttype == CART_MEGA && addr >= 0xffc0) {
+            /* Select new 16K bank on Mega Carts - Divide the number of pages
+              by 2 because we are dealing with 16K banks vs 8K banks. Subtract
+              1 because page numbers are zero-indexed. Shift left 14 to create
+              the offset into ROM data.
             */
             rompage[2] = (addr & ((rompages >> 1) - 1)) << 14;
             rompage[3] = rompage[2] + SIZE_8K; // Second half of 16K page
+        }
+        else if (carttype == CART_ACTIVISION) {
+            /* Return the ROM data at 0xbf80 if SDA is set, otherwise return
+               the data at 0xff80.
+            */
+            if (addr == 0xff80) {
+                if (sda)
+                    return romdata[0xbf80];
+                else
+                    return romdata[0xff80];
+            }
         }
 
         // If there are read attempts beyond the ROM's true size, return padding
@@ -192,6 +211,47 @@ void jcv_mem_wr(uint16_t addr, uint8_t data) {
         cvsys.sgmram[addr] = data;
     else if ((addr > 0x5fff) && (addr < 0x8000)) // Base System RAM writes
         cvsys.ram[addr & 0x3ff] = data;
+
+    if (carttype == CART_ACTIVISION) {
+        /* Activision PCBs swap banks when 0xff90, 0xffa0, or 0xffb0 are
+           written with any value. Writes to 0xffc0 and 0xffd0 control the
+           state of SCL, while writes to 0xffe0 and 0xfff0 control the state of
+           SDA.
+        */
+        switch (addr) {
+            case 0xff90: {
+                rompage[2] = 2 * SIZE_8K;
+                rompage[3] = 3 * SIZE_8K;
+                break;
+            }
+            case 0xffa0: {
+                rompage[2] = 4 * SIZE_8K;
+                rompage[3] = 5 * SIZE_8K;
+                break;
+            }
+            case 0xffb0: {
+                rompage[2] = 6 * SIZE_8K;
+                rompage[3] = 7 * SIZE_8K;
+                break;
+            }
+            case 0xffc0: {
+                scl = 0;
+                break;
+            }
+            case 0xffd0: {
+                scl = 1;
+                break;
+            }
+            case 0xffe0: {
+                sda = 0;
+                break;
+            }
+            case 0xfff0: {
+                sda = 1;
+                break;
+            }
+        }
+    }
 }
 
 // Load the ColecoVision BIOS
@@ -239,32 +299,27 @@ int jcv_rom_load(void *data, size_t size) {
     romdata = (uint8_t*)data; // Assign internal ROM pointer
     romsize = size; // Record the true size of the ROM data in bytes
 
-    if (romsize > 0x8000) { // ROM image is possibly a Mega Cart
-        uint16_t hword = // First, check if this is a valid ROM image
-            romdata[romsize - SIZE_16K] | (romdata[romsize - SIZE_16K+1] << 8);
-        if (hword != 0xaa55 && hword != 0x55aa)
-            return 0; // Fail if this not a valid ColecoVision ROM image
-
-        megacart = 1; // Mark the Mega Cart bit true
-        rompages = (size / SIZE_8K) + (size % SIZE_8K ? 1 : 0); // Count pages
-
-        // The selectable banks are 16K and mapped to 0xc000 - 0xffff
-        rompage[2] = 0x0000; // Map 0xc000 to the first 8K bank
-        rompage[3] = SIZE_8K; // Map 0xe000 to the second 8K bank
-
-        // The final 16K segment of ROM is always mapped to 0x8000 - 0xbfff
-        rompage[0] = romsize - SIZE_16K; // First half of final 16K bank
-        rompage[1] = romsize - SIZE_8K; // Second half of final 16K bank
-
-        return 1;
-    }
-
     /* ROM data should start with one of two possible combinations of two bytes:
        0xaa, 0x55: Show the BIOS screen with game title and copyright info
        0x55, 0xaa: Jump to the code vector (start of game code), bypassing BIOS
                    boot routines
     */
     uint16_t hword = romdata[1] | (romdata[0] << 8); // Header Word
+
+    if (romsize > 0x8000) { // ROM is possibly a Mega Cart or Activision PCB
+        uint16_t mchword = // First, check if this is a Mega Cart
+            romdata[romsize - SIZE_16K] | (romdata[romsize - SIZE_16K+1] << 8);
+
+        if (mchword == 0xaa55 || mchword == 0x55aa) {
+            carttype = CART_MEGA; // Mark the Mega Cart bit true
+            hword = mchword;
+        }
+        else {
+            carttype = CART_ACTIVISION; // It is most likely an Activision PCB
+            printf("Activision");
+        }
+    }
+
     if (hword != 0xaa55 && hword != 0x55aa)
         return 0; // Fail if this not a valid ColecoVision ROM image
 
@@ -272,10 +327,29 @@ int jcv_rom_load(void *data, size_t size) {
     // Use modulus to discover if there is a page that is not quite 8K
     rompages = (size / SIZE_8K) + (size % SIZE_8K ? 1 : 0);
 
-    // Assign ROM page offsets to locations in ROM data
-    // Schematic shows 4 lines for 8K ROM pages (EN_80, EN_A0, EN_C0, EN_E0)
-    for (int i = 0; i < rompages; ++i)
-        rompage[i] = i * SIZE_8K;
+    if (carttype == CART_MEGA) {
+        // The selectable banks are 16K and mapped to 0xc000 - 0xffff
+        rompage[2] = 0x0000; // Map 0xc000 to the first 8K bank
+        rompage[3] = SIZE_8K; // Map 0xe000 to the second 8K bank
+
+        // The final 16K segment of ROM is always mapped to 0x8000 - 0xbfff
+        rompage[0] = romsize - SIZE_16K; // First half of final 16K bank
+        rompage[1] = romsize - SIZE_8K; // Second half of final 16K bank
+    }
+    else if (carttype == CART_ACTIVISION) {
+        /* The selectable banks are 16K and mapped to 0xc000 - 0xffff. The
+           first 16K is always mapped to the first 16K of address space.
+        */
+        for (int i = 0; i < 4; ++i)
+            rompage[i] = i * SIZE_8K;
+    }
+    else {
+        /* Assign ROM page offsets to locations in ROM data
+           Schematic shows 4 lines for 8K ROM pages: EN_80, EN_A0, EN_C0, EN_E0
+        */
+        for (int i = 0; i < rompages; ++i)
+            rompage[i] = i * SIZE_8K;
+    }
 
     return 1;
 }
@@ -325,6 +399,10 @@ void jcv_state_load_raw(const void *sstate) {
     jcv_sgmpsg_state_load(st);
     jcv_vdp_state_load(st);
     jcv_z80_state_load(st);
+    if (carttype == CART_ACTIVISION) {
+        scl = jcv_serial_pop8(st);
+        sda = jcv_serial_pop8(st);
+    }
 }
 
 // Load a state from a file
@@ -376,6 +454,10 @@ const void* jcv_state_save_raw(void) {
     jcv_sgmpsg_state_save(state);
     jcv_vdp_state_save(state);
     jcv_z80_state_save(state);
+    if (carttype == CART_ACTIVISION) {
+        jcv_serial_push8(state, scl);
+        jcv_serial_push8(state, sda);
+    }
     return (const void*)state;
 }
 

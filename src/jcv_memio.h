@@ -67,6 +67,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CV_INPUT_P 0x07 // Purple
 #define CV_INPUT_B 0x0b // Blue
 
+typedef enum _cv_cart {
+    CART_NORMAL,
+    CART_MEGA,
+    CART_ACTIVISION
+} cv_cart;
+
 typedef struct _cv_sys_t {
     uint8_t ram[SIZE_CVRAM]; // System RAM
     uint8_t sgmram[SIZE_32K]; // Super Game Module RAM
