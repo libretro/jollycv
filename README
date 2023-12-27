@@ -78,9 +78,6 @@ Compatibility
 JollyCV is compatible with 100% of the commercially released ColecoVision
 library, and all known and freely available homebrew.
 
-Only a single game is known not to boot (possibly a bad dump):
-Lord of the Dungeon (USA) (Beta)
-
 Super Sketch boots, but is not usable due to a lack of documentation on the
 Super Sketch Pad.
 

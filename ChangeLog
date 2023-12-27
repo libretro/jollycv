@@ -2,6 +2,7 @@ Version 1.?.?
 -------------
  - Build improvements
  - Support Activision style PCBs
+ - Support for cartridges with SRAM (Lord of the Dungeon)
 
 Version 1.0.1
 -------------
