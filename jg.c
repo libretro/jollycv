@@ -170,6 +170,10 @@ static dbentry_t gamedb[] = {
         { "a46d20d65533ed979933fc1cfe6c0ad7", JG_COLECO_SKETCH },
 };
 
+static const char *gamedb_sram[] = { // Games containing SRAM
+    "d5964ac4e7b1fd3ae91a8008ef57a3cc", // Lord of the Dungeon (USA) (Beta)
+};
+
 // There may be more PAL-only releases, but many dumps marked as "Europe" are
 // actually worldwide releases - for now, don't use this list for anything
 /*static const char *gamedb_pal[] = { // PAL games
@@ -393,6 +397,24 @@ int jg_game_load(void) {
     if (!jcv_rom_load(gameinfo.data, gameinfo.size))
         return 0;
 
+    for (size_t i = 0; i < (sizeof(gamedb_sram) / sizeof(const char*)); ++i) {
+        if (!strcmp(gamedb_sram[i], gameinfo.md5)) {
+            jcv_rom_set_carttype(CART_SRAM);
+            char savename[292];
+            snprintf(savename, sizeof(savename),
+                "%s/%s.srm", pathinfo.save, gameinfo.name);
+            int sramstat = jcv_sram_load((const char*)savename);
+
+            if (sramstat == 1)
+                jg_cb_log(JG_LOG_DBG, "SRAM Loaded: %s\n", savename);
+            else if (sramstat == 2)
+                jg_cb_log(JG_LOG_DBG, "SRAM File Missing: %s\n", savename);
+            else
+                jg_cb_log(JG_LOG_DBG, "SRAM Load Failed: %s\n", savename);
+            break;
+        }
+    }
+
     // Set the samples per frame and frame timing depending on region
     if (settings_jcv[REGION].val) { // PAL mode
         vidinfo.aspect = ASPECT_PAL;
@@ -409,6 +431,18 @@ int jg_game_load(void) {
 }
 
 int jg_game_unload(void) {
+    char savename[292];
+    snprintf(savename, sizeof(savename),
+        "%s/%s.srm", pathinfo.save, gameinfo.name);
+    int srmstat = jcv_sram_save((const char*)savename);
+
+    if (srmstat == 1)
+        jg_cb_log(JG_LOG_DBG, "SRAM Saved: %s\n", savename);
+    else if (srmstat == 2)
+        jg_cb_log(JG_LOG_DBG, "Cartridge does not contain SRAM\n");
+    else
+        jg_cb_log(JG_LOG_DBG, "SRAM Save Failed: %s\n", savename);
+
     return 1;
 }
 

@@ -32,6 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define JCV_MEMIO_H
 
 #define SIZE_1K 0x400
+#define SIZE_2K 0x800
 #define SIZE_8K 0x2000
 #define SIZE_16K 0x4000
 #define SIZE_32K 0x8000
@@ -70,7 +71,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 typedef enum _cv_cart {
     CART_NORMAL,
     CART_MEGA,
-    CART_ACTIVISION
+    CART_ACTIVISION,
+    CART_SRAM
 } cv_cart;
 
 typedef struct _cv_sys_t {
@@ -94,6 +96,7 @@ void jcv_memio_deinit(void);
 int jcv_bios_load_file(const char*);
 int jcv_bios_load(void*, size_t);
 int jcv_rom_load(void*, size_t);
+void jcv_rom_set_carttype(int);
 
 size_t jcv_state_size(void);
 
@@ -102,5 +105,8 @@ int jcv_state_load(const char*);
 
 const void* jcv_state_save_raw(void);
 int jcv_state_save(const char*);
+
+int jcv_sram_load(const char*);
+int jcv_sram_save(const char*);
 
 #endif

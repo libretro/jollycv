@@ -43,7 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "jcv_z80.h"
 
 #define SIZE_STATE 50392
-static uint8_t state[SIZE_STATE];
+static uint8_t state[SIZE_STATE + SIZE_2K];
 
 static uint16_t (*jcv_input_cb)(int); // Input poll callback
 
@@ -64,6 +64,9 @@ static uint8_t sgm_lower = 0; // Enable lower 8K SGM RAM - replaces BIOS mapping
 // Activision PCBs with EEPROM
 static uint8_t sda = 0;
 static uint8_t scl = 0;
+
+// SRAM or EEPROM Save Data
+static uint8_t savedata[SIZE_2K];
 
 static cv_sys_t cvsys; // ColecoVision System Context
 
@@ -189,6 +192,9 @@ uint8_t jcv_mem_rd(uint16_t addr) {
                     return romdata[0xff80];
             }
         }
+        else if (carttype == CART_SRAM && addr > 0xdfff) {
+            return savedata[addr & 0x7ff];
+        }
 
         // If there are read attempts beyond the ROM's true size, return padding
         if (addr >= (romsize + SIZE_32K))
@@ -251,6 +257,9 @@ void jcv_mem_wr(uint16_t addr, uint8_t data) {
                 break;
             }
         }
+    }
+    else if (carttype == CART_SRAM && addr >= 0xdfff) {
+        savedata[addr & 0x7ff] = data;
     }
 }
 
@@ -354,6 +363,10 @@ int jcv_rom_load(void *data, size_t size) {
     return 1;
 }
 
+void jcv_rom_set_carttype(int ctype) {
+    carttype = ctype;
+}
+
 // Initialize memory and set I/O states to default
 void jcv_memio_init(void) {
     /* Fill RAM with garbage - Some software relies on non-zero data at boot,
@@ -382,7 +395,7 @@ void jcv_memio_deinit(void) {
 
 // Return the size of a state
 size_t jcv_state_size(void) {
-    return SIZE_STATE;
+    return SIZE_STATE + (carttype == CART_SRAM ? SIZE_2K : 0);
 }
 
 // Load raw state data into the running system
@@ -402,6 +415,9 @@ void jcv_state_load_raw(const void *sstate) {
     if (carttype == CART_ACTIVISION) {
         scl = jcv_serial_pop8(st);
         sda = jcv_serial_pop8(st);
+    }
+    else if (carttype == CART_SRAM) {
+        jcv_serial_popblk(savedata, st, SIZE_2K);
     }
 }
 
@@ -458,6 +474,9 @@ const void* jcv_state_save_raw(void) {
         jcv_serial_push8(state, scl);
         jcv_serial_push8(state, sda);
     }
+    else if (carttype == CART_SRAM) {
+        jcv_serial_pushblk(state, savedata, SIZE_2K);
+    }
     return (const void*)state;
 }
 
@@ -474,6 +493,55 @@ int jcv_state_save(const char *filename) {
 
     // Write and close the file
     fwrite(sstate, jcv_state_size(), sizeof(uint8_t), file);
+    fclose(file);
+
+    return 1; // Success!
+}
+
+// Load SRAM
+int jcv_sram_load(const char *filename) {
+    FILE *file;
+    size_t filesize, result;
+
+    // Open the file for reading
+    file = fopen(filename, "rb");
+    if (!file)
+        return 2;
+
+    // Find out the file's size
+    fseek(file, 0, SEEK_END);
+    filesize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    if (filesize > SIZE_2K) {
+        fclose(file);
+        return 0;
+    }
+
+    // Read the file into the system's Cartridge RAM slot and then close it
+    result = fread(savedata, sizeof(uint8_t), filesize, file);
+    if (result != filesize) {
+        fclose(file);
+        return 0;
+    }
+
+    fclose(file);
+
+    return 1; // Success!
+}
+
+// Save SRAM
+int jcv_sram_save(const char *filename) {
+    if (carttype != CART_SRAM)
+        return 2;
+
+    FILE *file;
+    file = fopen(filename, "wb");
+    if (!file)
+        return 0;
+
+    // Write and close the file
+    fwrite(savedata, SIZE_2K, sizeof(uint8_t), file);
     fclose(file);
 
     return 1; // Success!
