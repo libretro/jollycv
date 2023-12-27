@@ -412,6 +412,8 @@ void jcv_state_load_raw(const void *sstate) {
     jcv_sgmpsg_state_load(st);
     jcv_vdp_state_load(st);
     jcv_z80_state_load(st);
+    sgm_upper = jcv_serial_pop8(st);
+    sgm_lower = jcv_serial_pop8(st);
     if (carttype == CART_ACTIVISION) {
         scl = jcv_serial_pop8(st);
         sda = jcv_serial_pop8(st);
@@ -470,6 +472,8 @@ const void* jcv_state_save_raw(void) {
     jcv_sgmpsg_state_save(state);
     jcv_vdp_state_save(state);
     jcv_z80_state_save(state);
+    jcv_serial_push8(state, sgm_upper);
+    jcv_serial_push8(state, sgm_lower);
     if (carttype == CART_ACTIVISION) {
         jcv_serial_push8(state, scl);
         jcv_serial_push8(state, sda);
