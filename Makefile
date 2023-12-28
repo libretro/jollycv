@@ -20,6 +20,9 @@ LIBS :=
 
 DOCS := LICENSE README
 
+# TODO: add public API header
+HEADERS :=
+
 # Object dirs
 MKDIRS := z80
 
