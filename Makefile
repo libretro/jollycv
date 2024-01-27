@@ -10,7 +10,6 @@ DESCRIPTION := JollyCV is a highly accurate emulator for the ColecoVision, \
 CFLAGS ?= -O2
 
 FLAGS := -std=c11 -Wall -Wextra -Wshadow -Wmissing-prototypes -pedantic
-DEPDIR := $(SOURCEDIR)/deps
 SRCDIR := $(SOURCEDIR)/src
 
 INCLUDES := -I$(SRCDIR)/z80
