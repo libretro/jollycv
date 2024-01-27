@@ -12,10 +12,10 @@ CFLAGS ?= -O2
 FLAGS := -std=c11 -Wall -Wextra -Wshadow -Wmissing-prototypes -pedantic
 SRCDIR := $(SOURCEDIR)/src
 
-INCLUDES := -I$(SRCDIR)/z80
-INCLUDES_JG := -I$(SRCDIR)
+INCLUDES = -I$(SRCDIR)/z80
+INCLUDES_JG = -I$(SRCDIR)
 
-LIBS :=
+LIBS =
 
 DOCS := LICENSE README
 
