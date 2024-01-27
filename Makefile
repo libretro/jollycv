@@ -30,7 +30,6 @@ override INSTALL_SHARED := 1
 
 include $(SOURCEDIR)/version.h
 include $(SOURCEDIR)/mk/jg.mk
-include $(SOURCEDIR)/mk/speexdsp.mk
 
 INCLUDES += $(CFLAGS_SPEEXDSP)
 LIBS += $(LIBS_SPEEXDSP)
