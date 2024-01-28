@@ -17,6 +17,8 @@ INCLUDES_JG = -I$(SRCDIR)
 
 LIBS =
 
+LIBS_REQUIRES := speexdsp
+
 DOCS := LICENSE README
 
 # TODO: add public API header
@@ -26,6 +28,7 @@ HEADERS :=
 MKDIRS := z80
 
 override INSTALL_DATA := 0
+override INSTALL_EXAMPLE := 0
 override INSTALL_SHARED := 1
 
 include $(SOURCEDIR)/version.h
