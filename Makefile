@@ -36,6 +36,7 @@ include $(SOURCEDIR)/mk/jg.mk
 INCLUDES += $(CFLAGS_SPEEXDSP)
 LIBS += $(LIBS_SPEEXDSP)
 
+EXT := c
 FLAGS := -std=c11 $(WARNINGS_DEF_C)
 LINKER := $(CC)
 
@@ -66,14 +67,10 @@ all: $(TARGET)
 include $(SOURCEDIR)/mk/rules.mk
 
 # Rules
-$(OBJDIR)/%.o: $(SRCDIR)/%.c $(OBJDIR)/.tag
+$(OBJDIR)/%.o: $(SRCDIR)/%.$(EXT) $(PREREQ)
 	$(call COMPILE_INFO,$(BUILD_MAIN))
 	@$(BUILD_MAIN)
 
-# Shim rules
-$(OBJDIR)/%.o: $(SOURCEDIR)/%.c $(OBJDIR)/.tag
-	$(call COMPILE_INFO,$(BUILD_JG))
-	@$(BUILD_JG)
-
+# Data rules
 install-docs::
 	cp $(SRCDIR)/z80/LICENSE $(DESTDIR)$(DOCDIR)/LICENSE-z80
