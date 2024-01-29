@@ -9,7 +9,6 @@ DESCRIPTION := JollyCV is a highly accurate emulator for the ColecoVision, \
 
 CFLAGS ?= -O2
 
-FLAGS := -std=c11 -Wall -Wextra -Wshadow -Wmissing-prototypes -pedantic
 SRCDIR := $(SOURCEDIR)/src
 
 INCLUDES = -I$(SRCDIR)/z80
@@ -37,6 +36,7 @@ include $(SOURCEDIR)/mk/jg.mk
 INCLUDES += $(CFLAGS_SPEEXDSP)
 LIBS += $(LIBS_SPEEXDSP)
 
+FLAGS := -std=c11 $(WARNINGS_DEF_C)
 LINKER := $(CC)
 
 CSRCS := z80/z80.c \
@@ -66,10 +66,6 @@ all: $(TARGET)
 include $(SOURCEDIR)/mk/rules.mk
 
 # Rules
-$(OBJDIR)/%.o: $(DEPDIR)/%.c $(OBJDIR)/.tag
-	$(call COMPILE_INFO,$(BUILD_MAIN))
-	@$(BUILD_MAIN)
-
 $(OBJDIR)/%.o: $(SRCDIR)/%.c $(OBJDIR)/.tag
 	$(call COMPILE_INFO,$(BUILD_MAIN))
 	@$(BUILD_MAIN)
