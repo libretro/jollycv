@@ -325,7 +325,6 @@ int jcv_rom_load(void *data, size_t size) {
         }
         else {
             carttype = CART_ACTIVISION; // It is most likely an Activision PCB
-            printf("Activision");
         }
     }
 
