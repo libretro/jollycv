@@ -12,9 +12,6 @@ ifneq ($(USE_VENDORED_SPEEXDSP), 0)
 	MKDIRS += deps/speex
 	SRCS_SPEEXDSP := deps/speex/resample.c
 	OBJS_SPEEXDSP := $(SRCS_SPEEXDSP:.c=.o)
-
-install-docs::
-	cp $(DIR_SPEEXDSP)/COPYING $(DESTDIR)$(DOCDIR)/COPYING-speexdsp
 else
 	CFLAGS_SPEEXDSP = $(shell $(PKG_CONFIG) --cflags speexdsp)
 	LIBS_SPEEXDSP = $(shell $(PKG_CONFIG) --libs speexdsp)
@@ -37,4 +34,9 @@ BUILD_SPEEXDSP = $(call COMPILE_C, $(FLAGS_SPEEXDSP))
 $(OBJDIR)/deps/speex/%.o: $(DIR_SPEEXDSP)/%.c $(OBJDIR)/.tag
 	$(call COMPILE_INFO,$(BUILD_SPEEXDSP))
 	@$(BUILD_SPEEXDSP)
+
+ifneq ($(USE_VENDORED_SPEEXDSP), 0)
+install-docs::
+	cp $(DIR_SPEEXDSP)/COPYING $(DESTDIR)$(DOCDIR)/COPYING-speexdsp
+endif
 endif
