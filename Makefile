@@ -28,7 +28,7 @@ MKDIRS := z80
 
 override INSTALL_DATA := 0
 override INSTALL_EXAMPLE := 0
-override INSTALL_SHARED := 1
+override INSTALL_SHARED := 0
 
 include $(SOURCEDIR)/version.h
 include $(SOURCEDIR)/mk/jg.mk
