@@ -7,8 +7,6 @@ JGNAME := $(NAME)
 DESCRIPTION := JollyCV is a highly accurate emulator for the ColecoVision, \
 	including support for the Super Game Module.
 
-CFLAGS ?= -O2
-
 SRCDIR := $(SOURCEDIR)/src
 
 INCLUDES = -I$(SRCDIR)/z80
@@ -64,8 +62,6 @@ BUILD_MAIN = $(call COMPILE_C, $(FLAGS) $(INCLUDES))
 
 all: $(TARGET)
 
-include $(SOURCEDIR)/mk/rules.mk
-
 # Rules
 $(OBJDIR)/%.o: $(SRCDIR)/%.$(EXT) $(PREREQ)
 	$(call COMPILE_INFO,$(BUILD_MAIN))
@@ -74,3 +70,5 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.$(EXT) $(PREREQ)
 # Data rules
 install-docs::
 	cp $(SRCDIR)/z80/LICENSE $(DESTDIR)$(DOCDIR)/LICENSE-z80
+
+include $(SOURCEDIR)/mk/rules.mk
