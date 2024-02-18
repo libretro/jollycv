@@ -138,7 +138,7 @@ void jcv_io_wr(uint8_t port, uint8_t data) {
             else if (port == 0x51) // Write to the SGM PSG's selected register
                 jcv_sgmpsg_wr(data);
             else if (port == 0x53)
-                sgm_upper = 1;
+                sgm_upper = data & 0x01;
             else if (port == 0x7f)
                 sgm_lower = ~data & 0x02;
             break;
@@ -174,9 +174,9 @@ uint8_t jcv_mem_rd(uint16_t addr) {
     else { // Cartridge ROM from 0x8000 to 0xffff
         if (carttype == CART_MEGA && addr >= 0xffc0) {
             /* Select new 16K bank on Mega Carts - Divide the number of pages
-              by 2 because we are dealing with 16K banks vs 8K banks. Subtract
-              1 because page numbers are zero-indexed. Shift left 14 to create
-              the offset into ROM data.
+               by 2 because we are dealing with 16K banks vs 8K banks. Subtract
+               1 because page numbers are zero-indexed. Shift left 14 to create
+               the offset into ROM data.
             */
             rompage[2] = (addr & ((rompages >> 1) - 1)) << 14;
             rompage[3] = rompage[2] + SIZE_8K; // Second half of 16K page
@@ -374,7 +374,7 @@ void jcv_memio_init(void) {
     */
     srand(time(NULL));
     for (int i = 0; i < SIZE_CVRAM; ++i)
-        cvsys.ram[i] = rand() % 256; // Random numbers from 0-255
+        cvsys.ram[i] = rand() & 0xff; // Random numbers from 0-255
 
     memset(cvsys.sgmram, 0xff, 0x6000);
 
