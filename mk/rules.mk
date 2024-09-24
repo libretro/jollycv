@@ -51,6 +51,39 @@ $(OBJDIR)/module.map: $(SOURCEDIR)/link.in $(OBJDIR)/.tag
 	@sed -e 's|@NAME@||' -e 's|@SYMBOLS@|jg_*;|' $< > $@
 endif
 
+ifneq ($(DOXYFILE),)
+$(HTML_OUT)/.tag:
+	@mkdir -p $(HTML_OUT)
+	@touch $@
+
+$(TARGET_HTML): $(HEADERS) $(HTML_OUT)/.tag
+	@cp $(HEADERS:%=$(SOURCEDIR)/%) $(HTML_OUT)/
+
+$(HTML_OUT)/Doxyfile: $(DOXYFILE) $(TARGET_HTML)
+	@sed -e 's|@NAME@|$(NAME)|' \
+		-e 's|@DESCRIPTION@|$(DESCRIPTION)|' \
+		-e 's|@VERSION@|$(VERSION)|' \
+		$< \
+		> $@
+
+doxyfile: $(HTML_OUT)/Doxyfile
+
+$(HTML_OUT)/doxyfile.tag: $(HTML_OUT)/Doxyfile
+	cd $(HTML_OUT) && $(DOXYGEN) Doxyfile
+	@touch $@
+
+html: $(HTML_OUT)/doxyfile.tag
+
+install-html: html
+	@mkdir -p $(DESTDIR)$(HTMLDIR)
+	for i in $(HTML_OUT)/html/*; do \
+		cp $$i $(DESTDIR)/$(HTMLDIR); \
+	done
+
+uninstall::
+	rm -rf $(DESTDIR)$(HTMLDIR)
+endif
+
 ifneq ($(ICONS),)
 $(TARGET_ICONS): $(ICONS_BASE)
 	@mkdir -p $(NAME)/icons
@@ -58,13 +91,21 @@ $(TARGET_ICONS): $(ICONS_BASE)
 endif
 
 ifneq ($(INSTALL_DATA), 0)
-data: $(DATA_TARGET)
+data: $(PREREQ_DATA)
 
 uninstall::
 	rm -rf $(DESTDIR)$(DATADIR)/jollygood/$(NAME)
 endif
 
 ifneq ($(INSTALL_EXAMPLE), 0)
+$(BIN_OUT)/.tag:
+	@mkdir -p $(BIN_OUT)
+	touch $@
+
+$(BIN_OUT)/%.o: $(SOURCEDIR)/$(EXAMPLE)/%.$(EXT) $(BIN_OUT)/.tag
+	$(call COMPILE_INFO,$(BUILD_EXAMPLE))
+	@$(BUILD_EXAMPLE)
+
 $(BIN_EXAMPLE): $(OBJS_BIN) $(OBJS_MODULE)
 	$(LINK_BIN)
 
@@ -72,7 +113,7 @@ $(TARGET_BIN): $(SOURCEDIR)/lib/bin.in $(BIN_EXAMPLE)
 	@sed -e 's|@EXAMPLE@|$(EXAMPLE)|' $< > $@
 	@chmod 0755 $@
 
-example: $(TARGET_BIN)
+example: $(PREREQ_EXAMPLE)
 
 install-bin: example
 	@mkdir -p $(DESTDIR)$(BINDIR)

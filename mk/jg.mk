@@ -1,5 +1,6 @@
 DISABLE_MODULE ?= 0
 ENABLE_EXAMPLE ?= 0
+ENABLE_HTML ?= 0
 ENABLE_SHARED ?= 0
 ENABLE_STATIC ?= 0
 ENABLE_STATIC_JG ?= 0
@@ -70,13 +71,20 @@ override VERSION_SCRIPT_MODULE := $(VERSION_SCRIPT),$(OBJDIR)/module.map
 
 # Prerequisites
 override PREREQ := $(OBJDIR)/.tag
+override PREREQ_DATA =
+override PREREQ_EXAMPLE = $(TARGET_BIN)
 
 # Desktop File
 override DESKTOP := $(JGNAME).desktop
 
+# HTML Docs
+override HTML_OUT := $(OBJDIR)/doc
+override DOXYFILE := $(wildcard $(SOURCEDIR)/lib/Doxyfile.in)
+
 # Example
+override BIN_OUT := $(OBJDIR)/$(EXAMPLE)
 override BIN_NAME := $(NAME)-example
-override BIN_EXAMPLE := $(OBJDIR)/$(EXAMPLE)/$(BIN_NAME)
+override BIN_EXAMPLE := $(BIN_OUT)/$(BIN_NAME)
 
 # Icons
 override ICONS_BASE := $(wildcard $(SOURCEDIR)/icons/*.png \
@@ -90,6 +98,7 @@ override TARGET_STRIP :=
 override TARGET_BIN := $(OBJDIR)/$(BIN_NAME)
 override TARGET_DESKTOP := $(NAME)/$(DESKTOP)
 override TARGET_ICONS := $(ICONS:%=$(NAME)/icons/%)
+override TARGET_HTML := $(addprefix $(HTML_OUT)/,$(notdir $(HEADERS)))
 override TARGET_MODULE := $(NAME)/$(LIBRARY)
 override TARGET_SHARED := $(OBJDIR)/$(LIB_VERSION)
 override TARGET_STATIC := $(OBJDIR)/$(LIB_STATIC)
@@ -98,11 +107,16 @@ override TARGET_STATIC_MK := $(NAME)/jg-static.mk
 
 override PHONY += module install-module install-strip-module static-jg
 
+ifeq ($(DOXYFILE),)
+	override ENABLE_HTML := 0
+else
+	override PHONY += doxyfile html install-html
+endif
+
 ifeq ($(INSTALL_EXAMPLE), 0)
 	override ENABLE_EXAMPLE := 0
 else
 	override PHONY += example install-bin install-strip-bin
-	override MKDIRS += $(EXAMPLE)
 endif
 
 ifeq ($(INSTALL_DATA), 0)
@@ -116,6 +130,16 @@ else
 	ifneq (,$(or $(filter-out 0,$(ENABLE_EXAMPLE)), \
 			$(filter 0,$(DISABLE_MODULE))))
 		override TARGET_INSTALL += install-data
+	endif
+	ifneq (,$(or $(filter-out 0,$(ENABLE_STATIC_JG)), \
+                        $(filter 0,$(DISABLE_MODULE))))
+		override PREREQ_DATA += $(DATA_TARGET)
+	endif
+	ifneq ($(ENABLE_EXAMPLE), 0)
+		override PREREQ_DATA += $(DATA_BIN_TARGET)
+	endif
+	ifneq ($(INSTALL_EXAMPLE), 0)
+		override PREREQ_EXAMPLE += $(DATA_BIN_TARGET)
 	endif
 endif
 
@@ -140,6 +164,11 @@ endif
 
 ifneq ($(SYMBOLS_LIST),)
 	override SONAME += $(VERSION_SCRIPT),$(OBJDIR)/shared.map
+endif
+
+ifneq ($(ENABLE_HTML), 0)
+	override TARGET += html
+	override TARGET_INSTALL += install-html
 endif
 
 ifneq ($(ENABLE_EXAMPLE), 0)
