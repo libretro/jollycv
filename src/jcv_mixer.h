@@ -37,8 +37,8 @@ void jcv_mixer_init(void);
 void jcv_mixer_set_buffer(int16_t*);
 void jcv_mixer_set_callback(void (*)(size_t));
 void jcv_mixer_set_rate(size_t);
-void jcv_mixer_set_region(uint8_t);
-void jcv_mixer_set_rsqual(uint8_t);
+void jcv_mixer_set_region(unsigned);
+void jcv_mixer_set_rsqual(unsigned);
 void jcv_mixer_resamp(size_t, size_t);
 
 #endif

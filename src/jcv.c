@@ -58,18 +58,12 @@ PSG cycles per frame:
     59735.66667 / 16 = 3733.4792 (~224KHz)
 */
 
-#define DIV_PSG 16 // PSG Clock Divider
-#define Z80_CYC_LINE 228 // Z80 CPU cycles per scanline (227.99873)
-
-static size_t numscanlines = CV_VDP_SCANLINES;
-static size_t psgcycs = 0;
-static size_t psgsamps = 0;
-static size_t sgmsamps = 0;
+void (*jcv_exec)(void);
 
 // Set the region
-void jcv_set_region(uint8_t region) {
+void jcv_set_region(unsigned region) {
     // 313 scanlines for PAL, 262 scanlines for NTSC (192 visible for both)
-    numscanlines = region ? CV_VDP_SCANLINES_PAL : CV_VDP_SCANLINES;
+    jcv_coleco_set_region(region);
     jcv_mixer_set_region(region);
     jcv_vdp_set_region(region);
 }
@@ -82,6 +76,8 @@ void jcv_init(void) {
     jcv_mixer_init();
     jcv_vdp_init();
     jcv_z80_init();
+
+    jcv_exec = &jcv_coleco_exec;
 }
 
 // Deinitialize
@@ -92,56 +88,10 @@ void jcv_deinit(void) {
 
 // Reset the system
 void jcv_reset(int hard) {
-    if (hard) { } // Currently unused
+    (void)hard; // Currently unused
     jcv_memio_init(); // Init does the same thing reset needs to do
     sn76489_init();
     ay38910_init();
     jcv_vdp_init();
     jcv_z80_reset();
-}
-
-// Run emulation for one frame
-void jcv_exec(void) {
-    // Keep track of the number of samples generated this frame
-    psgsamps = 0;
-    sgmsamps = 0;
-
-    // Restore the leftover cycle count
-    uint32_t extcycs = jcv_z80_cyc_restore();
-
-    // Run scanline-based iterations of emulation until a frame is complete
-    for (size_t i = 0; i < numscanlines; ++i) {
-        // Set the number of cycles required to complete this scanline
-        size_t reqcycs = Z80_CYC_LINE - extcycs;
-
-        // Count cycles for an iteration (usually one instruction)
-        size_t itercycs = 0;
-
-        // Count the total cycles run in a scanline
-        size_t linecycs = 0;
-
-        // Run CPU instructions until enough have been run for one scanline
-        while (linecycs < reqcycs) {
-            itercycs = jcv_z80_exec(); // Run a single CPU instruction
-            linecycs += itercycs; // Add the number of cycles to the total
-
-            for (size_t s = 0; s < itercycs; ++s) { // Catch PSGs up to the CPU
-                if (++psgcycs % DIV_PSG == 0) {
-                    psgsamps += sn76489_exec();
-                    sgmsamps += ay38910_exec();
-                    psgcycs = 0;
-                }
-            }
-        }
-
-        extcycs = linecycs - reqcycs; // Store extra cycle count
-
-        jcv_vdp_exec(); // Draw a scanline of pixel data
-    }
-
-    // Resample audio and push to the frontend
-    jcv_mixer_resamp(psgsamps, sgmsamps);
-
-    // Store the leftover cycle count
-    jcv_z80_cyc_store(extcycs);
 }

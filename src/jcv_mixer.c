@@ -45,8 +45,8 @@ static int16_t *abuf = NULL; // Buffer to output resampled data into
 static int16_t *psgbuf = NULL; // PSG buffer
 static int16_t *sgmbuf = NULL; // SGM PSG buffer
 static size_t samplerate = 48000; // Default sample rate is 48000Hz
-static uint8_t framerate = 60; // Default to 60 for NTSC
-static uint8_t rsq = 3; // Default resampler quality is 3
+static unsigned framerate = 60; // Default to 60 for NTSC
+static unsigned rsq = 3; // Default resampler quality is 3
 
 // Speex
 static SpeexResamplerState *resampler = NULL;
@@ -67,12 +67,12 @@ void jcv_mixer_set_rate(size_t rate) {
 }
 
 // Set the region
-void jcv_mixer_set_region(uint8_t region) {
+void jcv_mixer_set_region(unsigned region) {
     framerate = region ? 50 : 60; // 50 for PAL, 60 for NSTC
 }
 
 // Set the resampler quality
-void jcv_mixer_set_rsqual(uint8_t qual) {
+void jcv_mixer_set_rsqual(unsigned qual) {
     if (qual <= 10)
         rsq = qual;
 }

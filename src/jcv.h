@@ -36,10 +36,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define REGION_NTSC 0
 #define REGION_PAL 1
 
-void jcv_set_region(uint8_t);
+void jcv_set_region(unsigned);
 void jcv_init(void);
 void jcv_deinit(void);
 void jcv_reset(int);
-void jcv_exec(void);
+
+extern void (*jcv_exec)(void);
 
 #endif

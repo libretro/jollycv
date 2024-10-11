@@ -109,4 +109,8 @@ int jcv_state_save(const char*);
 int jcv_sram_load(const char*);
 int jcv_sram_save(const char*);
 
+void jcv_coleco_set_region(unsigned);
+
+void jcv_coleco_exec(void);
+
 #endif
