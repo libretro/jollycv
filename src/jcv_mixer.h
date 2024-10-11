@@ -31,6 +31,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JCV_MIXER_H
 #define JCV_MIXER_H
 
+#include "sn76489.h"
+
 void jcv_mixer_deinit(void);
 void jcv_mixer_init(void);
 
@@ -39,6 +41,8 @@ void jcv_mixer_set_callback(void (*)(size_t));
 void jcv_mixer_set_rate(size_t);
 void jcv_mixer_set_region(unsigned);
 void jcv_mixer_set_rsqual(unsigned);
-void jcv_mixer_resamp(size_t, size_t);
+void jcv_mixer_resamp(size_t);
+
+void jcv_mixer_set_psg(sn76489_t*);
 
 #endif

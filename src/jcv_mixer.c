@@ -36,14 +36,17 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "jcv_mixer.h"
 
 #include "ay38910.h"
-#include "sn76489.h"
 
 #define SAMPLERATE_PSG 224010 // Approximate PSG sample rate (Hz)
 #define SIZE_PSGBUF 4600 // Size of the PSG buffers
 
 static int16_t *abuf = NULL; // Buffer to output resampled data into
+
+static sn76489_t *psg = NULL; // Pointer to active PSG context
 static int16_t *psgbuf = NULL; // PSG buffer
+
 static int16_t *sgmbuf = NULL; // SGM PSG buffer
+
 static size_t samplerate = 48000; // Default sample rate is 48000Hz
 static unsigned framerate = 60; // Default to 60 for NTSC
 static unsigned rsq = 3; // Default resampler quality is 3
@@ -87,6 +90,10 @@ void jcv_mixer_set_callback(void (*cb)(size_t)) {
     jcv_mixer_cb = cb;
 }
 
+void jcv_mixer_set_psg(sn76489_t *ptr) {
+    psg = ptr;
+}
+
 // Deinitialize the resampler
 void jcv_mixer_deinit(void) {
     if (resampler) {
@@ -106,23 +113,21 @@ void jcv_mixer_init(void) {
     resampler = speex_resampler_init(1, SAMPLERATE_PSG, samplerate, rsq, &err);
     psgbuf = (int16_t*)calloc(1, SIZE_PSGBUF * sizeof(int16_t));
     sgmbuf = (int16_t*)calloc(1, SIZE_PSGBUF * sizeof(int16_t));
-    sn76489_set_buffer(psgbuf);
+    psg->buf = psgbuf;
     ay38910_set_buffer(sgmbuf);
 }
 
 // Resample raw audio and execute the callback
-void jcv_mixer_resamp(size_t in_psg, size_t in_sgm) {
+void jcv_mixer_resamp(size_t in_psg) {
     // Reset buffer position for both chips
-    sn76489_reset_buffer();
+    psg->bufpos = 0;
     ay38910_reset_buffer();
 
     spx_uint32_t in_len = in_psg;
 
-    // If the SGM is active, mix it in
-    if (in_sgm) {
-        for (size_t i = 0; i < in_len; ++i)
-            psgbuf[i] += sgmbuf[i];
-    }
+    // Mix in the SGM samples
+    for (size_t i = 0; i < in_len; ++i)
+        psgbuf[i] += sgmbuf[i];
 
     spx_uint32_t outsamps = samplerate / framerate;
     err = speex_resampler_process_int(resampler, 0, (spx_int16_t*)psgbuf,

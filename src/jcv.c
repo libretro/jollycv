@@ -71,7 +71,6 @@ void jcv_set_region(unsigned region) {
 // Initialize
 void jcv_init(void) {
     jcv_memio_init();
-    sn76489_init();
     ay38910_init();
     jcv_mixer_init();
     jcv_vdp_init();
@@ -90,7 +89,6 @@ void jcv_deinit(void) {
 void jcv_reset(int hard) {
     (void)hard; // Currently unused
     jcv_memio_init(); // Init does the same thing reset needs to do
-    sn76489_init();
     ay38910_init();
     jcv_vdp_init();
     jcv_z80_reset();

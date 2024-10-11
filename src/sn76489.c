@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020-2022 Rupert Carmichael
+Copyright (c) 2020-2024 Rupert Carmichael
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -45,38 +45,29 @@ static const int16_t vtable[16] = { // Volume Table
     0x0512, 0x0407, 0x0333, 0x028b, 0x0205, 0x019b, 0x0146, 0x0000,
 };
 
-static sn76489_t psg; // PSG Context
-static int16_t *psgbuf = NULL; // Buffer for raw PSG output samples
-static size_t bufpos = 0; // Keep track of the position in the PSG output buffer
-
-// Set the pointer to the sample buffer
-void sn76489_set_buffer(int16_t *ptr) {
-    psgbuf = ptr;
-}
-
-// Grab the pointer to the PSG's buffer
-void sn76489_reset_buffer(void) {
-    bufpos = 0;
-}
-
 // Set initial values
-void sn76489_init(void) {
-    psg.clatch = 0x00; // Channel Latch starts at Tone Channel 0
+void sn76489_init(sn76489_t *psg) {
+    psg->clatch = 0x00; // Channel Latch starts at Tone Channel 0
 
     for (int i = 0; i < 4; ++i) {
-        psg.attenuator[i] = 0x0f; // Silence
-        psg.counter[i] = 0x00; // Count starting from 0
+        psg->attenuator[i] = 0x0f; // Silence
+        psg->counter[i] = 0x00; // Count starting from 0
     }
 
     // Set the frequency and noise registers to 0
-    psg.frequency[0] = psg.frequency[1] = psg.frequency[2] = psg.noise = 0x00;
+    psg->frequency[0] = 0x00;
+    psg->frequency[1] = 0x00;
+    psg->frequency[2] = 0x00;
+    psg->noise = 0x00;
 
-    psg.lfsr = 1 << LFSRSHIFT; // Seed the noise shift register
-    psg.freqff = 0x00; // Frequency flip-flop bits start at 0 (Positive)
+    psg->lfsr = 1 << LFSRSHIFT; // Seed the noise shift register
+    psg->freqff = 0x00; // Frequency flip-flop bits start at 0 (Positive)
+
+    psg->bufpos = 0;
 }
 
 // Write to PSG Control Registers
-void sn76489_wr(uint8_t data) {
+void sn76489_wr(sn76489_t *psg, uint8_t data) {
     /* Register Writes
     There are two types of register writes, referred to in the smspower
     documentation as LATCH/DATA and DATA.
@@ -117,28 +108,28 @@ void sn76489_wr(uint8_t data) {
     |-------------------------------|  0x02 = N/2048, 0x03 = Tone 2 Freq Counter
     */
     if (data & 0x80) // LATCH/DATA byte - update the latch
-        psg.clatch = data; // Record the data in the channel latch
+        psg->clatch = data; // Record the data in the channel latch
 
     // For convenience, store the channel as a variable
-    uint8_t chan = (psg.clatch & 0x60) >> 5; // Channel (2 bits, 0-3)
+    uint8_t chan = (psg->clatch & 0x60) >> 5; // Channel (2 bits, 0-3)
 
-    if (psg.clatch & 0x10) { // Attenuator Registers for channels 0-3
+    if (psg->clatch & 0x10) { // Attenuator Registers for channels 0-3
         // (DDDDDD)dddd = (--vvvv)vvvv
-        psg.attenuator[chan] = data & 0x0f;
+        psg->attenuator[chan] = data & 0x0f;
     }
     else { // Frequency/Noise Registers
         if (chan < 3) { // Frequency Registers for channels 0-2
             // DDDDDDdddd = cccccccccc
-            psg.frequency[chan] = data & 0x80 ? // Detect byte type
-                (psg.frequency[chan] & 0x03f0) | (data & 0x0f) : // LATCH/DATA
-                ((psg.frequency[chan] & 0x0f) | (data << 4)) & 0x03ff; // DATA
+            psg->frequency[chan] = data & 0x80 ? // Detect byte type
+                (psg->frequency[chan] & 0x03f0) | (data & 0x0f) : // LATCH/DATA
+                ((psg->frequency[chan] & 0x0f) | (data << 4)) & 0x03ff; // DATA
         }
         else if (chan == 3) { // Noise Register for channel 3
             // (DDDDDD)dddd = (---trr)-trr
-            psg.noise = data & 0x07;
+            psg->noise = data & 0x07;
             // Whenever the noise control register is changed, the shift
             // register is cleared/reseeded.
-            psg.lfsr = 1 << LFSRSHIFT;
+            psg->lfsr = 1 << LFSRSHIFT;
         }
     }
 }
@@ -154,14 +145,14 @@ static inline uint16_t parity(uint16_t v) {
 }
 
 // Execute a PSG cycle
-size_t sn76489_exec(void) {
+void sn76489_exec(sn76489_t *psg) {
     // Tone Generators
     for (size_t i = 0; i < 3; ++i) {
         // Each clock cycle, the counter is decremented (if it is non-zero)
-        if (psg.counter[i] > 0)
-            --psg.counter[i]; // Decrement the period counter
+        if (psg->counter[i] > 0)
+            --psg->counter[i]; // Decrement the period counter
 
-        if (psg.counter[i] == 0) {
+        if (psg->counter[i] == 0) {
             /* When the tone counter decrements to zero, it is reloaded with
                the value of the corresponding frequency register. In order to
                produce a wave, it must oscillate. The value in the frequency
@@ -171,37 +162,37 @@ size_t sn76489_exec(void) {
                is set to 1, they output a DC offset value corresponding to the
                volume level. PCM is done by rapidly changing the volume level.
             */
-            psg.counter[i] = psg.frequency[i];
+            psg->counter[i] = psg->frequency[i];
 
             // Update the volume of the output channel
-            psg.output[i] = vtable[psg.attenuator[i]];
+            psg->output[i] = vtable[psg->attenuator[i]];
 
             // Flip the frequency flip-flop for the channel (sign/polarity bit)
-            psg.freqff ^= 1 << i;
+            psg->freqff ^= 1 << i;
 
             // Set the waveform high or low
-            if (psg.freqff & (1 << i))
-                psg.output[i] = 0;
+            if (psg->freqff & (1 << i))
+                psg->output[i] = 0;
         }
     }
 
     // Noise Generator
-    if (psg.counter[3] > 0) // If it is already zero, no need to decrement
-        --psg.counter[3];
+    if (psg->counter[3] > 0) // If it is already zero, no need to decrement
+        --psg->counter[3];
 
     // Update the volume value for the noise output channel
-    psg.output[3] = (psg.lfsr & 0x01) * vtable[psg.attenuator[3]];
+    psg->output[3] = (psg->lfsr & 0x01) * vtable[psg->attenuator[3]];
 
-    if (psg.counter[3] == 0) {
+    if (psg->counter[3] == 0) {
         /* Set the shift rate or use the Tone Generator 2 frequency
            If the value of the lowest two bits of the noise register is 3, then
            use the value of Tone Generator 2's frequency. Otherwise shift 0x10
            left by the value of the register.
         */
-        psg.counter[3] = (psg.noise & 0x03) == 0x03 ?
-            psg.frequency[2] : 0x10 << (psg.noise & 0x03);
+        psg->counter[3] = (psg->noise & 0x03) == 0x03 ?
+            psg->frequency[2] : 0x10 << (psg->noise & 0x03);
 
-        psg.freqff ^= 0x08; // Flip the bit for this channel
+        psg->freqff ^= 0x08; // Flip the bit for this channel
 
         /* White Noise:
         ->|1|0|0|0|0|0|0|0|0|0|0|0|0|0|0|  Bits 0 and 1 are the Tapped Bits.
@@ -211,8 +202,8 @@ size_t sn76489_exec(void) {
         Becomes:                           bit 14 after shifting the LFSR right.
           |0|1|0|0|0|0|0|0|0|0|0|0|0|0|0| --> |0| (Discarded)
 
-        Parity plays a role in the value, which will be 1 if an odd number of
-        bits are set, and 0 if an even number are set.
+        Parity determines the value, which will be 1 if an odd number of bits
+        are set, and 0 if an even number are set.
 
         Periodic Noise:
         ->|0|0|0|0|0|0|0|0|0|0|0|0|0|0|0|  |1|
@@ -224,39 +215,37 @@ size_t sn76489_exec(void) {
 
         Bit 14 set, Bit 0 discarded
         */
-        if (psg.freqff & 0x08) { // Adjust if frequency flip-flop bit is set
+        if (psg->freqff & 0x08) { // Adjust if frequency flip-flop bit is set
             // First shift the register, then insert the proper bit at Bit 14
-            psg.lfsr = (psg.lfsr >> 1) | ((psg.noise & 0x04) ?
-                (parity(psg.lfsr & NOISETAP) << LFSRSHIFT) : // White Noise
-                ((psg.lfsr & 0x01) << LFSRSHIFT)); // Periodic Noise
+            psg->lfsr = (psg->lfsr >> 1) | ((psg->noise & 0x04) ?
+                (parity(psg->lfsr & NOISETAP) << LFSRSHIFT) : // White Noise
+                ((psg->lfsr & 0x01) << LFSRSHIFT)); // Periodic Noise
         }
     }
 
     // Mix the channel output volumes into a single sample
-    psgbuf[bufpos++] =
-        psg.output[0] + psg.output[1] + psg.output[2] + psg.output[3];
-
-    return 1; // Return 1, signifying that a sample has been generated
+    psg->buf[psg->bufpos++] =
+        psg->output[0] + psg->output[1] + psg->output[2] + psg->output[3];
 }
 
-void sn76489_state_load(uint8_t *st) {
-    psg.clatch = jcv_serial_pop8(st);
-    for (size_t i = 0; i < 4; ++i) psg.attenuator[i] = jcv_serial_pop8(st);
-    for (size_t i = 0; i < 3; ++i) psg.frequency[i] = jcv_serial_pop16(st);
-    psg.noise = jcv_serial_pop8(st);
-    psg.lfsr = jcv_serial_pop16(st);
-    for (size_t i = 0; i < 4; ++i) psg.counter[i] = jcv_serial_pop16(st);
-    for (size_t i = 0; i < 4; ++i) psg.output[i] = jcv_serial_pop16(st);
-    psg.freqff = jcv_serial_pop8(st);
+void sn76489_state_load(sn76489_t *psg, uint8_t *st) {
+    psg->clatch = jcv_serial_pop8(st);
+    for (size_t i = 0; i < 4; ++i) psg->attenuator[i] = jcv_serial_pop8(st);
+    for (size_t i = 0; i < 3; ++i) psg->frequency[i] = jcv_serial_pop16(st);
+    psg->noise = jcv_serial_pop8(st);
+    psg->lfsr = jcv_serial_pop16(st);
+    for (size_t i = 0; i < 4; ++i) psg->counter[i] = jcv_serial_pop16(st);
+    for (size_t i = 0; i < 4; ++i) psg->output[i] = jcv_serial_pop16(st);
+    psg->freqff = jcv_serial_pop8(st);
 }
 
-void sn76489_state_save(uint8_t *st) {
-    jcv_serial_push8(st, psg.clatch);
-    for (size_t i = 0; i < 4; ++i) jcv_serial_push8(st, psg.attenuator[i]);
-    for (size_t i = 0; i < 3; ++i) jcv_serial_push16(st, psg.frequency[i]);
-    jcv_serial_push8(st, psg.noise);
-    jcv_serial_push16(st, psg.lfsr);
-    for (size_t i = 0; i < 4; ++i) jcv_serial_push16(st, psg.counter[i]);
-    for (size_t i = 0; i < 4; ++i) jcv_serial_push16(st, psg.output[i]);
-    jcv_serial_push8(st, psg.freqff);
+void sn76489_state_save(sn76489_t *psg, uint8_t *st) {
+    jcv_serial_push8(st, psg->clatch);
+    for (size_t i = 0; i < 4; ++i) jcv_serial_push8(st, psg->attenuator[i]);
+    for (size_t i = 0; i < 3; ++i) jcv_serial_push16(st, psg->frequency[i]);
+    jcv_serial_push8(st, psg->noise);
+    jcv_serial_push16(st, psg->lfsr);
+    for (size_t i = 0; i < 4; ++i) jcv_serial_push16(st, psg->counter[i]);
+    for (size_t i = 0; i < 4; ++i) jcv_serial_push16(st, psg->output[i]);
+    jcv_serial_push8(st, psg->freqff);
 }

@@ -76,9 +76,9 @@ static uint8_t savedata[SIZE_2K];
 static size_t numscanlines = CV_VDP_SCANLINES;
 static size_t psgcycs = 0;
 static size_t psgsamps = 0;
-static size_t sgmsamps = 0;
 
 static cv_sys_t cvsys; // ColecoVision System Context
+static sn76489_t psg; // PSG Context
 
 void jcv_input_set_callback(uint16_t (*cb)(int)) {
     jcv_input_cb = cb;
@@ -139,7 +139,7 @@ void jcv_io_wr(uint8_t port, uint8_t data) {
                does not seem to be any definitive data on this.
             */
             jcv_z80_delay(48); // PCM sample pitch will be high without a delay
-            sn76489_wr(data);
+            sn76489_wr(&psg, data);
             break;
         }
         default: {
@@ -394,6 +394,10 @@ void jcv_memio_init(void) {
     // Set SGM RAM to disabled state
     sgm_upper = 1;
     sgm_lower = 0;
+
+    // Initialize sound chips
+    sn76489_init(&psg);
+    jcv_mixer_set_psg(&psg);
 }
 
 // Deinitialize any allocated memory
@@ -421,7 +425,7 @@ void jcv_state_load_raw(const void *sstate) {
     cvsys.ctrl[0] = jcv_serial_pop16(st);
     cvsys.ctrl[1] = jcv_serial_pop16(st);
     for (int i = 0; i < 4; ++i) rompage[i] = jcv_serial_pop32(st);
-    sn76489_state_load(st);
+    sn76489_state_load(&psg, st);
     ay38910_state_load(st);
     jcv_vdp_state_load(st);
     jcv_z80_state_load(st);
@@ -481,7 +485,7 @@ const void* jcv_state_save_raw(void) {
     jcv_serial_push16(state, cvsys.ctrl[0]);
     jcv_serial_push16(state, cvsys.ctrl[1]);
     for (int i = 0; i < 4; ++i) jcv_serial_push32(state, rompage[i]);
-    sn76489_state_save(state);
+    sn76489_state_save(&psg, state);
     ay38910_state_save(state);
     jcv_vdp_state_save(state);
     jcv_z80_state_save(state);
@@ -568,7 +572,6 @@ int jcv_sram_save(const char *filename) {
 void jcv_coleco_exec(void) {
     // Keep track of the number of samples generated this frame
     psgsamps = 0;
-    sgmsamps = 0;
 
     // Restore the leftover cycle count
     uint32_t extcycs = jcv_z80_cyc_restore();
@@ -591,8 +594,9 @@ void jcv_coleco_exec(void) {
 
             for (size_t s = 0; s < itercycs; ++s) { // Catch PSGs up to the CPU
                 if (++psgcycs % DIV_PSG == 0) {
-                    psgsamps += sn76489_exec();
-                    sgmsamps += ay38910_exec();
+                    sn76489_exec(&psg);
+                    ay38910_exec();
+                    ++psgsamps;
                     psgcycs = 0;
                 }
             }
@@ -604,7 +608,7 @@ void jcv_coleco_exec(void) {
     }
 
     // Resample audio and push to the frontend
-    jcv_mixer_resamp(psgsamps, sgmsamps);
+    jcv_mixer_resamp(psgsamps);
 
     // Store the leftover cycle count
     jcv_z80_cyc_store(extcycs);

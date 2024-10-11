@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020-2022 Rupert Carmichael
+Copyright (c) 2020-2024 Rupert Carmichael
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -40,16 +40,16 @@ typedef struct _sn76489_t {
     uint16_t counter[4]; // Period Counter
     int16_t output[4]; // Per-channel output volumes for mixing
     uint8_t freqff; // Four bits for four channels, 0 = Positive, 1 = Negative
+
+    int16_t *buf; // Buffer for raw audio samples
+    size_t bufpos; // Current write position in buffer
 } sn76489_t;
 
-void sn76489_set_buffer(int16_t*);
-void sn76489_reset_buffer(void);
+void sn76489_init(sn76489_t*);
+void sn76489_wr(sn76489_t*, uint8_t);
+void sn76489_exec(sn76489_t*);
 
-void sn76489_init(void);
-void sn76489_wr(uint8_t);
-size_t sn76489_exec(void);
-
-void sn76489_state_load(uint8_t*);
-void sn76489_state_save(uint8_t*);
+void sn76489_state_load(sn76489_t*, uint8_t*);
+void sn76489_state_save(sn76489_t*, uint8_t*);
 
 #endif
