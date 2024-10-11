@@ -28,13 +28,13 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-// ColecoVision PSG - Texas Instruments SN76489AN
+// Texas Instruments SN76489AN
 
 #include <stddef.h>
 #include <stdint.h>
 
-#include "jcv_psg.h"
 #include "jcv_serial.h"
+#include "sn76489.h"
 
 #define LFSRSHIFT 14 // Linear Feedback Shift Register is 15 bits, so shift 14
 #define NOISETAP 0x0003 // Tapped bits for ColecoVision are 0 and 1
@@ -45,22 +45,22 @@ static const int16_t vtable[16] = { // Volume Table
     0x0512, 0x0407, 0x0333, 0x028b, 0x0205, 0x019b, 0x0146, 0x0000,
 };
 
-static cv_psg_t psg; // PSG Context
+static sn76489_t psg; // PSG Context
 static int16_t *psgbuf = NULL; // Buffer for raw PSG output samples
 static size_t bufpos = 0; // Keep track of the position in the PSG output buffer
 
 // Set the pointer to the sample buffer
-void jcv_psg_set_buffer(int16_t *ptr) {
+void sn76489_set_buffer(int16_t *ptr) {
     psgbuf = ptr;
 }
 
 // Grab the pointer to the PSG's buffer
-void jcv_psg_reset_buffer(void) {
+void sn76489_reset_buffer(void) {
     bufpos = 0;
 }
 
 // Set initial values
-void jcv_psg_init(void) {
+void sn76489_init(void) {
     psg.clatch = 0x00; // Channel Latch starts at Tone Channel 0
 
     for (int i = 0; i < 4; ++i) {
@@ -76,7 +76,7 @@ void jcv_psg_init(void) {
 }
 
 // Write to PSG Control Registers
-void jcv_psg_wr(uint8_t data) {
+void sn76489_wr(uint8_t data) {
     /* Register Writes
     There are two types of register writes, referred to in the smspower
     documentation as LATCH/DATA and DATA.
@@ -154,7 +154,7 @@ static inline uint16_t parity(uint16_t v) {
 }
 
 // Execute a PSG cycle
-size_t jcv_psg_exec(void) {
+size_t sn76489_exec(void) {
     // Tone Generators
     for (size_t i = 0; i < 3; ++i) {
         // Each clock cycle, the counter is decremented (if it is non-zero)
@@ -239,7 +239,7 @@ size_t jcv_psg_exec(void) {
     return 1; // Return 1, signifying that a sample has been generated
 }
 
-void jcv_psg_state_load(uint8_t *st) {
+void sn76489_state_load(uint8_t *st) {
     psg.clatch = jcv_serial_pop8(st);
     for (size_t i = 0; i < 4; ++i) psg.attenuator[i] = jcv_serial_pop8(st);
     for (size_t i = 0; i < 3; ++i) psg.frequency[i] = jcv_serial_pop16(st);
@@ -250,7 +250,7 @@ void jcv_psg_state_load(uint8_t *st) {
     psg.freqff = jcv_serial_pop8(st);
 }
 
-void jcv_psg_state_save(uint8_t *st) {
+void sn76489_state_save(uint8_t *st) {
     jcv_serial_push8(st, psg.clatch);
     for (size_t i = 0; i < 4; ++i) jcv_serial_push8(st, psg.attenuator[i]);
     for (size_t i = 0; i < 3; ++i) jcv_serial_push16(st, psg.frequency[i]);

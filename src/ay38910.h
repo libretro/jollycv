@@ -28,28 +28,43 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef JCV_PSG_H
-#define JCV_PSG_H
+#ifndef AY38910_H
+#define AY38910_H
 
-typedef struct _cv_psg_t {
-    uint8_t clatch; // Channel latch tells which channel's registers to write
-    uint8_t attenuator[4]; // Four attenuators control volume on four channels
-    uint16_t frequency[3]; // Three frequency registers for Tone Generators
-    uint8_t noise; // One register for the Noise Generator
-    uint16_t lfsr; // Linear Feedback Shift Register (15 bits on ColecoVision)
-    uint16_t counter[4]; // Period Counter
-    int16_t output[4]; // Per-channel output volumes for mixing
-    uint8_t freqff; // Four bits for four channels, 0 = Positive, 1 = Negative
-} cv_psg_t;
+typedef struct _ay38910_t {
+    uint8_t reg[16]; // 16 Read/Write 8-bit registers
+    uint8_t rlatch; // Register that is currently selected
 
-void jcv_psg_set_buffer(int16_t*);
-void jcv_psg_reset_buffer(void);
+    uint16_t tperiod[3]; // Periods for Tones A, B, and C
+    uint16_t tcounter[3]; // Counters for Tones A, B, and C
+    uint8_t amplitude[3]; // Amplitudes for Tones A, B, and C
 
-void jcv_psg_init(void);
-void jcv_psg_wr(uint8_t);
-size_t jcv_psg_exec(void);
+    uint8_t nperiod; // Noise Period
+    uint16_t ncounter; // Noise Counter
+    uint32_t nshift; // Noise Random Number Generator Shift Register (17-bit)
 
-void jcv_psg_state_load(uint8_t*);
-void jcv_psg_state_save(uint8_t*);
+    uint16_t eperiod; // Envelope Period
+    uint16_t ecounter; // Envelope Counter
+    uint8_t eseg; // Envelope Segment: Which half of the cycle
+    uint8_t estep; // Envelope Step
+    uint8_t evol; // Envelope Volume
+
+    uint8_t tdisable[3]; // Disable bit for Tones A, B, and C
+    uint8_t ndisable[3]; // Disable bit for Noise on Channels A, B, and C
+    uint8_t emode[3]; // Envelope Mode Enable bit for Tones A, B, and C
+
+    uint8_t sign[3]; // Signify whether the waveform is high or low
+} ay38910_t;
+
+void ay38910_set_buffer(int16_t*);
+void ay38910_reset_buffer(void);
+void ay38910_init(void);
+uint8_t ay38910_rd(void);
+void ay38910_wr(uint8_t data);
+void ay38910_set_reg(uint8_t);
+size_t ay38910_exec(void);
+
+void ay38910_state_load(uint8_t*);
+void ay38910_state_save(uint8_t*);
 
 #endif

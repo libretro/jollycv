@@ -28,25 +28,30 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-// ColecoVision Super Game Module PSG - General Instrument AY-3-8910
+// General Instrument AY-3-8910
 
 #include <stddef.h>
 #include <stdint.h>
 
 #include "jcv_serial.h"
-#include "jcv_sgmpsg.h"
+#include "ay38910.h"
 
 static const int16_t vtable[16] = { // Volume Table
     0,       40,      60,     86,    124,    186,    264,    440,
     518,    840,    1196,   1526,   2016,   2602,   3300,   4096,
 };
 
-static cv_sgmpsg_t psg; // SGM PSG Context
+static const uint8_t dcmask[16] = { // Masks to avoid writing "Don't Care" bits
+    0xff, 0x0f, 0xff, 0x0f, 0xff, 0x0f, 0x1f, 0xff,
+    0x1f, 0x1f, 0x1f, 0xff, 0xff, 0x0f, 0xff, 0xff,
+};
+
+static ay38910_t psg; // SGM PSG Context
 static int16_t *psgbuf = NULL; // Buffer for raw PSG output samples
 static size_t bufpos = 0; // Keep track of the position in the PSG output buffer
 
 // Reset the Envelope step and volume depending on the currently selected shape
-static inline void jcv_sgmpsg_env_reset(void) {
+static inline void ay38910_env_reset(void) {
     psg.estep = 0; // Reset the step counter
 
     if (psg.eseg) { // Segment 1
@@ -68,17 +73,17 @@ static inline void jcv_sgmpsg_env_reset(void) {
 }
 
 // Set the pointer to the sample buffer
-void jcv_sgmpsg_set_buffer(int16_t *ptr) {
+void ay38910_set_buffer(int16_t *ptr) {
     psgbuf = ptr;
 }
 
 // Reset position of the buffer
-void jcv_sgmpsg_reset_buffer(void) {
+void ay38910_reset_buffer(void) {
     bufpos = 0;
 }
 
 // Set initial values
-void jcv_sgmpsg_init(void) {
+void ay38910_init(void) {
     // Registers
     for (int i = 0; i < 16; ++i)
         psg.reg[i] = 0x00;
@@ -117,12 +122,12 @@ void jcv_sgmpsg_init(void) {
 }
 
 // Read from the currently latched Control Register
-uint8_t jcv_sgmpsg_rd(void) {
+uint8_t ay38910_rd(void) {
     return psg.reg[psg.rlatch];
 }
 
 // Write to the currently latched Control Register
-void jcv_sgmpsg_wr(uint8_t data) {
+void ay38910_wr(uint8_t data) {
     /* Registers
     |---|-----------------------------------------------|
     | R |  7  |  6  |  5  |  4  |  3  |  2  |  1  |  0  |
@@ -156,12 +161,6 @@ void jcv_sgmpsg_wr(uint8_t data) {
     |15 |          8-bit Parallel IO on Port B          | IO Port B Data Store
     |---|-----------------------------------------------|
     */
-
-    // Masks to avoid writing "Don't Care" bits
-    uint8_t dcmask[16] = {
-        0xff, 0x0f, 0xff, 0x0f, 0xff, 0x0f, 0x1f, 0xff,
-        0x1f, 0x1f, 0x1f, 0xff, 0xff, 0x0f, 0xff, 0xff,
-    };
 
     // Write data to the latched register
     psg.reg[psg.rlatch] = data & dcmask[psg.rlatch];
@@ -228,7 +227,7 @@ void jcv_sgmpsg_wr(uint8_t data) {
             // Reset all Envelope related variables when Register 13 is written
             psg.ecounter = 0;
             psg.eseg = 0;
-            jcv_sgmpsg_env_reset();
+            ay38910_env_reset();
             break;
         }
         /* Nothing really needs to be done for the IO Port Data Store Registers,
@@ -241,12 +240,12 @@ void jcv_sgmpsg_wr(uint8_t data) {
 }
 
 // Set the latched Control Register
-void jcv_sgmpsg_set_reg(uint8_t r) {
-    psg.rlatch = r;
+void ay38910_set_reg(uint8_t r) {
+    psg.rlatch = r & 0x0f;
 }
 
 // Execute a PSG cycle
-size_t jcv_sgmpsg_exec(void) {
+size_t ay38910_exec(void) {
     // Clock Tone Counters for Channels A, B, and C
     for (int i = 0; i < 3; ++i) {
         if (++psg.tcounter[i] >= psg.tperiod[i]) {
@@ -302,7 +301,7 @@ size_t jcv_sgmpsg_exec(void) {
                 psg.eseg ^= 1;
             else // Hold the current Segment for 0-7, 9, 11, 13, 15
                 psg.eseg = 1;
-            jcv_sgmpsg_env_reset();
+            ay38910_env_reset();
         }
     }
 
@@ -338,7 +337,7 @@ size_t jcv_sgmpsg_exec(void) {
     return 1; // Return 1, signifying that a sample has been generated
 }
 
-void jcv_sgmpsg_state_load(uint8_t *st) {
+void ay38910_state_load(uint8_t *st) {
     for (size_t i = 0; i < 16; ++i) psg.reg[i] = jcv_serial_pop8(st);
     psg.rlatch = jcv_serial_pop8(st);
     for (size_t i = 0; i < 3; ++i) psg.tperiod[i] = jcv_serial_pop16(st);
@@ -358,7 +357,7 @@ void jcv_sgmpsg_state_load(uint8_t *st) {
     for (size_t i = 0; i < 3; ++i) psg.sign[i] = jcv_serial_pop8(st);
 }
 
-void jcv_sgmpsg_state_save(uint8_t *st) {
+void ay38910_state_save(uint8_t *st) {
     for (size_t i = 0; i < 16; ++i) jcv_serial_push8(st, psg.reg[i]);
     jcv_serial_push8(st, psg.rlatch);
     for (size_t i = 0; i < 3; ++i) jcv_serial_push16(st, psg.tperiod[i]);

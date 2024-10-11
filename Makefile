@@ -42,11 +42,11 @@ CSRCS := z80/z80.c \
 	jcv.c \
 	jcv_memio.c \
 	jcv_mixer.c \
-	jcv_psg.c \
 	jcv_serial.c \
-	jcv_sgmpsg.c \
 	jcv_vdp.c \
-	jcv_z80.c
+	jcv_z80.c \
+	ay38910.c \
+	sn76489.c
 
 JGSRCS := jg.c
 

@@ -36,11 +36,11 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "jcv.h"
 #include "jcv_memio.h"
-#include "jcv_psg.h"
 #include "jcv_serial.h"
-#include "jcv_sgmpsg.h"
 #include "jcv_vdp.h"
 #include "jcv_z80.h"
+#include "ay38910.h"
+#include "sn76489.h"
 
 #define SIZE_STATE 50392
 static uint8_t state[SIZE_STATE + SIZE_2K];
@@ -95,7 +95,7 @@ uint8_t jcv_io_rd(uint8_t port) {
         }
         default: {
             if (port == 0x52) // SGM PSG Read
-                return jcv_sgmpsg_rd();
+                return ay38910_rd();
             return 0xff;
         }
     }
@@ -129,14 +129,14 @@ void jcv_io_wr(uint8_t port, uint8_t data) {
                does not seem to be any definitive data on this.
             */
             jcv_z80_delay(48); // PCM sample pitch will be high without a delay
-            jcv_psg_wr(data);
+            sn76489_wr(data);
             break;
         }
         default: {
             if (port == 0x50) // Set the SGM PSG's active register
-                jcv_sgmpsg_set_reg(data & 0x0f);
+                ay38910_set_reg(data & 0x0f);
             else if (port == 0x51) // Write to the SGM PSG's selected register
-                jcv_sgmpsg_wr(data);
+                ay38910_wr(data);
             else if (port == 0x53)
                 sgm_upper = data & 0x01;
             else if (port == 0x7f)
@@ -382,7 +382,7 @@ void jcv_memio_init(void) {
     cvsys.ctrl[0] = cvsys.ctrl[1] = 0; // Reset input states to empty
 
     // Set SGM RAM to disabled state
-    sgm_upper = 0;
+    sgm_upper = 1;
     sgm_lower = 0;
 }
 
@@ -407,8 +407,8 @@ void jcv_state_load_raw(const void *sstate) {
     cvsys.ctrl[0] = jcv_serial_pop16(st);
     cvsys.ctrl[1] = jcv_serial_pop16(st);
     for (int i = 0; i < 4; ++i) rompage[i] = jcv_serial_pop32(st);
-    jcv_psg_state_load(st);
-    jcv_sgmpsg_state_load(st);
+    sn76489_state_load(st);
+    ay38910_state_load(st);
     jcv_vdp_state_load(st);
     jcv_z80_state_load(st);
     sgm_upper = jcv_serial_pop8(st);
@@ -467,8 +467,8 @@ const void* jcv_state_save_raw(void) {
     jcv_serial_push16(state, cvsys.ctrl[0]);
     jcv_serial_push16(state, cvsys.ctrl[1]);
     for (int i = 0; i < 4; ++i) jcv_serial_push32(state, rompage[i]);
-    jcv_psg_state_save(state);
-    jcv_sgmpsg_state_save(state);
+    sn76489_state_save(state);
+    ay38910_state_save(state);
     jcv_vdp_state_save(state);
     jcv_z80_state_save(state);
     jcv_serial_push8(state, sgm_upper);

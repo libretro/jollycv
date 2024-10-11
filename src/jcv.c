@@ -34,10 +34,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "jcv.h"
 #include "jcv_memio.h"
 #include "jcv_mixer.h"
-#include "jcv_psg.h"
-#include "jcv_sgmpsg.h"
 #include "jcv_vdp.h"
 #include "jcv_z80.h"
+#include "ay38910.h"
+#include "sn76489.h"
 
 /* NTSC Timing
 Z80 cycles per audio sample at 48000Hz (16 CPU cycles per PSG cycle):
@@ -64,7 +64,7 @@ PSG cycles per frame:
 static size_t numscanlines = CV_VDP_SCANLINES;
 static size_t psgcycs = 0;
 static size_t psgsamps = 0;
-static size_t sgmpsgsamps = 0;
+static size_t sgmsamps = 0;
 
 // Set the region
 void jcv_set_region(uint8_t region) {
@@ -77,8 +77,8 @@ void jcv_set_region(uint8_t region) {
 // Initialize
 void jcv_init(void) {
     jcv_memio_init();
-    jcv_psg_init();
-    jcv_sgmpsg_init();
+    sn76489_init();
+    ay38910_init();
     jcv_mixer_init();
     jcv_vdp_init();
     jcv_z80_init();
@@ -94,8 +94,8 @@ void jcv_deinit(void) {
 void jcv_reset(int hard) {
     if (hard) { } // Currently unused
     jcv_memio_init(); // Init does the same thing reset needs to do
-    jcv_psg_init();
-    jcv_sgmpsg_init();
+    sn76489_init();
+    ay38910_init();
     jcv_vdp_init();
     jcv_z80_reset();
 }
@@ -104,7 +104,7 @@ void jcv_reset(int hard) {
 void jcv_exec(void) {
     // Keep track of the number of samples generated this frame
     psgsamps = 0;
-    sgmpsgsamps = 0;
+    sgmsamps = 0;
 
     // Restore the leftover cycle count
     uint32_t extcycs = jcv_z80_cyc_restore();
@@ -127,8 +127,8 @@ void jcv_exec(void) {
 
             for (size_t s = 0; s < itercycs; ++s) { // Catch PSGs up to the CPU
                 if (++psgcycs % DIV_PSG == 0) {
-                    psgsamps += jcv_psg_exec();
-                    sgmpsgsamps += jcv_sgmpsg_exec();
+                    psgsamps += sn76489_exec();
+                    sgmsamps += ay38910_exec();
                     psgcycs = 0;
                 }
             }
@@ -140,7 +140,7 @@ void jcv_exec(void) {
     }
 
     // Resample audio and push to the frontend
-    jcv_mixer_resamp(psgsamps, sgmpsgsamps);
+    jcv_mixer_resamp(psgsamps, sgmsamps);
 
     // Store the leftover cycle count
     jcv_z80_cyc_store(extcycs);
