@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020-2022 Rupert Carmichael
+Copyright (c) 2020-2024 Rupert Carmichael
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -54,17 +54,18 @@ typedef struct _ay38910_t {
     uint8_t emode[3]; // Envelope Mode Enable bit for Tones A, B, and C
 
     uint8_t sign[3]; // Signify whether the waveform is high or low
+
+    int16_t *buf; // Buffer for raw PSG output samples
+    size_t bufpos; // Keep track of the position in the PSG output buffer
 } ay38910_t;
 
-void ay38910_set_buffer(int16_t*);
-void ay38910_reset_buffer(void);
-void ay38910_init(void);
-uint8_t ay38910_rd(void);
-void ay38910_wr(uint8_t data);
-void ay38910_set_reg(uint8_t);
-size_t ay38910_exec(void);
+void ay38910_init(ay38910_t*);
+uint8_t ay38910_rd(ay38910_t*);
+void ay38910_wr(ay38910_t*, uint8_t);
+void ay38910_set_reg(ay38910_t*, uint8_t);
+void ay38910_exec(ay38910_t*);
 
-void ay38910_state_load(uint8_t*);
-void ay38910_state_save(uint8_t*);
+void ay38910_state_load(ay38910_t*, uint8_t*);
+void ay38910_state_save(ay38910_t*, uint8_t*);
 
 #endif

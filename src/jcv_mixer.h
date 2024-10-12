@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JCV_MIXER_H
 #define JCV_MIXER_H
 
+#include "ay38910.h"
 #include "sn76489.h"
 
 void jcv_mixer_deinit(void);
@@ -44,5 +45,6 @@ void jcv_mixer_set_rsqual(unsigned);
 void jcv_mixer_resamp(size_t);
 
 void jcv_mixer_set_psg(sn76489_t*);
+void jcv_mixer_set_sgm(ay38910_t*);
 
 #endif

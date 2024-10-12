@@ -79,6 +79,7 @@ static size_t psgsamps = 0;
 
 static cv_sys_t cvsys; // ColecoVision System Context
 static sn76489_t psg; // PSG Context
+static ay38910_t sgmpsg; // SGM PSG Context
 
 void jcv_input_set_callback(uint16_t (*cb)(int)) {
     jcv_input_cb = cb;
@@ -105,7 +106,7 @@ uint8_t jcv_io_rd(uint8_t port) {
         }
         default: {
             if (port == 0x52) // SGM PSG Read
-                return ay38910_rd();
+                return ay38910_rd(&sgmpsg);
             return 0xff;
         }
     }
@@ -144,9 +145,9 @@ void jcv_io_wr(uint8_t port, uint8_t data) {
         }
         default: {
             if (port == 0x50) // Set the SGM PSG's active register
-                ay38910_set_reg(data & 0x0f);
+                ay38910_set_reg(&sgmpsg, data & 0x0f);
             else if (port == 0x51) // Write to the SGM PSG's selected register
-                ay38910_wr(data);
+                ay38910_wr(&sgmpsg, data);
             else if (port == 0x53)
                 sgm_upper = data & 0x01;
             else if (port == 0x7f)
@@ -397,7 +398,9 @@ void jcv_memio_init(void) {
 
     // Initialize sound chips
     sn76489_init(&psg);
+    ay38910_init(&sgmpsg);
     jcv_mixer_set_psg(&psg);
+    jcv_mixer_set_sgm(&sgmpsg);
 }
 
 // Deinitialize any allocated memory
@@ -426,7 +429,7 @@ void jcv_state_load_raw(const void *sstate) {
     cvsys.ctrl[1] = jcv_serial_pop16(st);
     for (int i = 0; i < 4; ++i) rompage[i] = jcv_serial_pop32(st);
     sn76489_state_load(&psg, st);
-    ay38910_state_load(st);
+    ay38910_state_load(&sgmpsg, st);
     jcv_vdp_state_load(st);
     jcv_z80_state_load(st);
     sgm_upper = jcv_serial_pop8(st);
@@ -486,7 +489,7 @@ const void* jcv_state_save_raw(void) {
     jcv_serial_push16(state, cvsys.ctrl[1]);
     for (int i = 0; i < 4; ++i) jcv_serial_push32(state, rompage[i]);
     sn76489_state_save(&psg, state);
-    ay38910_state_save(state);
+    ay38910_state_save(&sgmpsg, state);
     jcv_vdp_state_save(state);
     jcv_z80_state_save(state);
     jcv_serial_push8(state, sgm_upper);
@@ -595,7 +598,7 @@ void jcv_coleco_exec(void) {
             for (size_t s = 0; s < itercycs; ++s) { // Catch PSGs up to the CPU
                 if (++psgcycs % DIV_PSG == 0) {
                     sn76489_exec(&psg);
-                    ay38910_exec();
+                    ay38910_exec(&sgmpsg);
                     ++psgsamps;
                     psgcycs = 0;
                 }

@@ -35,8 +35,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "jcv_mixer.h"
 
-#include "ay38910.h"
-
 #define SAMPLERATE_PSG 224010 // Approximate PSG sample rate (Hz)
 #define SIZE_PSGBUF 4600 // Size of the PSG buffers
 
@@ -45,6 +43,7 @@ static int16_t *abuf = NULL; // Buffer to output resampled data into
 static sn76489_t *psg = NULL; // Pointer to active PSG context
 static int16_t *psgbuf = NULL; // PSG buffer
 
+static ay38910_t *sgmpsg = NULL;
 static int16_t *sgmbuf = NULL; // SGM PSG buffer
 
 static size_t samplerate = 48000; // Default sample rate is 48000Hz
@@ -94,6 +93,10 @@ void jcv_mixer_set_psg(sn76489_t *ptr) {
     psg = ptr;
 }
 
+void jcv_mixer_set_sgm(ay38910_t *ptr) {
+    sgmpsg = ptr;
+}
+
 // Deinitialize the resampler
 void jcv_mixer_deinit(void) {
     if (resampler) {
@@ -114,14 +117,14 @@ void jcv_mixer_init(void) {
     psgbuf = (int16_t*)calloc(1, SIZE_PSGBUF * sizeof(int16_t));
     sgmbuf = (int16_t*)calloc(1, SIZE_PSGBUF * sizeof(int16_t));
     psg->buf = psgbuf;
-    ay38910_set_buffer(sgmbuf);
+    sgmpsg->buf = sgmbuf;
 }
 
 // Resample raw audio and execute the callback
 void jcv_mixer_resamp(size_t in_psg) {
     // Reset buffer position for both chips
     psg->bufpos = 0;
-    ay38910_reset_buffer();
+    sgmpsg->bufpos = 0;
 
     spx_uint32_t in_len = in_psg;
 
