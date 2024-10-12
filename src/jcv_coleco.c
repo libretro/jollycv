@@ -34,8 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #include <time.h>
 
-#include "jcv.h"
-#include "jcv_memio.h"
+#include "jcv_coleco.h"
 #include "jcv_mixer.h"
 #include "jcv_serial.h"
 #include "jcv_vdp.h"
@@ -378,7 +377,7 @@ void jcv_rom_set_carttype(int ctype) {
 }
 
 // Initialize memory and set I/O states to default
-void jcv_memio_init(void) {
+void jcv_coleco_init(void) {
     /* Fill RAM with garbage - Some software relies on non-zero data at boot,
        such as Yolk's on You, and possibly more. Every individual console may
        have its own affinities, but the values are still indeterminate.
@@ -404,7 +403,7 @@ void jcv_memio_init(void) {
 }
 
 // Deinitialize any allocated memory
-void jcv_memio_deinit(void) {
+void jcv_coleco_deinit(void) {
     if (cvbios && bios_internal)
         free(cvbios);
 }

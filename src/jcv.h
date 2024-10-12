@@ -36,6 +36,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define REGION_NTSC 0
 #define REGION_PAL 1
 
+#define SIZE_1K 0x400
+#define SIZE_2K 0x800
+#define SIZE_8K 0x2000
+#define SIZE_16K 0x4000
+#define SIZE_32K 0x8000
+
 void jcv_set_region(unsigned);
 void jcv_init(void);
 void jcv_deinit(void);

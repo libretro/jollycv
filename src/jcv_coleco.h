@@ -28,14 +28,10 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef JCV_MEMIO_H
-#define JCV_MEMIO_H
+#ifndef JCV_COLECO_H
+#define JCV_COLECO_H
 
-#define SIZE_1K 0x400
-#define SIZE_2K 0x800
-#define SIZE_8K 0x2000
-#define SIZE_16K 0x4000
-#define SIZE_32K 0x8000
+#include "jcv.h"
 
 #define SIZE_CVBIOS SIZE_8K
 #define SIZE_CVRAM SIZE_1K
@@ -90,8 +86,8 @@ void jcv_io_wr(uint8_t, uint8_t);
 uint8_t jcv_mem_rd(uint16_t);
 void jcv_mem_wr(uint16_t, uint8_t);
 
-void jcv_memio_init(void);
-void jcv_memio_deinit(void);
+void jcv_coleco_init(void);
+void jcv_coleco_deinit(void);
 
 int jcv_bios_load_file(const char*);
 int jcv_bios_load(void*, size_t);

@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <stdint.h>
 
-#include "jcv_memio.h"
+#include "jcv_coleco.h"
 #include "jcv_serial.h"
 #include "jcv_z80.h"
 

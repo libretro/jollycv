@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stddef.h>
 
 #include "jcv.h"
-#include "jcv_memio.h"
+#include "jcv_coleco.h"
 #include "jcv_mixer.h"
 #include "jcv_vdp.h"
 #include "jcv_z80.h"
@@ -70,7 +70,7 @@ void jcv_set_region(unsigned region) {
 
 // Initialize
 void jcv_init(void) {
-    jcv_memio_init();
+    jcv_coleco_init();
     jcv_mixer_init();
     jcv_vdp_init();
     jcv_z80_init();
@@ -80,14 +80,14 @@ void jcv_init(void) {
 
 // Deinitialize
 void jcv_deinit(void) {
-    jcv_memio_deinit();
+    jcv_coleco_deinit();
     jcv_mixer_deinit();
 }
 
 // Reset the system
 void jcv_reset(int hard) {
     (void)hard; // Currently unused
-    jcv_memio_init(); // Init does the same thing reset needs to do
+    jcv_coleco_init(); // Init does the same thing reset needs to do
     jcv_vdp_init();
     jcv_z80_reset();
 }

@@ -37,7 +37,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <jg/jg_coleco.h>
 
 #include "jcv.h"
-#include "jcv_memio.h"
+#include "jcv_coleco.h"
 #include "jcv_mixer.h"
 #include "jcv_vdp.h"
 #include "jcv_z80.h"

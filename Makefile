@@ -40,7 +40,7 @@ LINKER := $(CC)
 
 CSRCS := z80/z80.c \
 	jcv.c \
-	jcv_memio.c \
+	jcv_coleco.c \
 	jcv_mixer.c \
 	jcv_serial.c \
 	jcv_vdp.c \
