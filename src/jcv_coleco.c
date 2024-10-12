@@ -392,7 +392,7 @@ void jcv_coleco_init(void) {
     cvsys.ctrl[0] = cvsys.ctrl[1] = 0; // Reset input states to empty
 
     // Set SGM RAM to disabled state
-    sgm_upper = 1;
+    sgm_upper = 0;
     sgm_lower = 0;
 
     // Initialize sound chips
