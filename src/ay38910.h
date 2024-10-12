@@ -59,13 +59,13 @@ typedef struct _ay38910_t {
     size_t bufpos; // Keep track of the position in the PSG output buffer
 } ay38910_t;
 
-void ay38910_init(ay38910_t*);
-uint8_t ay38910_rd(ay38910_t*);
-void ay38910_wr(ay38910_t*, uint8_t);
-void ay38910_set_reg(ay38910_t*, uint8_t);
-void ay38910_exec(ay38910_t*);
+void ay38910_init(ay38910_t* const);
+uint8_t ay38910_rd(ay38910_t* const);
+void ay38910_wr(ay38910_t* const, uint8_t);
+void ay38910_set_reg(ay38910_t* const, uint8_t);
+void ay38910_exec(ay38910_t* const);
 
-void ay38910_state_load(ay38910_t*, uint8_t*);
-void ay38910_state_save(ay38910_t*, uint8_t*);
+void ay38910_state_load(ay38910_t* const, uint8_t*);
+void ay38910_state_save(ay38910_t* const, uint8_t*);
 
 #endif

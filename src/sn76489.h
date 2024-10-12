@@ -45,11 +45,11 @@ typedef struct _sn76489_t {
     size_t bufpos; // Current write position in buffer
 } sn76489_t;
 
-void sn76489_init(sn76489_t*);
-void sn76489_wr(sn76489_t*, uint8_t);
-void sn76489_exec(sn76489_t*);
+void sn76489_init(sn76489_t* const);
+void sn76489_wr(sn76489_t* const, uint8_t);
+void sn76489_exec(sn76489_t* const);
 
-void sn76489_state_load(sn76489_t*, uint8_t*);
-void sn76489_state_save(sn76489_t*, uint8_t*);
+void sn76489_state_load(sn76489_t* const, uint8_t*);
+void sn76489_state_save(sn76489_t* const, uint8_t*);
 
 #endif

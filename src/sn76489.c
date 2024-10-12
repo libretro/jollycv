@@ -46,7 +46,7 @@ static const int16_t vtable[16] = { // Volume Table
 };
 
 // Set initial values
-void sn76489_init(sn76489_t *psg) {
+void sn76489_init(sn76489_t* const psg) {
     psg->clatch = 0x00; // Channel Latch starts at Tone Channel 0
 
     for (int i = 0; i < 4; ++i) {
@@ -67,7 +67,7 @@ void sn76489_init(sn76489_t *psg) {
 }
 
 // Write to PSG Control Registers
-void sn76489_wr(sn76489_t *psg, uint8_t data) {
+void sn76489_wr(sn76489_t* const psg, uint8_t data) {
     /* Register Writes
     There are two types of register writes, referred to in the smspower
     documentation as LATCH/DATA and DATA.
@@ -145,7 +145,7 @@ static inline uint16_t parity(uint16_t v) {
 }
 
 // Execute a PSG cycle
-void sn76489_exec(sn76489_t *psg) {
+void sn76489_exec(sn76489_t* const psg) {
     // Tone Generators
     for (size_t i = 0; i < 3; ++i) {
         // Each clock cycle, the counter is decremented (if it is non-zero)
@@ -228,7 +228,7 @@ void sn76489_exec(sn76489_t *psg) {
         psg->output[0] + psg->output[1] + psg->output[2] + psg->output[3];
 }
 
-void sn76489_state_load(sn76489_t *psg, uint8_t *st) {
+void sn76489_state_load(sn76489_t* const psg, uint8_t *st) {
     psg->clatch = jcv_serial_pop8(st);
     for (size_t i = 0; i < 4; ++i) psg->attenuator[i] = jcv_serial_pop8(st);
     for (size_t i = 0; i < 3; ++i) psg->frequency[i] = jcv_serial_pop16(st);
@@ -239,7 +239,7 @@ void sn76489_state_load(sn76489_t *psg, uint8_t *st) {
     psg->freqff = jcv_serial_pop8(st);
 }
 
-void sn76489_state_save(sn76489_t *psg, uint8_t *st) {
+void sn76489_state_save(sn76489_t* const psg, uint8_t *st) {
     jcv_serial_push8(st, psg->clatch);
     for (size_t i = 0; i < 4; ++i) jcv_serial_push8(st, psg->attenuator[i]);
     for (size_t i = 0; i < 3; ++i) jcv_serial_push16(st, psg->frequency[i]);

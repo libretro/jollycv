@@ -47,7 +47,7 @@ static const uint8_t dcmask[16] = { // Masks to avoid writing "Don't Care" bits
 };
 
 // Reset the Envelope step and volume depending on the currently selected shape
-static inline void ay38910_env_reset(ay38910_t *psg) {
+static inline void ay38910_env_reset(ay38910_t* const psg) {
     psg->estep = 0; // Reset the step counter
 
     if (psg->eseg) { // Segment 1
@@ -69,7 +69,7 @@ static inline void ay38910_env_reset(ay38910_t *psg) {
 }
 
 // Set initial values
-void ay38910_init(ay38910_t *psg) {
+void ay38910_init(ay38910_t* const psg) {
     // Registers
     for (int i = 0; i < 16; ++i)
         psg->reg[i] = 0x00;
@@ -105,15 +105,17 @@ void ay38910_init(ay38910_t *psg) {
         psg->ndisable[i] = 0x00;
         psg->emode[i] = 0x00;
     }
+
+    psg->bufpos = 0;
 }
 
 // Read from the currently latched Control Register
-uint8_t ay38910_rd(ay38910_t *psg) {
+uint8_t ay38910_rd(ay38910_t* const psg) {
     return psg->reg[psg->rlatch];
 }
 
 // Write to the currently latched Control Register
-void ay38910_wr(ay38910_t *psg, uint8_t data) {
+void ay38910_wr(ay38910_t* const psg, uint8_t data) {
     /* Registers
     |---|-----------------------------------------------|
     | R |  7  |  6  |  5  |  4  |  3  |  2  |  1  |  0  |
@@ -226,7 +228,7 @@ void ay38910_wr(ay38910_t *psg, uint8_t data) {
 }
 
 // Set the latched Control Register
-void ay38910_set_reg(ay38910_t *psg, uint8_t r) {
+void ay38910_set_reg(ay38910_t* const psg, uint8_t r) {
     psg->rlatch = r & 0x0f;
 }
 
@@ -321,7 +323,7 @@ void ay38910_exec(ay38910_t *psg) {
     psg->buf[psg->bufpos++] = v;
 }
 
-void ay38910_state_load(ay38910_t *psg, uint8_t *st) {
+void ay38910_state_load(ay38910_t* const psg, uint8_t *st) {
     for (size_t i = 0; i < 16; ++i) psg->reg[i] = jcv_serial_pop8(st);
     psg->rlatch = jcv_serial_pop8(st);
     for (size_t i = 0; i < 3; ++i) psg->tperiod[i] = jcv_serial_pop16(st);
@@ -341,7 +343,7 @@ void ay38910_state_load(ay38910_t *psg, uint8_t *st) {
     for (size_t i = 0; i < 3; ++i) psg->sign[i] = jcv_serial_pop8(st);
 }
 
-void ay38910_state_save(ay38910_t *psg, uint8_t *st) {
+void ay38910_state_save(ay38910_t* const psg, uint8_t *st) {
     for (size_t i = 0; i < 16; ++i) jcv_serial_push8(st, psg->reg[i]);
     jcv_serial_push8(st, psg->rlatch);
     for (size_t i = 0; i < 3; ++i) jcv_serial_push16(st, psg->tperiod[i]);
