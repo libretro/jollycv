@@ -100,7 +100,7 @@ endif
 ifneq ($(INSTALL_EXAMPLE), 0)
 $(BIN_OUT)/.tag:
 	@mkdir -p $(BIN_OUT)
-	touch $@
+	@touch $@
 
 $(BIN_OUT)/%.o: $(SOURCEDIR)/$(EXAMPLE)/%.$(EXT) $(BIN_OUT)/.tag
 	$(call COMPILE_INFO,$(BUILD_EXAMPLE))
