@@ -74,7 +74,6 @@ static uint8_t savedata[SIZE_2K];
 // Frame execution related variables
 static size_t numscanlines = CV_VDP_SCANLINES;
 static size_t psgcycs = 0;
-static size_t psgsamps = 0;
 
 static cv_sys_t cvsys; // ColecoVision System Context
 static sn76489_t psg; // PSG Context
@@ -572,9 +571,6 @@ int jcv_sram_save(const char *filename) {
 
 // Run emulation for one frame
 void jcv_coleco_exec(void) {
-    // Keep track of the number of samples generated this frame
-    psgsamps = 0;
-
     // Restore the leftover cycle count
     uint32_t extcycs = jcv_z80_cyc_restore();
 
@@ -598,7 +594,6 @@ void jcv_coleco_exec(void) {
                 if (++psgcycs % DIV_PSG == 0) {
                     sn76489_exec(&psg);
                     ay38910_exec(&sgmpsg);
-                    ++psgsamps;
                     psgcycs = 0;
                 }
             }
@@ -610,7 +605,7 @@ void jcv_coleco_exec(void) {
     }
 
     // Resample audio and push to the frontend
-    jcv_mixer_resamp(psgsamps);
+    jcv_mixer_resamp(psg.bufpos);
 
     // Store the leftover cycle count
     jcv_z80_cyc_store(extcycs);
