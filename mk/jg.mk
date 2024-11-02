@@ -143,6 +143,12 @@ else
 	endif
 endif
 
+ifeq (,$(filter 0,$(ENABLE_EXAMPLE) $(DISABLE_MODULE)))
+	override DATA_OUT := $(BIN_OUT)
+else
+	override DATA_OUT := $(NAME)
+endif
+
 ifeq ($(INSTALL_SHARED), 0)
 	override HEADERS :=
 	override SYMBOLS_LIST :=
