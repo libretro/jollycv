@@ -72,7 +72,6 @@ override VERSION_SCRIPT_NAME = $(shell printf %s lib$(NAME) | \
 override VERSION_SCRIPT_MODULE := $(VERSION_SCRIPT),$(OBJDIR)/module.map
 
 # Prerequisites
-override PREREQ := $(OBJDIR)/.tag
 override PREREQ_DATA =
 override PREREQ_EXAMPLE = $(TARGET_BIN)
 

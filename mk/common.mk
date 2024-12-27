@@ -29,6 +29,7 @@ override REQUIRES_PRIVATE := Requires.private:
 
 override DEPDIR := $(SOURCEDIR)/deps
 override OBJDIR := objs
+override PREREQ := $(OBJDIR)/.tag
 override UNAME := $(shell uname -s)
 
 # Info command
