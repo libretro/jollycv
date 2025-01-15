@@ -12,6 +12,8 @@ SRCDIR := $(SOURCEDIR)/src
 INCLUDES = -I$(SRCDIR)/z80
 INCLUDES_JG = -I$(SRCDIR)
 
+LINKER = $(CC)
+
 LIBS =
 LIBS_STATIC =
 
@@ -37,7 +39,6 @@ LIBS += $(LIBS_SPEEXDSP)
 
 EXT := c
 FLAGS := -std=c11 $(WARNINGS_DEF_C)
-LINKER := $(CC)
 
 CSRCS := z80/z80.c \
 	jcv.c \

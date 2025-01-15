@@ -32,9 +32,9 @@ else
 	override PKGCONFEXECDIR := $(EXEC_PREFIX)
 endif
 
-ifeq ($(UNAME), Darwin)
+ifeq ($(PLATFORM), Darwin)
 	override LIBRARY := $(NAME).dylib
-else ifeq ($(OS), Windows_NT)
+else ifeq ($(PLATFORM), Windows)
 	override LIBRARY := $(NAME).dll
 else
 	override LIBRARY := $(NAME).so
@@ -44,7 +44,7 @@ override LIB_PC := lib$(NAME).pc
 override LIB_SHARED := lib$(LIBRARY)
 override LIB_STATIC := lib$(NAME).a
 
-ifeq ($(UNAME), Darwin)
+ifeq ($(PLATFORM), Darwin)
 	override LIB_MAJOR := lib$(NAME).$(VERSION_MAJOR).dylib
 	override LIB_VERSION := lib$(NAME).$(VERSION).dylib
 	override SHARED += -dynamiclib
@@ -62,7 +62,7 @@ else
 	override VERSION_SCRIPT := -Wl,-version-script
 endif
 
-ifneq ($(UNAME), OpenBSD)
+ifneq ($(PLATFORM), OpenBSD)
 	override SHARED += $(UNDEFINED)
 endif
 
@@ -84,7 +84,7 @@ override DOXYFILE := $(wildcard $(SOURCEDIR)/lib/Doxyfile.in)
 
 # Example
 override BIN_OUT := $(OBJDIR)/$(EXAMPLE)
-override BIN_NAME := $(NAME)-example
+override BIN_NAME := $(NAME)-example$(BIN_EXT)
 override BIN_EXAMPLE := $(BIN_OUT)/$(BIN_NAME)
 
 # Icons
@@ -162,7 +162,7 @@ else
 		install-headers install-pkgconfig
 endif
 
-ifeq ($(UNAME), Darwin)
+ifeq ($(PLATFORM), Darwin)
 ifneq ($(VERSION_MAJOR), 0)
 	override SONAME += -Wl,-compatibility_version,$(VERSION_MAJOR) \
 		-Wl,-current_version,$(VERSION)
@@ -201,7 +201,7 @@ endif
 ifneq ($(ENABLE_SHARED), 0)
 	override TARGET += shared
 	override TARGET_INSTALL += install-shared
-	override TARGET_STRIP += install-shared-strip
+	override TARGET_STRIP += install-strip-shared
 	override LIBS_MODULE := -L$(OBJDIR) -l$(NAME)
 else
 	override LIBS_MODULE = $(OBJS_SHARED) $(LIBS)

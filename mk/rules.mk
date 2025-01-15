@@ -32,7 +32,7 @@ install-module: module
 	cp $(TARGET_MODULE) $(DESTDIR)$(LIBPATH)/
 
 install-strip-module: install-module
-	strip $(DESTDIR)$(LIBPATH)/$(LIBRARY)
+	$(STRIP) $(DESTDIR)$(LIBPATH)/$(LIBRARY)
 
 install: $(if $(TARGET_INSTALL),$(TARGET_INSTALL),all)
 	@$(if $(TARGET_INSTALL),,echo 'Nothing to install')
@@ -43,7 +43,7 @@ uninstall::
 	rm -f $(DESTDIR)$(LIBPATH)/$(LIBRARY)
 	rm -rf $(DESTDIR)$(DOCDIR)
 
-ifeq ($(UNAME), Darwin)
+ifeq ($(PLATFORM), Darwin)
 $(OBJDIR)/module.map: $(OBJDIR)/.tag
 	@printf '%s\n' '_jg_*' > $@
 else
@@ -120,7 +120,7 @@ install-bin: example
 	cp $(BIN_EXAMPLE) $(DESTDIR)$(BINDIR)/
 
 install-strip-bin: install-bin
-	strip $(DESTDIR)$(BINDIR)/$(BIN_NAME)
+	$(STRIP) $(DESTDIR)$(BINDIR)/$(BIN_NAME)
 
 uninstall::
 	rm -f $(DESTDIR)$(BINDIR)/$(BIN_NAME)
@@ -155,7 +155,7 @@ install-shared: shared
 	cp -P $(OBJDIR)/$(LIB_SHARED) $(DESTDIR)$(LIBDIR)/
 
 install-strip-shared: install-shared
-	strip $(DESTDIR)$(LIBDIR)/$(LIB_VERSION)
+	$(STRIP) $(DESTDIR)$(LIBDIR)/$(LIB_VERSION)
 
 static: $(TARGET_STATIC)
 
@@ -184,7 +184,7 @@ uninstall::
 	rm -f $(DESTDIR)$(LIBDIR)/$(LIB_VERSION)
 	rm -f $(DESTDIR)$(LIBDIR)/pkgconfig/$(LIB_PC)
 
-ifeq ($(UNAME), Darwin)
+ifeq ($(PLATFORM), Darwin)
 $(OBJDIR)/shared.map: $(OBJDIR)/.tag
 	@printf '%s\n' '$(SYMBOLS_LIST)' | sed -e 's/ /\n/g' > $@
 else

@@ -5,6 +5,7 @@ CC_FOR_BUILD ?= $(CC)
 CXX_FOR_BUILD ?= $(CXX)
 DOXYGEN ?= doxygen
 PKG_CONFIG ?= pkg-config
+STRIP ?= strip
 
 PREFIX ?= /usr/local
 EXEC_PREFIX ?= $(PREFIX)
@@ -20,6 +21,8 @@ MANDIR ?= $(DATAROOTDIR)/man
 CFLAGS ?= -O2
 CXXFLAGS ?= -O2
 
+HOST = $(shell $(LINKER) -dumpmachine)
+
 WARNINGS_DEF := -Wall -Wextra -Wshadow -Wmissing-declarations
 WARNINGS_DEF_C := $(WARNINGS_DEF) -Wmissing-prototypes -pedantic
 WARNINGS_DEF_CXX := $(WARNINGS_DEF) -pedantic
@@ -30,7 +33,39 @@ override REQUIRES_PRIVATE := Requires.private:
 override DEPDIR := $(SOURCEDIR)/deps
 override OBJDIR := objs
 override PREREQ := $(OBJDIR)/.tag
-override UNAME := $(shell uname -s)
+override HOST := $(HOST)
+
+ifneq (,$(findstring darwin, $(HOST)))
+	override PLATFORM := Darwin
+else ifneq (,$(findstring dragonfly, $(HOST)))
+	override PLATFORM := DragonFlyBSD
+else ifneq (,$(findstring freebsd, $(HOST)))
+	override PLATFORM := FreeBSD
+else ifneq (,$(findstring haiku, $(HOST)))
+	override PLATFORM := Haiku
+else ifneq (,$(findstring linux, $(HOST)))
+	override PLATFORM := Linux
+else ifneq (,$(findstring midipix, $(HOST)))
+	override PLATFORM := Midipix
+else ifneq (,$(findstring netbsd, $(HOST)))
+	override PLATFORM := NetBSD
+else ifneq (,$(findstring openbsd, $(HOST)))
+	override PLATFORM := OpenBSD
+else ifneq (,$(or $(findstring cygwin, $(HOST)), \
+		$(findstring mingw, $(HOST)), \
+		$(findstring msvc, $(HOST)), \
+		$(findstring msys, $(HOST)), \
+		$(findstring windows, $(HOST))))
+	override PLATFORM := Windows
+else
+	override PLATFORM :=
+endif
+
+ifeq ($(PLATFORM), Windows)
+	override BIN_EXT := .exe
+else
+	override BIN_EXT :=
+endif
 
 # Info command
 override COMPILE_INFO = $(info $(subst $(SOURCEDIR)/,,$(1)))
