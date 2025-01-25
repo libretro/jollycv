@@ -11,7 +11,7 @@ ifneq ($(USE_VENDORED_SPEEXDSP), 0)
 	LIBS_SPEEXDSP :=  $(if $(findstring -lm,$(LIBS)),,-lm)
 	MKDIRS += deps/speex
 	SRCS_SPEEXDSP := deps/speex/resample.c
-	OBJS_SPEEXDSP := $(SRCS_SPEEXDSP:.c=.o)
+	OBJS_SPEEXDSP := $(patsubst %,$(OBJDIR)/%,$(SRCS_SPEEXDSP:.c=.o))
 else
 	CFLAGS_SPEEXDSP = $(shell $(PKG_CONFIG) --cflags speexdsp)
 	LIBS_SPEEXDSP = $(shell $(PKG_CONFIG) --libs speexdsp)
@@ -28,6 +28,10 @@ endif
 
 ifneq ($(DIR_SPEEXDSP),)
 FLAGS_SPEEXDSP := -std=c99 $(WARNINGS_DEF_C)
+
+ifneq ($(PLATFORM), Windows)
+	FLAGS_SPEEXDSP += -fvisibility=hidden
+endif
 
 BUILD_SPEEXDSP = $(call COMPILE_C, $(FLAGS_SPEEXDSP))
 
