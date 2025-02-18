@@ -48,7 +48,8 @@ CSRCS := z80/z80.c \
 	jcv_vdp.c \
 	jcv_z80.c \
 	ay38910.c \
-	sn76489.c
+	sn76489.c \
+	eep24cxx.c
 
 JGSRCS := jg.c
 
