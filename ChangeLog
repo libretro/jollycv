@@ -1,5 +1,6 @@
 Version 1.1.0
 -------------
+ - Adjust overscan and aspect ratio
  - Build improvements
  - Support Activision style PCBs
  - Support for cartridges with SRAM (Lord of the Dungeon)

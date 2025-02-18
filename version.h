@@ -4,10 +4,10 @@
 
 # https://semver.org/
 VERSION_MAJOR=1
-VERSION_MINOR=0
-VERSION_PATCH=1
+VERSION_MINOR=1
+VERSION_PATCH=0
 #endif
 
 #ifndef JG_VERSION
-#define JG_VERSION "1.0.1"
+#define JG_VERSION "1.1.0"
 #endif
