@@ -41,12 +41,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "jcv_z80.h"
 #include "ay38910.h"
 #include "sn76489.h"
+#include "eep24cxx.h"
 
 #define DIV_PSG 16 // PSG Clock Divider
 #define Z80_CYC_LINE 228 // Z80 CPU cycles per scanline (227.99873)
 
 #define SIZE_STATE 50392
-static uint8_t state[SIZE_STATE + SIZE_2K];
+static uint8_t state[SIZE_STATE + SIZE_32K];
 
 static uint16_t (*jcv_input_cb)(int); // Input poll callback
 
@@ -64,12 +65,9 @@ static unsigned carttype = 0; // Cartridge Type
 static uint8_t sgm_upper = 0; // Enable upper 24K SGM RAM
 static uint8_t sgm_lower = 0; // Enable lower 8K SGM RAM - replaces BIOS mapping
 
-// Activision PCBs with EEPROM
-static uint8_t sda = 0;
-static uint8_t scl = 0;
-
 // SRAM or EEPROM Save Data
-static uint8_t savedata[SIZE_2K];
+static uint8_t savedata[SIZE_32K];
+static size_t savesize = 0;
 
 // Frame execution related variables
 static size_t numscanlines = CV_VDP_SCANLINES;
@@ -78,6 +76,7 @@ static size_t psgcycs = 0;
 static cv_sys_t cvsys; // ColecoVision System Context
 static sn76489_t psg; // PSG Context
 static ay38910_t sgmpsg; // SGM PSG Context
+static eep24cxx_t eep24cxx; // 24Cxx EEPROM Context (Activision PCBs)
 
 void jcv_input_set_callback(uint16_t (*cb)(int)) {
     jcv_input_cb = cb;
@@ -190,16 +189,9 @@ uint8_t jcv_mem_rd(uint16_t addr) {
             rompage[2] = (addr & ((rompages >> 1) - 1)) << 14;
             rompage[3] = rompage[2] + SIZE_8K; // Second half of 16K page
         }
-        else if (carttype == CART_ACTIVISION) {
-            /* Return the ROM data at 0xbf80 if SDA is set, otherwise return
-               the data at 0xff80.
-            */
-            if (addr == 0xff80) {
-                if (sda)
-                    return romdata[0xbf80];
-                else
-                    return romdata[0xff80];
-            }
+        else if (carttype == CART_ACTIVISION && addr == 0xff80) {
+            // Return the value of the EEPROM output pin for address 0xff80.
+            return eep24cxx.out;
         }
         else if (carttype == CART_SRAM && addr > 0xdfff) {
             return savedata[addr & 0x7ff];
@@ -250,19 +242,19 @@ void jcv_mem_wr(uint16_t addr, uint8_t data) {
                 break;
             }
             case 0xffc0: {
-                scl = 0;
+                eep24cxx_wr(&eep24cxx, eep24cxx.sda, 0);
                 break;
             }
             case 0xffd0: {
-                scl = 1;
+                eep24cxx_wr(&eep24cxx, eep24cxx.sda, 1);
                 break;
             }
             case 0xffe0: {
-                sda = 0;
+                eep24cxx_wr(&eep24cxx, 0, eep24cxx.scl);
                 break;
             }
             case 0xfff0: {
-                sda = 1;
+                eep24cxx_wr(&eep24cxx, 1, eep24cxx.scl);
                 break;
             }
         }
@@ -359,6 +351,7 @@ int jcv_rom_load(void *data, size_t size) {
         */
         for (int i = 0; i < 4; ++i)
             rompage[i] = i * SIZE_8K;
+        eep24cxx_init(&eep24cxx, savedata, savesize);
     }
     else {
         /* Assign ROM page offsets to locations in ROM data
@@ -371,8 +364,12 @@ int jcv_rom_load(void *data, size_t size) {
     return 1;
 }
 
-void jcv_rom_set_carttype(int ctype) {
+void jcv_rom_set_carttype(unsigned ctype, unsigned special) {
     carttype = ctype;
+    if (carttype == CART_SRAM)
+        savesize = SIZE_2K;
+    else if (carttype == CART_ACTIVISION)
+        savesize = special;
 }
 
 // Initialize memory and set I/O states to default
@@ -413,7 +410,7 @@ void jcv_coleco_set_region(unsigned region) {
 
 // Return the size of a state
 size_t jcv_state_size(void) {
-    return SIZE_STATE + (carttype == CART_SRAM ? SIZE_2K : 0);
+    return SIZE_STATE + savesize;
 }
 
 // Load raw state data into the running system
@@ -432,9 +429,17 @@ void jcv_state_load_raw(const void *sstate) {
     jcv_z80_state_load(st);
     sgm_upper = jcv_serial_pop8(st);
     sgm_lower = jcv_serial_pop8(st);
-    if (carttype == CART_ACTIVISION) {
-        scl = jcv_serial_pop8(st);
-        sda = jcv_serial_pop8(st);
+    if (carttype == CART_ACTIVISION) { // EEPROM
+        eep24cxx.sda = jcv_serial_pop8(st);
+        eep24cxx.scl = jcv_serial_pop8(st);
+        eep24cxx.out = jcv_serial_pop8(st);
+        eep24cxx.wp = jcv_serial_pop8(st);
+        eep24cxx.mode = jcv_serial_pop8(st);
+        eep24cxx.cmd = jcv_serial_pop8(st);
+        eep24cxx.clk = jcv_serial_pop8(st);
+        eep24cxx.shift = jcv_serial_pop8(st);
+        eep24cxx.addr = jcv_serial_pop16(st);
+        jcv_serial_popblk(eep24cxx.data, st, eep24cxx.datasize);
     }
     else if (carttype == CART_SRAM) {
         jcv_serial_popblk(savedata, st, SIZE_2K);
@@ -492,9 +497,17 @@ const void* jcv_state_save_raw(void) {
     jcv_z80_state_save(state);
     jcv_serial_push8(state, sgm_upper);
     jcv_serial_push8(state, sgm_lower);
-    if (carttype == CART_ACTIVISION) {
-        jcv_serial_push8(state, scl);
-        jcv_serial_push8(state, sda);
+    if (carttype == CART_ACTIVISION) { // EEPROM
+        jcv_serial_push8(state, eep24cxx.sda);
+        jcv_serial_push8(state, eep24cxx.scl);
+        jcv_serial_push8(state, eep24cxx.out);
+        jcv_serial_push8(state, eep24cxx.wp);
+        jcv_serial_push8(state, eep24cxx.mode);
+        jcv_serial_push8(state, eep24cxx.cmd);
+        jcv_serial_push8(state, eep24cxx.clk);
+        jcv_serial_push8(state, eep24cxx.shift);
+        jcv_serial_push16(state, eep24cxx.addr);
+        jcv_serial_pushblk(state, eep24cxx.data, eep24cxx.datasize);
     }
     else if (carttype == CART_SRAM) {
         jcv_serial_pushblk(state, savedata, SIZE_2K);
@@ -535,7 +548,7 @@ int jcv_sram_load(const char *filename) {
     filesize = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    if (filesize > SIZE_2K) {
+    if (filesize > savesize) {
         fclose(file);
         return 0;
     }
@@ -554,7 +567,7 @@ int jcv_sram_load(const char *filename) {
 
 // Save SRAM
 int jcv_sram_save(const char *filename) {
-    if (carttype != CART_SRAM)
+    if (!(carttype == CART_SRAM || carttype == CART_ACTIVISION))
         return 2;
 
     FILE *file;
@@ -563,7 +576,7 @@ int jcv_sram_save(const char *filename) {
         return 0;
 
     // Write and close the file
-    fwrite(savedata, SIZE_2K, sizeof(uint8_t), file);
+    fwrite(savedata, savesize, sizeof(uint8_t), file);
     fclose(file);
 
     return 1; // Success!
