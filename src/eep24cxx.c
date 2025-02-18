@@ -41,13 +41,13 @@ enum {
 
 #define EEP24CXX_RESETCLK 9 // Clock up to 9 cycles
 
-static inline void eep24cxx_addr_inc(eep24cxx_t *eep) {
+static inline void eep24cxx_addr_inc(eep24cxx_t* const eep) {
     // Increment the address within a page
     eep->addr = ((eep->addr + 1) & (eep->pagesize - 1)) |
         (eep->addr & ~(eep->pagesize - 1));
 }
 
-void eep24cxx_init(eep24cxx_t *eep, uint8_t *savedata, unsigned sz) {
+void eep24cxx_init(eep24cxx_t* const eep, uint8_t *savedata, unsigned sz) {
     // Initialize the EEPROM
     eep->data = savedata;
     eep->datasize = sz;
@@ -77,7 +77,7 @@ void eep24cxx_init(eep24cxx_t *eep, uint8_t *savedata, unsigned sz) {
     eep->clk = 0;
 }
 
-void eep24cxx_wr(eep24cxx_t *eep, uint8_t sda, uint8_t scl) {
+void eep24cxx_wr(eep24cxx_t* const eep, uint8_t sda, uint8_t scl) {
     /* The SDA pin is normally pulled high with an external device. Data on the
        SDA pin may change only during SCL low time periods. Data changes during
        SCL high periods will indicate a start or stop condition.

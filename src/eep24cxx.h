@@ -46,7 +46,7 @@ typedef struct _eep24cxx_t {
     unsigned pagesize;
 } eep24cxx_t;
 
-void eep24cxx_init(eep24cxx_t*, uint8_t*, unsigned);
-void eep24cxx_wr(eep24cxx_t*, uint8_t, uint8_t);
+void eep24cxx_init(eep24cxx_t* const, uint8_t*, unsigned);
+void eep24cxx_wr(eep24cxx_t* const, uint8_t, uint8_t);
 
 #endif
