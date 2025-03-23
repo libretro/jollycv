@@ -19,7 +19,7 @@ LIBS_STATIC =
 
 LIBS_REQUIRES := speexdsp
 
-DOCS := LICENSE README
+DOCS := ChangeLog LICENSE README
 
 # TODO: add public API header
 HEADERS :=
