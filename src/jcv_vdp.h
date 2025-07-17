@@ -60,6 +60,7 @@ typedef struct _cv_vdp_t {
 void jcv_vdp_init(void);
 
 void jcv_vdp_set_buffer(uint32_t*);
+void jcv_vdp_set_vblint(void (*)(void));
 void jcv_vdp_set_palette(uint8_t);
 void jcv_vdp_set_region(uint8_t);
 

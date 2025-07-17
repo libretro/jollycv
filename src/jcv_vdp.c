@@ -35,7 +35,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "jcv_serial.h"
 #include "jcv_vdp.h"
-#include "jcv_z80.h"
 
 // The Carmichael Experience - Tweaked to Look Nice
 static const uint32_t palette_teatime[16] = {
@@ -60,6 +59,8 @@ static cv_vdp_t vdp; // VDP Context
 static uint32_t *vbuf = NULL;
 
 static uint16_t numscanlines = CV_VDP_SCANLINES;
+
+static void (*jcv_vdp_vblint)(void);
 
 // Increment address with wrap
 static inline void jcv_vdp_addr_inc(void) {
@@ -100,6 +101,11 @@ static inline void jcv_vdp_pixel(uint32_t c, int line, int dot) {
 // Set the video output buffer to be written to
 void jcv_vdp_set_buffer(uint32_t *ptr) {
     vbuf = ptr;
+}
+
+// Set the VBLANK interrupt function pointer
+void jcv_vdp_set_vblint(void (*cb)(void)) {
+    jcv_vdp_vblint = cb;
 }
 
 // Set the video palette
@@ -192,9 +198,11 @@ static void jcv_vdp_wr_reg(uint8_t rnum, uint8_t data) {
         }
         case 1: { // Mode Control 2
             // Screen mode may have changed - handle in drawing routines
-            // Fire NMI if Status INT is set and Register 1 GINT bit was set
+            /* Fire the VBLANK interrupt if Status INT is set and Register 1
+               GINT bit was set
+            */
             if (jcv_vdp_int() && jcv_vdp_gint() && !old_gint)
-                jcv_z80_nmi();
+                jcv_vdp_vblint();
             break;
         }
         case 2: { // Pattern Name Table
@@ -579,13 +587,14 @@ void jcv_vdp_exec(void) {
         // Set the INT bit on the Status Register
         vdp.stat |= 0x80;
 
-        /* Fire NMI if Register 1 GINT is set and Status Register INT was clear
-           before entering VBLANK. This prevents the NMI from being fired if
-           we're already in the interrupt service routine, and a read of the
-           status register has not yet been done to clear the bit.
+        /* Fire the VBLANK interrupt if Register 1 GINT is set and Status
+           Register INT was clear before entering VBLANK. This prevents the
+           interrupt from being fired if we're already in the interrupt service
+           routine, and a read of the status register has not yet been done to
+           clear the bit.
         */
         if (jcv_vdp_gint() && !old_int)
-            jcv_z80_nmi();
+            jcv_vdp_vblint();
     }
 
     // Start on the next frame when the end of this one is reached

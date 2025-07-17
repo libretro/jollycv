@@ -39,25 +39,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ay38910.h"
 #include "sn76489.h"
 
-/* NTSC Timing
-Z80 cycles per audio sample at 48000Hz (16 CPU cycles per PSG cycle):
-    (3579545 / x) / 16 = 48000
-    x = 4.6608659
-
-Z80 cycles per frame (2 CPU cycles per 3 VDP cycles):
-    89603.5 * 2/3 = 59735.66667
-
-Z80 cycles per scanline:
-    59735.66667 / 262 = 227.99873 (~228)
-
-VDP cycles per frame:
-    342 cycles per line, 262 lines, skip final cycle of frame every other frame
-    89604 or 89603 (89603.5)
-
-PSG cycles per frame:
-    59735.66667 / 16 = 3733.4792 (~224KHz)
-*/
-
 void (*jcv_exec)(void);
 
 // Set the region
@@ -76,6 +57,7 @@ void jcv_init(void) {
     jcv_z80_init();
 
     jcv_exec = &jcv_coleco_exec;
+    jcv_vdp_set_vblint(&jcv_z80_nmi);
 }
 
 // Deinitialize

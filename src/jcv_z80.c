@@ -44,25 +44,25 @@ static uint32_t delaycycs = 0;
 
 // Memory Read
 static uint8_t read_byte(void *userdata, uint16_t addr) {
-    if (userdata) { } // Unused
+    (void)userdata;
     return jcv_mem_rd(addr);
 }
 
 // Memory Write
 static void write_byte(void *userdata, uint16_t addr, uint8_t data) {
-    if (userdata) { } // Unused
+    (void)userdata;
     jcv_mem_wr(addr, data);
 }
 
 // IO Port Read
 static uint8_t port_in(z80 *z, uint16_t port) {
-    if (z) { } // Unused
+    (void)z;
     return jcv_io_rd(port & 0xff);
 }
 
 // IO Port Write
 static void port_out(z80 *z, uint16_t port, uint8_t data) {
-    if (z) { } // Unused
+    (void)z;
     jcv_io_wr(port & 0xff, data);
 }
 
