@@ -2,7 +2,6 @@
 -include $(SOURCEDIR)/mk/miniz.mk
 -include $(SOURCEDIR)/mk/samplerate.mk
 -include $(SOURCEDIR)/mk/speexdsp.mk
--include $(SOURCEDIR)/mk/soxr.mk
 
 CFLAGS_JG = $(shell $(PKG_CONFIG) --cflags jg)
 
