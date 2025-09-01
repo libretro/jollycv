@@ -114,6 +114,9 @@ Jolly Good Z80 (MIT)
   Copyright (c) 2022 rofl0r
   See src/z80/LICENSE
 
+m6502 (MIT)
+  Copyright (c) 2018 Nicolas Allemand
+
 Speex Resampler (BSD-3-Clause)
   Copyright (c) 2003, 2007, 2008 Xiph.org Foundation
   See source files in deps/speex/ for detailed information
