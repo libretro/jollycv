@@ -9,7 +9,7 @@ DESCRIPTION := JollyCV is a highly accurate emulator for the ColecoVision, \
 
 SRCDIR := $(SOURCEDIR)/src
 
-INCLUDES = -I$(SRCDIR)/z80
+INCLUDES = -I$(SRCDIR)/z80 -I$(SRCDIR)/m6502
 INCLUDES_JG = -I$(SRCDIR)
 
 LINKER = $(CC)
@@ -25,7 +25,7 @@ DOCS := ChangeLog LICENSE README
 HEADERS :=
 
 # Object dirs
-MKDIRS := z80
+MKDIRS := m6502 z80
 
 override INSTALL_DATA := 0
 override INSTALL_EXAMPLE := 0
@@ -40,13 +40,15 @@ LIBS += $(LIBS_SPEEXDSP)
 EXT := c
 FLAGS := -std=c11 $(WARNINGS_DEF_C)
 
-CSRCS := z80/z80.c \
+CSRCS := m6502/m6502.c \
+	z80/z80.c \
 	jcv.c \
 	jcv_coleco.c \
 	jcv_mixer.c \
 	jcv_serial.c \
 	jcv_vdp.c \
 	jcv_z80.c \
+	jcv_m6502.c \
 	ay38910.c \
 	sn76489.c \
 	eep24cxx.c
