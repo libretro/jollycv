@@ -64,6 +64,8 @@ void jcv_vdp_set_vblint(void (*)(void));
 void jcv_vdp_set_palette(uint8_t);
 void jcv_vdp_set_region(uint8_t);
 
+void jcv_vdp_intchk(void);
+
 uint8_t jcv_vdp_rd_data(void);
 uint8_t jcv_vdp_rd_stat(void);
 

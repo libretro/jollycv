@@ -152,6 +152,12 @@ void jcv_vdp_init(void) {
 
 }
 
+// Check if the VBLANK interrupt should be asserted
+void jcv_vdp_intchk(void) {
+    if (jcv_vdp_int() && jcv_vdp_gint())
+        jcv_vdp_vblint(); // Keep calling this while INT flag is set
+}
+
 uint8_t jcv_vdp_rd_data(void) {
     vdp.wlatch = 0; // Make sure the write latch is clear
     uint8_t rb = vdp.dlatch; // Store original latch value
