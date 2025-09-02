@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <stdint.h>
 
-//#include "jcv_crvision.h"
+#include "jcv_crvision.h"
 #include "jcv_serial.h"
 #include "jcv_m6502.h"
 
@@ -46,14 +46,13 @@ static uint32_t delaycycs = 0;
 // Memory Read
 static uint8_t read_byte(void *userdata, uint16_t addr) {
     (void)userdata;
-    //return jcv_crvision_mem_rd(addr);
-    return 0xff;
+    return jcv_crvision_mem_rd(addr);
 }
 
 // Memory Write
 static void write_byte(void *userdata, uint16_t addr, uint8_t data) {
     (void)userdata;
-    //jcv_crvision_mem_wr(addr, data);
+    jcv_crvision_mem_wr(addr, data);
 }
 
 // Store extra cycle count

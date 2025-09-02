@@ -44,6 +44,7 @@ CSRCS := m6502/m6502.c \
 	z80/z80.c \
 	jcv.c \
 	jcv_coleco.c \
+	jcv_crvision.c \
 	jcv_mixer.c \
 	jcv_serial.c \
 	jcv_vdp.c \

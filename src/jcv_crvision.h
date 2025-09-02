@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020-2022 Rupert Carmichael
+Copyright (c) 2020-2025 Rupert Carmichael
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -28,73 +28,22 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <stdint.h>
-#include <stddef.h>
+#ifndef JCV_CRVISION_H
+#define JCV_CRVISION_H
 
 #include "jcv.h"
-#include "jcv_coleco.h"
-#include "jcv_crvision.h"
-#include "jcv_mixer.h"
-#include "jcv_vdp.h"
-#include "jcv_z80.h"
-#include "jcv_m6502.h"
-#include "ay38910.h"
-#include "sn76489.h"
 
-void (*jcv_exec)(void);
+typedef struct _crvision_sys_t {
+    uint8_t ram[0x800]; // System RAM
+} crvision_sys_t;
 
-static unsigned sys = 0;
+int jcv_crvision_bios_load(void*, size_t);
+int jcv_crvision_rom_load(void*, size_t);
 
-// Set the region
-void jcv_set_region(unsigned region) {
-    // 313 scanlines for PAL, 262 scanlines for NTSC (192 visible for both)
-    jcv_coleco_set_region(region);
-    jcv_mixer_set_region(region);
-    jcv_vdp_set_region(region);
-}
+uint8_t jcv_crvision_mem_rd(uint16_t);
+void jcv_crvision_mem_wr(uint16_t, uint8_t);
 
-// Set the emulated system
-void jcv_set_system(unsigned s) {
-    sys = s;
-}
+void jcv_crvision_exec(void);
+void jcv_crvision_init(void);
 
-// Initialize
-void jcv_init(void) {
-    if (sys == JCV_SYS_CRVISION) {
-        jcv_crvision_init();
-        jcv_mixer_init(1);
-        jcv_m6502_init();
-        jcv_vdp_set_vblint(&jcv_m6502_irq);
-        jcv_exec = &jcv_crvision_exec;
-    }
-    else {
-        jcv_coleco_init();
-        jcv_mixer_init(0);
-        jcv_z80_init();
-        jcv_vdp_set_vblint(&jcv_z80_nmi);
-        jcv_exec = &jcv_coleco_exec;
-    }
-
-    jcv_vdp_init();
-}
-
-// Deinitialize
-void jcv_deinit(void) {
-    if (sys == JCV_SYS_COLECO)
-        jcv_coleco_deinit();
-    jcv_mixer_deinit();
-}
-
-// Reset the system
-void jcv_reset(int hard) {
-    (void)hard; // Currently unused
-    if (sys == JCV_SYS_CRVISION) {
-        jcv_m6502_reset();
-    }
-    else {
-        jcv_coleco_init(); // Init does the same thing reset needs to do
-        jcv_z80_reset();
-    }
-
-    jcv_vdp_init();
-}
+#endif

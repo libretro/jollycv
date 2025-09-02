@@ -38,11 +38,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define SIZE_1K 0x400
 #define SIZE_2K 0x800
+#define SIZE_4K 0x1000
 #define SIZE_8K 0x2000
+#define SIZE_12K 0x3000
 #define SIZE_16K 0x4000
+#define SIZE_18K 0x4800
 #define SIZE_32K 0x8000
 
+#define JCV_SYS_COLECO      0x00
+#define JCV_SYS_CRVISION    0x01
+
 void jcv_set_region(unsigned);
+void jcv_set_system(unsigned);
 void jcv_init(void);
 void jcv_deinit(void);
 void jcv_reset(int);

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020-2022 Rupert Carmichael
+Copyright (c) 2020-2025 Rupert Carmichael
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -35,7 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "sn76489.h"
 
 void jcv_mixer_deinit(void);
-void jcv_mixer_init(void);
+void jcv_mixer_init(unsigned);
 
 void jcv_mixer_set_buffer(int16_t*);
 void jcv_mixer_set_callback(void (*)(size_t));
@@ -43,6 +43,7 @@ void jcv_mixer_set_rate(size_t);
 void jcv_mixer_set_region(unsigned);
 void jcv_mixer_set_rsqual(unsigned);
 void jcv_mixer_resamp(size_t);
+void jcv_mixer_resamp_crvision(size_t);
 
 void jcv_mixer_set_psg(sn76489_t*);
 void jcv_mixer_set_sgm(ay38910_t*);

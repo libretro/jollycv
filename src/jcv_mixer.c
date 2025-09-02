@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020-2022 Rupert Carmichael
+Copyright (c) 2020-2025 Rupert Carmichael
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -36,7 +36,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "jcv_mixer.h"
 
 #define SAMPLERATE_PSG 224010 // Approximate PSG sample rate (Hz)
-#define SIZE_PSGBUF 4600 // Size of the PSG buffers
+#define SAMPLERATE_PSG_CRV 125000 // PSG sample rate (CreatiVision)
+#define SIZE_PSGBUF 4800 // Size of the PSG buffers
 
 static int16_t *abuf = NULL; // Buffer to output resampled data into
 
@@ -112,7 +113,16 @@ void jcv_mixer_deinit(void) {
 }
 
 // Bring up the Speex resampler
-void jcv_mixer_init(void) {
+void jcv_mixer_init(unsigned sys) {
+    if (sys) { // CreatiVision
+        resampler = speex_resampler_init(1, SAMPLERATE_PSG_CRV, samplerate,
+            rsq, &err);
+        psgbuf = (int16_t*)calloc(1, SIZE_PSGBUF * sizeof(int16_t));
+        psg->buf = psgbuf;
+        return;
+    }
+
+    // ColecoVision
     resampler = speex_resampler_init(1, SAMPLERATE_PSG, samplerate, rsq, &err);
     psgbuf = (int16_t*)calloc(1, SIZE_PSGBUF * sizeof(int16_t));
     sgmbuf = (int16_t*)calloc(1, SIZE_PSGBUF * sizeof(int16_t));
@@ -131,6 +141,19 @@ void jcv_mixer_resamp(size_t in_psg) {
     // Mix in the SGM samples
     for (size_t i = 0; i < in_len; ++i)
         psgbuf[i] += sgmbuf[i];
+
+    spx_uint32_t outsamps = samplerate / framerate;
+    err = speex_resampler_process_int(resampler, 0, (spx_int16_t*)psgbuf,
+        &in_len, (spx_int16_t*)abuf, &outsamps);
+    jcv_mixer_cb(outsamps);
+}
+
+// Resample raw audio and execute the callback - CreatiVision (SN76489 PSG only)
+void jcv_mixer_resamp_crvision(size_t in_psg) {
+    // Reset buffer position
+    psg->bufpos = 0;
+
+    spx_uint32_t in_len = in_psg;
 
     spx_uint32_t outsamps = samplerate / framerate;
     err = speex_resampler_process_int(resampler, 0, (spx_int16_t*)psgbuf,
