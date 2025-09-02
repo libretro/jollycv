@@ -38,6 +38,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "jcv.h"
 #include "jcv_coleco.h"
+#include "jcv_crvision.h"
 #include "jcv_mixer.h"
 #include "jcv_vdp.h"
 #include "jcv_z80.h"
@@ -46,6 +47,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SAMPLERATE 48000
 #define FRAMERATE 60
 #define FRAMERATE_PAL 50
+#define ASPECT_NTSC 4.0/3.0
 #define ASPECT_PAL 1.4257812
 #define CHANNELS 1
 #define NUMINPUTS 2
@@ -68,7 +70,7 @@ static jg_videoinfo_t vidinfo = {
     6,                          // x
     0,                          // y
     CV_VDP_WIDTH_OVERSCAN,      // p
-    4.0/3.0,                    // aspect
+    ASPECT_NTSC,                // aspect
     NULL                        // buf
 };
 
@@ -123,6 +125,9 @@ enum {
     RSQUAL,
     REGION,
 };
+
+// System being emulated
+static int sys = JCV_SYS_COLECO;
 
 typedef struct _dbentry_t {
     const char *md5; unsigned input; unsigned carttype; unsigned special;
@@ -372,7 +377,13 @@ int jg_init(void) {
     jcv_mixer_set_rate(SAMPLERATE);
     jcv_mixer_set_rsqual(settings_jcv[RSQUAL].val);
     jcv_vdp_set_palette(settings_jcv[PALETTE].val);
-    jcv_set_region(settings_jcv[REGION].val);
+    if (sys == JCV_SYS_CRVISION) {
+        jcv_set_region(1); // force PAL
+        jcv_set_system(sys);
+    }
+    else {
+        jcv_set_region(settings_jcv[REGION].val);
+    }
     jcv_init();
     return 1;
 }
@@ -392,7 +403,10 @@ void jg_exec_frame(void) {
 int jg_game_load(void) {
     // Try to load the BIOS as an auxiliary file
     if (biosinfo.size) {
-        jcv_bios_load(biosinfo.data, biosinfo.size);
+        if (sys == JCV_SYS_CRVISION)
+            jcv_crvision_bios_load(biosinfo.data, biosinfo.size);
+        else
+            jcv_bios_load(biosinfo.data, biosinfo.size);
     }
     else {
         char biospath[256];
@@ -409,29 +423,39 @@ int jg_game_load(void) {
     }
 
     // Load the ROM
-    if (!jcv_rom_load(gameinfo.data, gameinfo.size))
-        return 0;
-
-    char savename[292];
-    snprintf(savename, sizeof(savename),
-        "%s/%s.srm", pathinfo.save, gameinfo.name);
-    int sramstat = jcv_sram_load((const char*)savename);
-
-    if (sramstat == 1)
-        jg_cb_log(JG_LOG_DBG, "SRAM/EEPROM Loaded: %s\n", savename);
-    else if (sramstat == 2)
-        jg_cb_log(JG_LOG_DBG, "SRAM/EEPROM File Missing: %s\n", savename);
-    else
-        jg_cb_log(JG_LOG_DBG, "SRAM/EEPROM Load Failed: %s\n", savename);
-
-    // Set the samples per frame and frame timing depending on region
-    if (settings_jcv[REGION].val) { // PAL mode
+    if (sys == JCV_SYS_CRVISION) {
+        if (!jcv_crvision_rom_load(gameinfo.data, gameinfo.size))
+            return 0;
         vidinfo.aspect = ASPECT_PAL;
         audinfo.spf = (SAMPLERATE / FRAMERATE_PAL) * CHANNELS;
         jg_cb_frametime(FRAMERATE_PAL);
     }
-    else { // NTSC mode
-        jg_cb_frametime(FRAMERATE);
+    else {
+        if (!jcv_rom_load(gameinfo.data, gameinfo.size))
+            return 0;
+        char savename[292];
+        snprintf(savename, sizeof(savename),
+            "%s/%s.srm", pathinfo.save, gameinfo.name);
+        int sramstat = jcv_sram_load((const char*)savename);
+
+        if (sramstat == 1)
+            jg_cb_log(JG_LOG_DBG, "SRAM/EEPROM Loaded: %s\n", savename);
+        else if (sramstat == 2)
+            jg_cb_log(JG_LOG_DBG, "SRAM/EEPROM File Missing: %s\n", savename);
+        else
+            jg_cb_log(JG_LOG_DBG, "SRAM/EEPROM Load Failed: %s\n", savename);
+
+        // Set the samples per frame and frame timing depending on region
+        if (settings_jcv[REGION].val) { // PAL mode
+            vidinfo.aspect = ASPECT_PAL;
+            audinfo.spf = (SAMPLERATE / FRAMERATE_PAL) * CHANNELS;
+            jg_cb_frametime(FRAMERATE_PAL);
+        }
+        else { // NTSC mode
+            vidinfo.aspect = ASPECT_NTSC;
+            audinfo.spf = (SAMPLERATE / FRAMERATE_PAL) * CHANNELS;
+            jg_cb_frametime(FRAMERATE);
+        }
     }
 
     jcv_input_setup();
@@ -497,8 +521,10 @@ void jg_data_push(uint32_t type, int port, const void *ptr, size_t size) {
     if (type || port || ptr || size) { }
 }
 
-jg_coreinfo_t* jg_get_coreinfo(const char *sys) {
-    if (sys) { } // Unused
+jg_coreinfo_t* jg_get_coreinfo(const char *subsys) {
+    if (!strcmp(subsys, "crvision")) {
+        sys = JCV_SYS_CRVISION;
+    }
     return &coreinfo;
 }
 
