@@ -61,9 +61,9 @@ static size_t psgcycs = 0;
 
 // Stub implementation of the PIA
 typedef struct _pia_t {
-    uint8_t io[2];
-    uint8_t addr[2];
-    uint8_t ctrl[2];
+    uint8_t ddr[2]; // Data Direction Register
+    uint8_t or[2]; // Output Register
+    uint8_t cr[2]; // Control Register
 } pia_t;
 static pia_t pia;
 
@@ -174,6 +174,10 @@ int jcv_crvision_rom_load(void *data, size_t size) {
             jcv_crvision_rom_rd80 = &jcv_crvision_rom_18k_rd80;
             break;
         }
+        default: {
+            printf("Unsupported ROM size: %ld bytes\n", romsize);
+            return 0;
+        }
     }
 
     return 1;
@@ -192,16 +196,31 @@ uint8_t jcv_crvision_mem_rd(uint16_t addr) {
         return crvsys.ram[addr & 0x3ff];
     }
     else if (addr < 0x2000) { // PIA
-        if ((addr & 0x03) == 2) {
-            if ((pia.io[0] & 0x0f) == 0) {
-                uint8_t x = kbtbl[7] ^ kbtbl[11] ^ 0xff;
-                uint8_t y = kbtbl[13] ^ kbtbl[14] ^ 0xff;
-                return (x ^ y ^ 0xff);
+        if ((addr & 0x03) == 0x02) { // Port B read
+            if ((pia.cr[1] & 0x04) == 0) {
+                // DDR selected, return DDR value
+                return pia.ddr[1];
             }
             else {
-                return(kbtbl[pia.io[0] & 0x0f]);
+                // Output register selected
+                if (pia.ddr[1] == 0xff) {
+                    // When all bits are output, return the output register
+                    return pia.or[1];
+                }
+                else {
+                    // Some inputs - return keyboard data (not yet implemented)
+                    if ((pia.or[0] & 0x0f) == 0) {
+                        uint8_t x = kbtbl[7] ^ kbtbl[11] ^ 0xff;
+                        uint8_t y = kbtbl[13] ^ kbtbl[14] ^ 0xff;
+                        return (x ^ y ^ 0xff);
+                    }
+                    else {
+                        return kbtbl[pia.or[0] & 0x0f];
+                    }
+                }
             }
         }
+
         return 0xff; // Other PIA registers
     }
     else if (addr < 0x3000) { // VDP
@@ -216,12 +235,15 @@ uint8_t jcv_crvision_mem_rd(uint16_t addr) {
     else if (addr < 0xc000) { // ROM bank 1
         return jcv_crvision_rom_rd80(addr);
     }
+    else if (addr == 0xe801) { // Centronics Status
+        printf("Centronics Status\n");
+        return 0xff;
+    }
     else if (addr >= 0xf800) { // BIOS ROM
         return biosdata[addr & 0x7ff];
     }
 
     printf("rd: %04x\n", addr);
-
     return 0xff;
 }
 
@@ -242,26 +264,27 @@ void jcv_crvision_mem_wr(uint16_t addr, uint8_t data) {
         case 0x1000: {
             switch (addr & 0x03) {
                 case 0:
-                    if ((pia.ctrl[0] & 0x04) == 0) {
-                        pia.addr[0] = data;
+                    if ((pia.cr[0] & 0x04) == 0) {
+                        pia.ddr[0] = data;
                     }
                     else {
-                       pia.io[0] = data;
+                        pia.or[0] = data;
                     }
                     return;
                 case 1:
-                    pia.ctrl[0] = data;
+                    pia.cr[0] = data;
                     return;
                 case 2:
-                    if ((pia.ctrl[1] & 0x04) == 0) {
-                        pia.addr[1] = data;
+                    if ((pia.cr[1] & 0x04) == 0) {
+                        pia.ddr[1] = data;
                     }
                     else {
+                        pia.or[1] = data;
                         sn76489_wr(&psg, data);
                     }
                     return;
                 case 3:
-                    pia.ctrl[1] = data;
+                    pia.cr[1] = data;
                     return;
             }
             break;
@@ -279,7 +302,6 @@ void jcv_crvision_mem_wr(uint16_t addr, uint8_t data) {
     printf("wr: %04x, %02x\n", addr, data);
 }
 
-
 void jcv_crvision_init(void) {
     // Initialize sound chip
     sn76489_init(&psg);
@@ -289,8 +311,8 @@ void jcv_crvision_init(void) {
     memset(crvsys.ram, 0, sizeof(crvsys.ram));
 
     // Initialize PIA registers
-    pia.io[0] = pia.addr[0] = pia.ctrl[0] = 0;
-    pia.io[1] = pia.addr[1] = pia.ctrl[1] = 0;
+    pia.or[0] = pia.ddr[0] = pia.cr[0] = 0;
+    pia.or[1] = pia.ddr[1] = pia.cr[1] = 0;
 
     // Initialize keyboard table
     for (int i = 0; i < 16; i++)
