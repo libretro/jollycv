@@ -80,7 +80,9 @@ void jcv_init(void) {
 
 // Deinitialize
 void jcv_deinit(void) {
-    if (sys == JCV_SYS_COLECO)
+    if (sys == JCV_SYS_CRVISION)
+        jcv_crvision_deinit();
+    else
         jcv_coleco_deinit();
     jcv_mixer_deinit();
 }

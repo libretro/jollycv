@@ -33,10 +33,13 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "jcv.h"
 
+#define SIZE_CRVBIOS SIZE_2K
+
 typedef struct _crvision_sys_t {
-    uint8_t ram[0x800]; // System RAM
+    uint8_t ram[SIZE_1K]; // System RAM
 } crvision_sys_t;
 
+int jcv_crvision_bios_load_file(const char*);
 int jcv_crvision_bios_load(void*, size_t);
 int jcv_crvision_rom_load(void*, size_t);
 
@@ -45,5 +48,6 @@ void jcv_crvision_mem_wr(uint16_t, uint8_t);
 
 void jcv_crvision_exec(void);
 void jcv_crvision_init(void);
+void jcv_crvision_deinit(void);
 
 #endif

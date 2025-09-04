@@ -409,10 +409,17 @@ int jg_game_load(void) {
             jcv_bios_load(biosinfo.data, biosinfo.size);
     }
     else {
-        char biospath[256];
-        snprintf(biospath, sizeof(biospath), "%s/coleco.rom", pathinfo.bios);
-        if (!jcv_bios_load_file(biospath))
-            jg_cb_log(JG_LOG_ERR, "Failed to load bios %s\n", biospath);
+        char bpath[256];
+        if (sys == JCV_SYS_CRVISION) {
+            snprintf(bpath, sizeof(bpath), "%s/bioscv.rom", pathinfo.bios);
+            if (!jcv_crvision_bios_load_file(bpath))
+                jg_cb_log(JG_LOG_ERR, "Failed to load bios %s\n", bpath);
+        }
+        else {
+            snprintf(bpath, sizeof(bpath), "%s/coleco.rom", pathinfo.bios);
+            if (!jcv_bios_load_file(bpath))
+                jg_cb_log(JG_LOG_ERR, "Failed to load bios %s\n", bpath);
+        }
     }
 
     for (size_t i = 0; i < (sizeof(gamedb) / sizeof(dbentry_t)); ++i) {

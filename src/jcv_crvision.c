@@ -52,8 +52,11 @@ static sn76489_t psg;           // PSG Context
 
 static uint8_t *romdata = NULL;     // Game ROM
 static size_t romsize = 0;          // Size of the ROM in bytes
+
+static uint8_t bios_internal = 0;   // BIOS loaded internally
 static uint8_t *biosdata = NULL;    // BIOS ROM
 static size_t biossize = 0;         // Size of the BIOS in bytes
+
 
 // Frame execution related variables
 static size_t numscanlines = 313;
@@ -106,6 +109,39 @@ static uint8_t jcv_crvision_rom_18k_rd80(uint16_t addr) {
 
 static uint8_t jcv_crvision_rom_18k_rd40(uint16_t addr) {
     return rombank_2k[addr & 0x7ff];
+}
+
+// Load the CreatiVision BIOS
+int jcv_crvision_bios_load_file(const char *biospath) {
+    FILE *file;
+    long size;
+
+    if (!(file = fopen(biospath, "rb")))
+        return 0;
+
+    // Find out the file's size
+    fseek(file, 0, SEEK_END);
+    size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    // Make sure it is the correct size before attempting to load it
+    if (size != SIZE_CRVBIOS) {
+        fclose(file);
+        return 0;
+    }
+
+    // Allocate memory for the BIOS
+    biosdata = (uint8_t*)calloc(SIZE_CRVBIOS, sizeof(uint8_t));
+
+    if (!fread(biosdata, SIZE_CRVBIOS, 1, file)) {
+        fclose(file);
+        return 0;
+    }
+
+    fclose(file);
+
+    bios_internal = 1;
+    return 1;
 }
 
 // Load the CreatiVision BIOS from a memory buffer
@@ -317,6 +353,12 @@ void jcv_crvision_init(void) {
     // Initialize keyboard table
     for (int i = 0; i < 16; i++)
         kbtbl[i] = 0xff;
+}
+
+// Deinitialize any allocated memory
+void jcv_crvision_deinit(void) {
+    if (biosdata && bios_internal)
+        free(biosdata);
 }
 
 /*
