@@ -78,7 +78,7 @@ mask_overscan = 0
 0 = Show Overscan, 1 = Mask Overscan
 
 palette = 0 
-0 = TeaTime, 1 = SYoung
+0 = TeaTime, 1 = SYoung, 2 = GCDatasheet
 
 rsqual = 3
 N = Resampler Quality (0-10)

@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020-2022 Rupert Carmichael
+Copyright (c) 2020-2025 Rupert Carmichael
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -41,7 +41,7 @@ static const uint32_t palette_teatime[16] = {
     0xff000000, 0xff000000, 0xff23b03f, 0xff3cdf5e,
     0xff495bfe, 0xff757cff, 0xffd73218, 0xff14f8f8,
     0xffff4746, 0xffff6464, 0xffd4ce54, 0xffe6e180,
-    0xff1d9a34, 0xffd63bc1, 0xffcccccc, 0xffffffff,
+    0xff1d9a34, 0xffd63bc1, 0xffcccccc, 0xffffffff
 };
 
 // Based on tms9918a.txt by Sean Young (the one most other emulators use)
@@ -49,7 +49,15 @@ static const uint32_t palette_syoung[16] = {
     0xff000000, 0xff000000, 0xff21c842, 0xff5edc78,
     0xff5455ed, 0xff7d76fc, 0xffd4524d, 0xff42ebf5,
     0xfffc5554, 0xffff7978, 0xffd4c154, 0xffe6ce80,
-    0xff21b03b, 0xffc95bba, 0xffcccccc, 0xffffffff,
+    0xff21b03b, 0xffc95bba, 0xffcccccc, 0xffffffff
+};
+
+// Gamma Corrected Datasheet-based Palette
+static const uint32_t palette_gcdatasheet[16] = {
+    0xff000000, 0xff000000, 0xff0aad1e, 0xff34c84c,
+    0xff2b2de3, 0xff514bfb, 0xffbd2925, 0xff1ee2ef,
+    0xfffb2c2b, 0xffff5f4c, 0xffbda22b, 0xffd7b454,
+    0xff0a8c18, 0xffaf329a, 0xffb2b2b2, 0xffffffff
 };
 
 static const uint32_t *palette = palette_teatime;
@@ -115,6 +123,8 @@ void jcv_vdp_set_palette(uint8_t p) {
             palette = palette_teatime; break;
         case 1:
             palette = palette_syoung; break;
+        case 2:
+            palette = palette_gcdatasheet; break;
         default:
             break;
     }

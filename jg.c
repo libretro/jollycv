@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020-2022 Rupert Carmichael
+Copyright (c) 2020-2025 Rupert Carmichael
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -108,9 +108,11 @@ static jg_setting_t settings_jcv[] = {
       0, 0, 1, JG_SETTING_RESTART
     },
     { "palette", "Colour Palette",
-      "0 = TeaTime, 1 = SYoung",
-      "Select either the beautiful or widely used colour palette",
-      0, 0, 1, 0
+      "0 = TeaTime, 1 = SYoung, 2 = GCDatasheet",
+      "Select a colour palette. TeaTime is a custom palette, SYoung is the "
+      "palette widely available in many emulator, and GCDatasheet is based "
+      "on the values from the datasheet, gamma corrected.",
+      0, 0, 2, 0
     },
     { "rsqual", "Resampler Quality",
       "N = Resampler Quality",
