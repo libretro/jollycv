@@ -382,18 +382,18 @@ static uint8_t jcv_crvision_input_poll(int keylatch) {
         case 0x04: { // PA2 - Right Joystick
             // Check for diagonal combinations
             if (p2_d && p2_r)
-                b &= ~0x03;
+                b &= ~CRV_INPUT_DOWNRIGHT;
             else if (p2_u && p2_r)
-                b &= ~0x44;
+                b &= ~CRV_INPUT_UPRIGHT;
             else if (p2_u && p2_l)
-                b &= ~0x30;
+                b &= ~CRV_INPUT_UPLEFT;
             else if (p2_d && p2_l)
-                b &= ~0x42;
+                b &= ~CRV_INPUT_DOWNLEFT;
             else {
-                if (p2_u) b &= ~0x08;
-                if (p2_d) b &= ~0x02;
-                if (p2_l) b &= ~0x20;
-                if (p2_r) b &= ~0x04;
+                if (p2_u) b &= ~CRV_INPUT_UP;
+                if (p2_d) b &= ~CRV_INPUT_DOWN;
+                if (p2_l) b &= ~CRV_INPUT_LEFT;
+                if (p2_r) b &= ~CRV_INPUT_RIGHT;
             }
             if (input_device[1]->button[5]) b &= ~CRV_INPUT_FIRE; // Fire 2
             if (input_device[1]->button[23]) b &= ~CRV_INPUT_TAB;
