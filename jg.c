@@ -214,7 +214,7 @@ static uint16_t jcv_input_poll(int port) {
 
 // Unconnected Port
 static uint16_t jcv_input_poll_null(int port) {
-    if (port) { }
+    (void)port;
     return 0x8080;
 }
 
@@ -308,6 +308,80 @@ static uint16_t jcv_input_poll_wheel(int port) {
     return b;
 }
 
+static uint8_t jcv_crvision_input_poll(int keylatch) {
+    uint8_t b = 0xff;
+
+    // Check joystick directional inputs to handle special diagonal bits
+    int p1_u = input_device[0]->button[0];
+    int p1_d = input_device[0]->button[1];
+    int p1_l = input_device[0]->button[2];
+    int p1_r = input_device[0]->button[3];
+    int p2_u = input_device[1]->button[0];
+    int p2_d = input_device[1]->button[1];
+    int p2_l = input_device[1]->button[2];
+    int p2_r = input_device[1]->button[3];
+
+    switch (keylatch) {
+        case 0x01: { // PA0 - Left Joystick
+            // Check for diagonal combinations
+            if (p1_d && p1_r)
+                b &= ~0x03;
+            else if (p1_u && p1_r)
+                b &= ~0x44;
+            else if (p1_u && p1_l)
+                b &= ~0x30;
+            else if (p1_d && p1_l)
+                b &= ~0x42;
+            else {
+                if (p1_u) b &= ~0x08;
+                if (p1_d) b &= ~0x02;
+                if (p1_l) b &= ~0x20;
+                if (p1_r) b &= ~0x04;
+            }
+            if (input_device[0]->button[5]) b &= ~0x80; // Fire 2
+            if (input_device[0]->button[6]) b &= ~0x0c; // 1
+            break;
+        }
+        case 0x02: { // PA1 - Left Keyboard
+            if (input_device[0]->button[11]) b &= ~0x50; // 6
+            if (input_device[0]->button[4]) b &= ~0x80; // Fire 1
+            break;
+        }
+        case 0x04: { // PA2 - Right Joystick
+            // Check for diagonal combinations
+            if (p2_d && p2_r)
+                b &= ~0x03;
+            else if (p2_u && p2_r)
+                b &= ~0x44;
+            else if (p2_u && p2_l)
+                b &= ~0x30;
+            else if (p2_d && p2_l)
+                b &= ~0x42;
+            else {
+                if (p2_u) b &= ~0x08;
+                if (p2_d) b &= ~0x02;
+                if (p2_l) b &= ~0x20;
+                if (p2_r) b &= ~0x04;
+            }
+            if (input_device[1]->button[5]) b &= ~0x80; // Fire 2
+            break;
+        }
+        case 0x08: { // PA3 - Right Keyboard
+            if (input_device[1]->button[4]) b &= ~0x80; // Fire 1
+            break;
+        }
+        case 0x0f: {
+            break;
+        }
+        default: {
+            // Multiple PA lines low - special scanning mode
+            break;
+        }
+    }
+
+    return b;
+}
+
 static void jcv_input_setup(void) {
     int itype = settings_jcv[INPUT].val;
 
@@ -373,6 +447,7 @@ void jg_set_cb_rumble(jg_cb_rumble_t func) {
 
 int jg_init(void) {
     jcv_input_set_callback(&jcv_input_poll);
+    jcv_crvision_input_set_callback(&jcv_crvision_input_poll);
     jcv_mixer_set_callback(jg_cb_audio);
     jcv_mixer_set_rate(SAMPLERATE);
     jcv_mixer_set_rsqual(settings_jcv[RSQUAL].val);
@@ -516,7 +591,7 @@ void jg_cheat_clear(void) {
 }
 
 void jg_cheat_set(const char *code) {
-    if (code) { }
+    (void)code;
 }
 
 void jg_rehash(void) {

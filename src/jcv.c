@@ -65,6 +65,7 @@ void jcv_init(void) {
         jcv_mixer_init(1);
         jcv_m6502_init();
         jcv_vdp_set_vblint(&jcv_m6502_irq);
+        jcv_vdp_init();
         jcv_exec = &jcv_crvision_exec;
     }
     else {
@@ -89,14 +90,17 @@ void jcv_deinit(void) {
 
 // Reset the system
 void jcv_reset(int hard) {
-    (void)hard; // Currently unused
     if (sys == JCV_SYS_CRVISION) {
-        jcv_m6502_reset();
+        if (hard) {
+            jcv_m6502_reset();
+        }
+        else {
+            jcv_m6502_nmi();
+        }
     }
     else {
         jcv_coleco_init(); // Init does the same thing reset needs to do
         jcv_z80_reset();
+        jcv_vdp_init();
     }
-
-    jcv_vdp_init();
 }

@@ -73,6 +73,8 @@ static pia_t pia;
 // Keyboard Table
 static uint8_t kbtbl[16];
 
+static uint8_t (*jcv_crvision_input_cb)(int); // Input poll callback
+
 // Pointers for 18K ROMs (Chopper Rescue)
 static uint8_t *rombank1_8k = NULL; // First 8K bank
 static uint8_t *rombank2_8k = NULL; // Second 8K bank
@@ -109,6 +111,10 @@ static uint8_t jcv_crvision_rom_18k_rd80(uint16_t addr) {
 
 static uint8_t jcv_crvision_rom_18k_rd40(uint16_t addr) {
     return rombank_2k[addr & 0x7ff];
+}
+
+void jcv_crvision_input_set_callback(uint8_t (*cb)(int)) {
+    jcv_crvision_input_cb = cb;
 }
 
 // Load the CreatiVision BIOS
@@ -244,15 +250,8 @@ uint8_t jcv_crvision_mem_rd(uint16_t addr) {
                     return pia.or[1];
                 }
                 else {
-                    // Some inputs - return keyboard data (not yet implemented)
-                    if ((pia.or[0] & 0x0f) == 0) {
-                        uint8_t x = kbtbl[7] ^ kbtbl[11] ^ 0xff;
-                        uint8_t y = kbtbl[13] ^ kbtbl[14] ^ 0xff;
-                        return (x ^ y ^ 0xff);
-                    }
-                    else {
-                        return kbtbl[pia.or[0] & 0x0f];
-                    }
+                    int keylatch = (~pia.or[0]) & 0x0f;
+                    return jcv_crvision_input_cb(keylatch);
                 }
             }
         }

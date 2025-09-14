@@ -39,6 +39,8 @@ typedef struct _crvision_sys_t {
     uint8_t ram[SIZE_1K]; // System RAM
 } crvision_sys_t;
 
+void jcv_crvision_input_set_callback(uint8_t (*)(int));
+
 int jcv_crvision_bios_load_file(const char*);
 int jcv_crvision_bios_load(void*, size_t);
 int jcv_crvision_rom_load(void*, size_t);
