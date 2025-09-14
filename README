@@ -50,10 +50,14 @@ Input Devices
 -------------
 JollyCV supports the following input devices:
 
-ColecoVision Paddle
-Roller Controller
-Steering Wheel
-Super Action Controller
+ColecoVision
+  ColecoVision Paddle
+  Roller Controller
+  Steering Wheel
+  Super Action Controller
+
+CreatiVision
+  CreatiVision Left/Right Paddle
 
 Input Notes
 -----------
@@ -64,6 +68,9 @@ Input Notes
 - The Super Action Controller's rollers are implemented using buttons which
   may be held down to simulate a continuous roll. It is recommended to assign
   the RollerL and RollerR input definitions to shoulder buttons on a gamepad.
+- CreatiVision games typically require a reset, and then pressing one of the
+  start buttons. By convention, those buttons are 6 and B on the left paddle,
+  or 7 and N on the right paddle.
 
 Settings
 --------
