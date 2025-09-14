@@ -35,6 +35,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <jg/jg.h>
 #include <jg/jg_coleco.h>
+#if JG_VERSION_NUMBER > 10000
+#include <jg/jg_crvision.h>
+#else
+#include "jg_crvision_jcv.h"
+#endif
+
 
 #include "jcv.h"
 #include "jcv_coleco.h"
@@ -90,7 +96,7 @@ static jg_inputstate_t *input_device[NUMINPUTS];
 
 // Emulator settings
 static jg_setting_t settings_jcv[] = {
-    { "input", "Input Devices",
+    { "input", "Input Devices (ColecoVision)",
       "0 = Auto, 1 = ColecoVision Paddle, 2 = Roller Controller, "
       "3 = Super Action Controller, 4 = Super Sketch, 5 = Steering Wheel",
       "Select the desired input device(s)",
@@ -338,12 +344,35 @@ static uint8_t jcv_crvision_input_poll(int keylatch) {
                 if (p1_l) b &= ~0x20;
                 if (p1_r) b &= ~0x04;
             }
+            // Cntl and Fire 2 are the same
+            if (input_device[0]->button[12]) b &= ~0x80; // Cntl
             if (input_device[0]->button[5]) b &= ~0x80; // Fire 2
             if (input_device[0]->button[6]) b &= ~0x0c; // 1
             break;
         }
         case 0x02: { // PA1 - Left Keyboard
+            if (input_device[0]->button[7]) b &= ~0x30; // 2
+            if (input_device[0]->button[8]) b &= ~0x60; // 3
+            if (input_device[0]->button[9]) b &= ~0x28; // 4
+            if (input_device[0]->button[10]) b &= ~0x48; // 5
             if (input_device[0]->button[11]) b &= ~0x50; // 6
+            if (input_device[0]->button[13]) b &= ~0x18; // Q
+            if (input_device[0]->button[14]) b &= ~0x0c; // W
+            if (input_device[0]->button[15]) b &= ~0x14; // E
+            if (input_device[0]->button[16]) b &= ~0x24; // R
+            if (input_device[0]->button[17]) b &= ~0x44; // T
+            if (input_device[0]->button[18]) b &= ~0x09; // Backspace
+            if (input_device[0]->button[19]) b &= ~0x11; // A
+            if (input_device[0]->button[20]) b &= ~0x21; // S
+            if (input_device[0]->button[21]) b &= ~0x41; // D
+            if (input_device[0]->button[22]) b &= ~0x03; // F
+            if (input_device[0]->button[23]) b &= ~0x05; // G
+            if (input_device[0]->button[24]) b &= ~0x80; // Shift
+            if (input_device[0]->button[25]) b &= ~0x0a; // Z
+            if (input_device[0]->button[26]) b &= ~0x12; // X
+            if (input_device[0]->button[27]) b &= ~0x22; // C
+            if (input_device[0]->button[28]) b &= ~0x42; // V
+            if (input_device[0]->button[29]) b &= ~0x06; // B
             if (input_device[0]->button[4]) b &= ~0x80; // Fire 1
             break;
         }
@@ -363,10 +392,34 @@ static uint8_t jcv_crvision_input_poll(int keylatch) {
                 if (p2_l) b &= ~0x20;
                 if (p2_r) b &= ~0x04;
             }
+            if (input_device[1]->button[23]) b &= ~0x80; // Tab
             if (input_device[1]->button[5]) b &= ~0x80; // Fire 2
+            if (input_device[1]->button[29]) b &= ~0x0c; // Space
             break;
         }
         case 0x08: { // PA3 - Right Keyboard
+            if (input_device[1]->button[6]) b &= ~0x06; // 7
+            if (input_device[1]->button[7]) b &= ~0x42; // 8
+            if (input_device[1]->button[8]) b &= ~0x22; // 9
+            if (input_device[1]->button[9]) b &= ~0x12; // 0
+            if (input_device[1]->button[10]) b &= ~0x0a; // Colon
+            if (input_device[1]->button[11]) b &= ~0x80; // Minus
+            if (input_device[1]->button[12]) b &= ~0x05; // Y
+            if (input_device[1]->button[13]) b &= ~0x03; // U
+            if (input_device[1]->button[14]) b &= ~0x41; // I
+            if (input_device[1]->button[15]) b &= ~0x21; // O
+            if (input_device[1]->button[16]) b &= ~0x11; // P
+            if (input_device[1]->button[17]) b &= ~0x09; // Retn
+            if (input_device[1]->button[18]) b &= ~0x44; // H
+            if (input_device[1]->button[19]) b &= ~0x24; // J
+            if (input_device[1]->button[20]) b &= ~0x14; // K
+            if (input_device[1]->button[21]) b &= ~0x0c; // L
+            if (input_device[1]->button[22]) b &= ~0x18; // Semicolon
+            if (input_device[1]->button[24]) b &= ~0x50; // N
+            if (input_device[1]->button[25]) b &= ~0x48; // M
+            if (input_device[1]->button[26]) b &= ~0x28; // Comma
+            if (input_device[1]->button[27]) b &= ~0x60; // Period
+            if (input_device[1]->button[28]) b &= ~0x30; // Slash
             if (input_device[1]->button[4]) b &= ~0x80; // Fire 1
             break;
         }
@@ -383,6 +436,12 @@ static uint8_t jcv_crvision_input_poll(int keylatch) {
 }
 
 static void jcv_input_setup(void) {
+    if (sys == JCV_SYS_CRVISION) {
+        inputinfo[0] = jg_crvision_inputinfo(0, JG_CRVISION_LPAD);
+        inputinfo[1] = jg_crvision_inputinfo(1, JG_CRVISION_RPAD);
+        return;
+    }
+
     int itype = settings_jcv[INPUT].val;
 
     if (!itype) {
