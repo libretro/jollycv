@@ -1,3 +1,9 @@
+Version x.x.x
+-------------
+ - VDP modified to allow connection to various interrupt functions
+ - Gamma Corrected Datasheet palette added
+ - Basic support for the CreatiVision
+
 Version 1.1.0
 -------------
  - Adjust overscan and aspect ratio
