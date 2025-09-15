@@ -38,6 +38,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "z80.h"
 
+uint8_t (*jcv_z80_io_rd)(uint16_t);
+void (*jcv_z80_io_wr)(uint16_t, uint8_t);
+
+uint8_t (*jcv_z80_mem_rd)(uint16_t);
+void (*jcv_z80_mem_wr)(uint16_t, uint8_t);
+
 static z80 z80ctx;
 static uint32_t extracycs = 0;
 static uint32_t delaycycs = 0;
@@ -45,25 +51,25 @@ static uint32_t delaycycs = 0;
 // Memory Read
 static uint8_t read_byte(void *userdata, uint16_t addr) {
     (void)userdata;
-    return jcv_mem_rd(addr);
+    return jcv_z80_mem_rd(addr);
 }
 
 // Memory Write
 static void write_byte(void *userdata, uint16_t addr, uint8_t data) {
     (void)userdata;
-    jcv_mem_wr(addr, data);
+    jcv_z80_mem_wr(addr, data);
 }
 
 // IO Port Read
 static uint8_t port_in(z80 *z, uint16_t port) {
     (void)z;
-    return jcv_io_rd(port & 0xff);
+    return jcv_z80_io_rd(port & 0xff);
 }
 
 // IO Port Write
 static void port_out(z80 *z, uint16_t port, uint8_t data) {
     (void)z;
-    jcv_io_wr(port & 0xff, data);
+    jcv_z80_io_wr(port & 0xff, data);
 }
 
 // Store extra cycle count

@@ -83,7 +83,7 @@ void jcv_input_set_callback(uint16_t (*cb)(int)) {
 }
 
 // Read a byte of data from an I/O port
-uint8_t jcv_io_rd(uint8_t port) {
+static uint8_t jcv_coleco_io_rd(uint16_t port) {
     /* ColecoVision I/O Read Map
        0xa0 - 0xbf: VDP Reads (Port Odd: Status, Port Even: VRAM)
        0xe0 - 0xff: Control Port Strobe (0xfc, 0xff)
@@ -110,14 +110,14 @@ uint8_t jcv_io_rd(uint8_t port) {
 }
 
 // Write a byte of data to an I/O port
-void jcv_io_wr(uint8_t port, uint8_t data) {
+static void jcv_coleco_io_wr(uint16_t port, uint8_t data) {
     /* ColecoVision I/O Write Map
        0x80 - 0x9f: Set Controller Strobe Segment to Numpad/FireR
        0xa0 - 0xbf: VDP Writes (Port Odd: Registers, Port Even: VRAM)
        0xc0 - 0xdf: Set Controller Strobe Segment to Joystick/FireL
        0xe0 - 0xff: PSG Writes (0xff)
     */
-    switch(port & 0xe0) {
+    switch (port & 0xe0) {
         // Data is irrelevant for cases 0x80 and 0xc0: just toggle a flip-flop
         case 0x80: { // Set Controller Strobe Segment to Numpad/FireR
             cvsys.cseg = 0;
@@ -163,7 +163,7 @@ void jcv_io_wr(uint8_t port, uint8_t data) {
 */
 
 // Read a byte of memory
-uint8_t jcv_mem_rd(uint16_t addr) {
+static uint8_t jcv_coleco_mem_rd(uint16_t addr) {
     if (sgm_lower && (addr < 0x2000)) {
         return cvsys.sgmram[addr];
     }
@@ -207,7 +207,7 @@ uint8_t jcv_mem_rd(uint16_t addr) {
 }
 
 // Write a byte to a memory location
-void jcv_mem_wr(uint16_t addr, uint8_t data) {
+static void jcv_coleco_mem_wr(uint16_t addr, uint8_t data) {
     /* If the Super Game Module is plugged in and activated, the RAM writes will
        all be mapped to the SGM RAM. This means writes that would normally go to
        base system RAM are now going into SGM RAM.
@@ -386,6 +386,12 @@ void jcv_coleco_init(void) {
 
     cvsys.cseg = 0; // Controller Strobe Segment
     cvsys.ctrl[0] = cvsys.ctrl[1] = 0; // Reset input states to empty
+
+    // Set Z80 function pointers
+    jcv_z80_io_rd = jcv_coleco_io_rd;
+    jcv_z80_io_wr = jcv_coleco_io_wr;
+    jcv_z80_mem_rd = jcv_coleco_mem_rd;
+    jcv_z80_mem_wr = jcv_coleco_mem_wr;
 
     // Set SGM RAM to disabled state
     sgm_upper = 0;

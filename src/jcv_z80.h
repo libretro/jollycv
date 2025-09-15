@@ -44,4 +44,10 @@ uint32_t jcv_z80_run(uint32_t);
 void jcv_z80_state_load(uint8_t*);
 void jcv_z80_state_save(uint8_t*);
 
+extern uint8_t (*jcv_z80_io_rd)(uint16_t);
+extern void (*jcv_z80_io_wr)(uint16_t, uint8_t);
+
+extern uint8_t (*jcv_z80_mem_rd)(uint16_t);
+extern void (*jcv_z80_mem_wr)(uint16_t, uint8_t);
+
 #endif

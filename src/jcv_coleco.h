@@ -80,12 +80,6 @@ typedef struct _cv_sys_t {
 
 void jcv_input_set_callback(uint16_t (*)(int));
 
-uint8_t jcv_io_rd(uint8_t);
-void jcv_io_wr(uint8_t, uint8_t);
-
-uint8_t jcv_mem_rd(uint16_t);
-void jcv_mem_wr(uint16_t, uint8_t);
-
 void jcv_coleco_init(void);
 void jcv_coleco_deinit(void);
 
