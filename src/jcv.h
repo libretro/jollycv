@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020-2022 Rupert Carmichael
+Copyright (c) 2020-2025 Rupert Carmichael
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -34,19 +34,20 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define JCV_H
 
 #define REGION_NTSC 0
-#define REGION_PAL 1
+#define REGION_PAL  1
 
-#define SIZE_1K 0x400
-#define SIZE_2K 0x800
-#define SIZE_4K 0x1000
-#define SIZE_8K 0x2000
-#define SIZE_12K 0x3000
-#define SIZE_16K 0x4000
-#define SIZE_18K 0x4800
-#define SIZE_32K 0x8000
+#define SIZE_1K     0x400
+#define SIZE_2K     0x800
+#define SIZE_4K     0x1000
+#define SIZE_8K     0x2000
+#define SIZE_12K    0x3000
+#define SIZE_16K    0x4000
+#define SIZE_18K    0x4800
+#define SIZE_32K    0x8000
 
 #define JCV_SYS_COLECO      0x00
 #define JCV_SYS_CRVISION    0x01
+#define JCV_SYS_MYVISION    0x02
 
 void jcv_set_region(unsigned);
 void jcv_set_system(unsigned);

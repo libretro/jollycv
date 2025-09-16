@@ -37,17 +37,22 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <jg/jg_coleco.h>
 #if JG_VERSION_NUMBER > 10000
 #include <jg/jg_crvision.h>
+#include <jg/jg_myvision.h>
 #else
 #include "jg_crvision_jcv.h"
+#include "jg_myvision_jcv.h"
 #endif
 
-
 #include "jcv.h"
+
 #include "jcv_coleco.h"
 #include "jcv_crvision.h"
+#include "jcv_myvision.h"
+
 #include "jcv_mixer.h"
 #include "jcv_vdp.h"
 #include "jcv_z80.h"
+
 #include "version.h"
 
 #define SAMPLERATE 48000
@@ -439,10 +444,54 @@ static uint8_t jcv_crvision_input_poll(int keylatch) {
     return b;
 }
 
+static uint8_t jcv_myvision_input_poll(int column) {
+    uint8_t b = 0xff;
+
+    switch (column) {
+        case 0x80: {
+            if (input_device[0]->button[12]) b &= ~MYV_INPUT_13;
+            if (input_device[0]->button[16]) b &= ~MYV_INPUT_C;
+            if (input_device[0]->button[8]) b &= ~MYV_INPUT_9;
+            if (input_device[0]->button[4]) b &= ~MYV_INPUT_5;
+            if (input_device[0]->button[0]) b &= ~MYV_INPUT_1;
+            break;
+        }
+        case 0x40: {
+            if (input_device[0]->button[15]) b &= ~MYV_INPUT_B;
+            if (input_device[0]->button[11]) b &= ~MYV_INPUT_12;
+            if (input_device[0]->button[7]) b &= ~MYV_INPUT_8;
+            if (input_device[0]->button[3]) b &= ~MYV_INPUT_4;
+            break;
+        }
+        case 0x20: {
+            if (input_device[0]->button[13]) b &= ~MYV_INPUT_14;
+            if (input_device[0]->button[17]) b &= ~MYV_INPUT_D;
+            if (input_device[0]->button[9]) b &= ~MYV_INPUT_10;
+            if (input_device[0]->button[5]) b &= ~MYV_INPUT_6;
+            if (input_device[0]->button[1]) b &= ~MYV_INPUT_2;
+            break;
+        }
+        case 0x10: {
+            if (input_device[0]->button[15]) b &= ~MYV_INPUT_A;
+            if (input_device[0]->button[18]) b &= ~MYV_INPUT_E;
+            if (input_device[0]->button[10]) b &= ~MYV_INPUT_11;
+            if (input_device[0]->button[6]) b &= ~MYV_INPUT_7;
+            if (input_device[0]->button[2]) b &= ~MYV_INPUT_3;
+            break;
+        }
+    }
+
+    return b;
+}
+
 static void jcv_input_setup(void) {
     if (sys == JCV_SYS_CRVISION) {
         inputinfo[0] = jg_crvision_inputinfo(0, JG_CRVISION_LPAD);
         inputinfo[1] = jg_crvision_inputinfo(1, JG_CRVISION_RPAD);
+        return;
+    }
+    else if (sys == JCV_SYS_MYVISION) {
+        inputinfo[0] = jg_myvision_inputinfo(0, JG_MYVISION_SYSTEM);
         return;
     }
 
@@ -511,18 +560,23 @@ void jg_set_cb_rumble(jg_cb_rumble_t func) {
 int jg_init(void) {
     jcv_input_set_callback(&jcv_input_poll);
     jcv_crvision_input_set_callback(&jcv_crvision_input_poll);
+    jcv_myvision_input_set_callback(&jcv_myvision_input_poll);
+
     jcv_mixer_set_callback(jg_cb_audio);
     jcv_mixer_set_rate(SAMPLERATE);
     jcv_mixer_set_rsqual(settings_jcv[RSQUAL].val);
+
     jcv_vdp_set_palette(settings_jcv[PALETTE].val);
-    if (sys == JCV_SYS_CRVISION) {
+
+    jcv_set_system(sys);
+
+    if (sys == JCV_SYS_CRVISION)
         jcv_set_region(1); // force PAL
-        jcv_set_system(sys);
-    }
-    else {
+    else
         jcv_set_region(settings_jcv[REGION].val);
-    }
+
     jcv_init();
+
     return 1;
 }
 
@@ -548,14 +602,14 @@ int jg_game_load(void) {
     }
     else {
         char bpath[256];
-        if (sys == JCV_SYS_CRVISION) {
-            snprintf(bpath, sizeof(bpath), "%s/bioscv.rom", pathinfo.bios);
-            if (!jcv_crvision_bios_load_file(bpath))
-                jg_cb_log(JG_LOG_ERR, "Failed to load bios %s\n", bpath);
-        }
-        else {
+        if (sys == JCV_SYS_COLECO) {
             snprintf(bpath, sizeof(bpath), "%s/coleco.rom", pathinfo.bios);
             if (!jcv_bios_load_file(bpath))
+                jg_cb_log(JG_LOG_ERR, "Failed to load bios %s\n", bpath);
+        }
+        else if (sys == JCV_SYS_CRVISION) {
+            snprintf(bpath, sizeof(bpath), "%s/bioscv.rom", pathinfo.bios);
+            if (!jcv_crvision_bios_load_file(bpath))
                 jg_cb_log(JG_LOG_ERR, "Failed to load bios %s\n", bpath);
         }
     }
@@ -568,14 +622,7 @@ int jg_game_load(void) {
     }
 
     // Load the ROM
-    if (sys == JCV_SYS_CRVISION) {
-        if (!jcv_crvision_rom_load(gameinfo.data, gameinfo.size))
-            return 0;
-        vidinfo.aspect = ASPECT_PAL;
-        audinfo.spf = (SAMPLERATE / FRAMERATE_PAL) * CHANNELS;
-        jg_cb_frametime(FRAMERATE_PAL);
-    }
-    else {
+    if (sys == JCV_SYS_COLECO) {
         if (!jcv_rom_load(gameinfo.data, gameinfo.size))
             return 0;
         char savename[292];
@@ -598,9 +645,23 @@ int jg_game_load(void) {
         }
         else { // NTSC mode
             vidinfo.aspect = ASPECT_NTSC;
-            audinfo.spf = (SAMPLERATE / FRAMERATE_PAL) * CHANNELS;
+            audinfo.spf = (SAMPLERATE / FRAMERATE) * CHANNELS;
             jg_cb_frametime(FRAMERATE);
         }
+    }
+    else if (sys == JCV_SYS_CRVISION) {
+        if (!jcv_crvision_rom_load(gameinfo.data, gameinfo.size))
+            return 0;
+        vidinfo.aspect = ASPECT_PAL;
+        audinfo.spf = (SAMPLERATE / FRAMERATE_PAL) * CHANNELS;
+        jg_cb_frametime(FRAMERATE_PAL);
+    }
+    else if (sys == JCV_SYS_MYVISION) {
+        if (!jcv_myvision_rom_load(gameinfo.data, gameinfo.size))
+            return 0;
+        vidinfo.aspect = ASPECT_NTSC;
+        audinfo.spf = (SAMPLERATE / FRAMERATE) * CHANNELS;
+        jg_cb_frametime(FRAMERATE);
     }
 
     jcv_input_setup();
@@ -667,9 +728,10 @@ void jg_data_push(uint32_t type, int port, const void *ptr, size_t size) {
 }
 
 jg_coreinfo_t* jg_get_coreinfo(const char *subsys) {
-    if (!strcmp(subsys, "crvision")) {
+    if (!strcmp(subsys, "crvision"))
         sys = JCV_SYS_CRVISION;
-    }
+    else if (!strcmp(subsys, "myvision"))
+        sys = JCV_SYS_MYVISION;
     return &coreinfo;
 }
 

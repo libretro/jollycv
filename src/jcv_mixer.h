@@ -44,6 +44,7 @@ void jcv_mixer_set_region(unsigned);
 void jcv_mixer_set_rsqual(unsigned);
 void jcv_mixer_resamp(size_t);
 void jcv_mixer_resamp_crvision(size_t);
+void jcv_mixer_resamp_myvision(size_t);
 
 void jcv_mixer_set_psg(sn76489_t*);
 void jcv_mixer_set_sgm(ay38910_t*);

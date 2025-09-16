@@ -103,6 +103,11 @@ void jcv_z80_irq(uint8_t data) {
     z80_pulse_irq(&z80ctx, data);
 }
 
+// Helper to pulse the IRQ with the default 0xff value on the bus
+void jcv_z80_irq_ff(void) {
+    z80_pulse_irq(&z80ctx, 0xff);
+}
+
 // Generate a Non-Maskable Interrupt
 void jcv_z80_nmi(void) {
     z80_pulse_nmi(&z80ctx);

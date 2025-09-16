@@ -35,6 +35,7 @@ void jcv_z80_cyc_store(uint32_t);
 uint32_t jcv_z80_cyc_restore(void);
 void jcv_z80_init(void);
 void jcv_z80_irq(uint8_t data);
+void jcv_z80_irq_ff(void);
 void jcv_z80_nmi(void);
 void jcv_z80_reset(void);
 void jcv_z80_delay(uint32_t);

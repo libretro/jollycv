@@ -32,12 +32,16 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stddef.h>
 
 #include "jcv.h"
+
 #include "jcv_coleco.h"
 #include "jcv_crvision.h"
+#include "jcv_myvision.h"
+
 #include "jcv_mixer.h"
 #include "jcv_vdp.h"
 #include "jcv_z80.h"
 #include "jcv_m6502.h"
+
 #include "ay38910.h"
 #include "sn76489.h"
 
@@ -60,20 +64,31 @@ void jcv_set_system(unsigned s) {
 
 // Initialize
 void jcv_init(void) {
-    if (sys == JCV_SYS_CRVISION) {
-        jcv_crvision_init();
-        jcv_mixer_init(1);
-        jcv_m6502_init();
-        jcv_vdp_set_vblint(&jcv_m6502_irq);
-        jcv_vdp_init();
-        jcv_exec = &jcv_crvision_exec;
-    }
-    else {
-        jcv_coleco_init();
-        jcv_mixer_init(0);
-        jcv_z80_init();
-        jcv_vdp_set_vblint(&jcv_z80_nmi);
-        jcv_exec = &jcv_coleco_exec;
+    switch (sys) {
+        default: case JCV_SYS_COLECO: {
+            jcv_coleco_init();
+            jcv_mixer_init(sys);
+            jcv_z80_init();
+            jcv_vdp_set_vblint(&jcv_z80_nmi);
+            jcv_exec = &jcv_coleco_exec;
+            break;
+        }
+        case JCV_SYS_CRVISION: {
+            jcv_crvision_init();
+            jcv_mixer_init(sys);
+            jcv_m6502_init();
+            jcv_vdp_set_vblint(&jcv_m6502_irq);
+            jcv_exec = &jcv_crvision_exec;
+            break;
+        }
+        case JCV_SYS_MYVISION: {
+            jcv_myvision_init();
+            jcv_mixer_init(sys);
+            jcv_z80_init();
+            jcv_vdp_set_vblint(&jcv_z80_irq_ff);
+            jcv_exec = &jcv_myvision_exec;
+            break;
+        }
     }
 
     jcv_vdp_init();
@@ -81,26 +96,47 @@ void jcv_init(void) {
 
 // Deinitialize
 void jcv_deinit(void) {
-    if (sys == JCV_SYS_CRVISION)
-        jcv_crvision_deinit();
-    else
-        jcv_coleco_deinit();
+    switch (sys) {
+        default: case JCV_SYS_COLECO: {
+            jcv_coleco_deinit();
+            break;
+        }
+        case JCV_SYS_CRVISION: {
+            jcv_crvision_deinit();
+            break;
+        }
+        case JCV_SYS_MYVISION: {
+            jcv_myvision_deinit();
+            break;
+        }
+    }
+
     jcv_mixer_deinit();
 }
 
 // Reset the system
 void jcv_reset(int hard) {
-    if (sys == JCV_SYS_CRVISION) {
-        if (hard) {
-            jcv_m6502_reset();
+    switch (sys) {
+        default: case JCV_SYS_COLECO: {
+            jcv_coleco_init(); // Init does the same thing reset needs to do
+            jcv_z80_reset();
+            jcv_vdp_init();
+            break;
         }
-        else {
-            jcv_m6502_nmi();
+        case JCV_SYS_CRVISION: {
+            if (hard) {
+                jcv_m6502_reset();
+            }
+            else {
+                jcv_m6502_nmi();
+            }
+            break;
         }
-    }
-    else {
-        jcv_coleco_init(); // Init does the same thing reset needs to do
-        jcv_z80_reset();
-        jcv_vdp_init();
+        case JCV_SYS_MYVISION: {
+            jcv_myvision_init();
+            jcv_z80_reset();
+            jcv_vdp_init();
+            break;
+        }
     }
 }

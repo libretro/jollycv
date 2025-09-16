@@ -45,11 +45,12 @@ CSRCS := m6502/m6502.c \
 	jcv.c \
 	jcv_coleco.c \
 	jcv_crvision.c \
+	jcv_m6502.c \
 	jcv_mixer.c \
+	jcv_myvision.c \
 	jcv_serial.c \
 	jcv_vdp.c \
 	jcv_z80.c \
-	jcv_m6502.c \
 	ay38910.c \
 	sn76489.c \
 	eep24cxx.c
