@@ -12,6 +12,7 @@ Exec=jollycv %f
 Terminal=false
 # ColecoVision .rom files identify as application/x-ibm-rom
 # CreatiVision .rom files identify as application/octet-stream
+# My Vision .myv files identify as application/octet-stream
 #MimeType=
 Categories=Game;Emulator;
 Keywords=emulator;
