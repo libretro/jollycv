@@ -45,9 +45,19 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "ay38910.h"
 #include "sn76489.h"
 
-void (*jcv_exec)(void);
+// Function pointer for execution of one frame of emulation
+void (*jcv_exec)(void) = NULL;
 
+// Log callback
+void (*jcv_log)(int, const char *, ...) = NULL;
+
+// System being emulated
 static unsigned sys = 0;
+
+// Set the log callback
+void jcv_log_set_callback(void (*cb)(int, const char *, ...)) {
+    jcv_log = cb;
+}
 
 // Set the region
 void jcv_set_region(unsigned region) {
@@ -124,12 +134,10 @@ void jcv_reset(int hard) {
             break;
         }
         case JCV_SYS_CRVISION: {
-            if (hard) {
+            if (hard)
                 jcv_m6502_reset();
-            }
-            else {
+            else
                 jcv_m6502_nmi();
-            }
             break;
         }
         case JCV_SYS_MYVISION: {

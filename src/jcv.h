@@ -49,12 +49,23 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define JCV_SYS_CRVISION    0x01
 #define JCV_SYS_MYVISION    0x02
 
+enum jcv_loglevel {
+    JCV_LOG_DBG,
+    JCV_LOG_INF,
+    JCV_LOG_WRN,
+    JCV_LOG_ERR,
+    JCV_LOG_SCR
+};
+
 void jcv_set_region(unsigned);
 void jcv_set_system(unsigned);
 void jcv_init(void);
 void jcv_deinit(void);
 void jcv_reset(int);
 
+void jcv_log_set_callback(void (*)(int, const char *, ...));
+
 extern void (*jcv_exec)(void);
+extern void (*jcv_log)(int, const char *, ...);
 
 #endif

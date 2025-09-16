@@ -551,6 +551,7 @@ void jg_set_cb_frametime(jg_cb_frametime_t func) {
 
 void jg_set_cb_log(jg_cb_log_t func) {
     jg_cb_log = func;
+    jcv_log_set_callback(func);
 }
 
 void jg_set_cb_rumble(jg_cb_rumble_t func) {
