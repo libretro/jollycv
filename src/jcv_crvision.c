@@ -31,7 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <string.h>
 
 #include "jcv_crvision.h"
 #include "jcv_mixer.h"
@@ -48,9 +47,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 static uint8_t (*jcv_crvision_rom_rd40)(uint16_t);
 static uint8_t (*jcv_crvision_rom_rd80)(uint16_t);
 
-static crvision_sys_t crvsys;   // CreatiVision System Context
 static sn76489_t psg;           // PSG Context
 
+static uint8_t ram[SIZE_1K];        // System RAM
 static uint8_t *romdata = NULL;     // Game ROM
 static size_t romsize = 0;          // Size of the ROM in bytes
 
@@ -162,28 +161,28 @@ int jcv_crvision_rom_load(void *data, size_t size) {
     romdata = (uint8_t*)data; // Assign internal ROM pointer
     romsize = size; // Record the size of the ROM data in bytes
 
-    printf("ROM size: %ld, 0x%04lx\n", romsize, romsize);
+    jcv_log(JCV_LOG_DBG, "ROM size: %ld, 0x%04lx\n", romsize, romsize);
     switch (romsize) {
         case SIZE_4K: {
-            printf("Configured as 4K ROM\n");
+            jcv_log(JCV_LOG_DBG, "Configured as 4K ROM\n");
             jcv_crvision_rom_rd40 = &jcv_crvision_rom_null_rd40;
             jcv_crvision_rom_rd80 = &jcv_crvision_rom_4k_rd80;
             break;
         }
         case SIZE_8K: {
-            printf("Configured as 8K ROM\n");
+            jcv_log(JCV_LOG_DBG, "Configured as 8K ROM\n");
             jcv_crvision_rom_rd40 = &jcv_crvision_rom_null_rd40;
             jcv_crvision_rom_rd80 = &jcv_crvision_rom_8k_rd80;
             break;
         }
         case SIZE_12K: {
-            printf("Configured as 12K ROM\n");
+            jcv_log(JCV_LOG_DBG, "Configured as 12K ROM\n");
             jcv_crvision_rom_rd40 = &jcv_crvision_rom_12k_rd40;
             jcv_crvision_rom_rd80 = &jcv_crvision_rom_12k_rd80;
             break;
         }
         case SIZE_18K: {
-            printf("Configured as 18K ROM\n");
+            jcv_log(JCV_LOG_DBG, "Configured as 18K ROM\n");
             /* Only one game is 18K, Chopper Rescue. Detect how the ROM chips
                are concatenated to form the file. There are three known
                configurations.
@@ -217,7 +216,7 @@ int jcv_crvision_rom_load(void *data, size_t size) {
             break;
         }
         default: {
-            printf("Unsupported ROM size: %ld bytes\n", romsize);
+            jcv_log(JCV_LOG_ERR, "Unsupported ROM size: %ld bytes\n", romsize);
             return 0;
         }
     }
@@ -235,7 +234,7 @@ int jcv_crvision_rom_load(void *data, size_t size) {
 */
 uint8_t jcv_crvision_mem_rd(uint16_t addr) {
     if (addr < 0x1000) { // RAM (mirrored)
-        return crvsys.ram[addr & 0x3ff];
+        return ram[addr & 0x3ff];
     }
     else if (addr < 0x2000) { // PIA
         if ((addr & 0x03) == 0x02) { // Port B read
@@ -271,14 +270,14 @@ uint8_t jcv_crvision_mem_rd(uint16_t addr) {
         return jcv_crvision_rom_rd80(addr);
     }
     else if (addr == 0xe801) { // Centronics Status
-        printf("Centronics Status\n");
+        jcv_log(JCV_LOG_DBG, "Centronics Status read\n");
         return 0xff;
     }
     else if (addr >= 0xf800) { // BIOS ROM
         return biosdata[addr & 0x7ff];
     }
 
-    printf("rd: %04x\n", addr);
+    jcv_log(JCV_LOG_DBG, "rd: %04x\n", addr);
     return 0xff;
 }
 
@@ -291,7 +290,7 @@ uint8_t jcv_crvision_mem_rd(uint16_t addr) {
 */
 void jcv_crvision_mem_wr(uint16_t addr, uint8_t data) {
     if (addr < 0x1000) { // RAM
-        crvsys.ram[addr & 0x3ff] = data;
+        ram[addr & 0x3ff] = data;
         return;
     }
 
@@ -329,12 +328,12 @@ void jcv_crvision_mem_wr(uint16_t addr, uint8_t data) {
             return;
         }
         case 0xe000: {
-            printf("Centronics\n");
+            jcv_log(JCV_LOG_DBG, "Centronics Write\n");
             return;
         }
     }
 
-    printf("wr: %04x, %02x\n", addr, data);
+    jcv_log(JCV_LOG_DBG, "wr: %04x, %02x\n", addr, data);
 }
 
 void jcv_crvision_init(void) {
@@ -343,7 +342,8 @@ void jcv_crvision_init(void) {
     jcv_mixer_set_psg(&psg);
 
     // Clear RAM
-    memset(crvsys.ram, 0, sizeof(crvsys.ram));
+    for (unsigned i = 0; i < sizeof(ram); ++i)
+        ram[i] = 0x00;
 
     // Initialize PIA registers
     pia.or[0] = pia.ddr[0] = pia.cr[0] = 0;

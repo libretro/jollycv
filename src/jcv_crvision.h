@@ -100,10 +100,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CRV_INPUT_N         0x50
 #define CRV_INPUT_M         0x48
 
-typedef struct _crvision_sys_t {
-    uint8_t ram[SIZE_1K]; // System RAM
-} crvision_sys_t;
-
 void jcv_crvision_input_set_callback(uint8_t (*)(int));
 
 int jcv_crvision_bios_load_file(const char*);
