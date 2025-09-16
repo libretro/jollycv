@@ -43,6 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define DIV_PSG 16          // PSG Clock Divider
 #define M6502_CYC_LINE 128  // 6502 CPU cycles per scanline (127.79553)
+#define NUM_SCANLINES 313   // Total number of video scanlines
 
 static uint8_t (*jcv_crvision_rom_rd40)(uint16_t);
 static uint8_t (*jcv_crvision_rom_rd80)(uint16_t);
@@ -59,7 +60,6 @@ static size_t biossize = 0;         // Size of the BIOS in bytes
 
 
 // Frame execution related variables
-static size_t numscanlines = 313;
 static size_t psgcycs = 0;
 
 // Stub implementation of the PIA
@@ -369,7 +369,7 @@ void jcv_crvision_exec(void) {
     uint32_t extcycs = jcv_m6502_cyc_restore();
 
     // Run scanline-based iterations of emulation until a frame is complete
-    for (size_t i = 0; i < numscanlines; ++i) {
+    for (size_t i = 0; i < NUM_SCANLINES; ++i) {
         // Set the number of cycles required to complete this scanline
         size_t reqcycs = M6502_CYC_LINE - extcycs;
 
