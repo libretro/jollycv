@@ -472,7 +472,7 @@ static uint8_t jcv_myvision_input_poll(int column) {
             break;
         }
         case 0x10: {
-            if (input_device[0]->button[15]) b &= ~MYV_INPUT_A;
+            if (input_device[0]->button[14]) b &= ~MYV_INPUT_A;
             if (input_device[0]->button[18]) b &= ~MYV_INPUT_E;
             if (input_device[0]->button[10]) b &= ~MYV_INPUT_11;
             if (input_device[0]->button[6]) b &= ~MYV_INPUT_7;
