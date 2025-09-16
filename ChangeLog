@@ -3,6 +3,7 @@ Version x.x.x
  - VDP modified to allow connection to various interrupt functions
  - Gamma Corrected Datasheet palette added
  - Basic support for the CreatiVision
+ - Basic support for the Nichibutsu My Vision
 
 Version 1.1.0
 -------------
