@@ -30,7 +30,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Nichibutsu My Vision
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 
@@ -42,7 +41,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "jcv_vdp.h"
 #include "jcv_z80.h"
 
-#define DIV_PSG 21          // PSG Clock Divider
+#define DIV_PSG 21          // PSG Clock Divider - (CPU Frequency) / 3 / 7
+#define NUM_SCANLINES 262   // Total number of video scanlines
 #define Z80_CYC_LINE 228    // Z80 CPU cycles per scanline (227.99873)
 
 static ay38910_t psg;       // PSG Context
@@ -52,7 +52,6 @@ static uint8_t *romdata = NULL;     // Game ROM
 static size_t romsize = 0;          // Size of the ROM in bytes
 
 // Frame execution related variables
-static size_t numscanlines = 262;
 static size_t psgcycs = 0;
 
 static uint8_t (*jcv_myvision_input_cb)(int); // Input poll callback
@@ -107,7 +106,6 @@ static uint8_t jcv_myvision_mem_rd(uint16_t addr) {
         return jcv_vdp_rd_data();
     else if (addr == 0xe002)
         return jcv_vdp_rd_stat();
-    //printf("mem rd: %04x\n", addr);
     return 0xff;
 }
 
@@ -120,7 +118,6 @@ static void jcv_myvision_mem_wr(uint16_t addr, uint8_t data) {
         jcv_vdp_wr_data(data);
     else if (addr == 0xe002)
         jcv_vdp_wr_ctrl(data);
-    //printf("mem wr: %04x, %02x\n", addr, data);
 }
 
 int jcv_myvision_rom_load(void *data, size_t size) {
@@ -154,7 +151,7 @@ void jcv_myvision_exec(void) {
     uint32_t extcycs = jcv_z80_cyc_restore();
 
     // Run scanline-based iterations of emulation until a frame is complete
-    for (size_t i = 0; i < numscanlines; ++i) {
+    for (size_t i = 0; i < NUM_SCANLINES; ++i) {
         // Set the number of cycles required to complete this scanline
         size_t reqcycs = Z80_CYC_LINE - extcycs;
 
