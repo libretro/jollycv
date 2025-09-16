@@ -1,14 +1,16 @@
 JollyCV
 -------
 JollyCV is a highly accurate emulator for the ColecoVision, including support
-for the Super Game Module. Support for the CreatiVision is experimental.
+for the Super Game Module. CreatiVision (experimental) and My Vision are also
+supported.
 
 JollyCV was the first emulator written specifically for The Jolly Good API.
 It is designed to document the ColecoVision for educational purposes through
 verbose comments, and high quality emulation. The ColecoVision is the perfect
 console to use to demonstrate how computer systems and emulators function
 because it is very simple and uses generic, off-the-shelf chips with widely
-available datasheets.
+available datasheets. JollyCV has evolved to additionally support other,
+similar systems.
 
 This repository lives at https://gitlab.com/jgemu/jollycv
 
@@ -59,6 +61,9 @@ ColecoVision
 CreatiVision
   CreatiVision Left/Right Paddle
 
+My Vision
+  My Vision System
+
 Input Notes
 -----------
 - The Roller Controller is implemented using a mouse. It is recommended to
@@ -88,11 +93,18 @@ region = 0
 
 Compatibility
 -------------
-JollyCV is compatible with 100% of the commercially released ColecoVision
-library, and all known and freely available homebrew.
+ ColecoVision
+  100% Compatibility with the commercially released library, and all known and
+  freely available homebrew.
 
-Super Sketch boots, but is not usable due to a lack of documentation on the
-Super Sketch Pad.
+  Super Sketch boots, but is not usable due to a lack of documentation on the
+  Super Sketch Pad.
+
+ CreatiVision
+  100% Compatibility with the commercially released library
+
+ My Vision
+  100% Compatibility with all dumped games
 
 Porting
 -------
