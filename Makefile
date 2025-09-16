@@ -4,8 +4,8 @@ SOURCEDIR := $(abspath $(patsubst %/,%,$(dir $(abspath $(lastword \
 NAME := jollycv
 JGNAME := $(NAME)
 
-DESCRIPTION := JollyCV is a highly accurate emulator for the ColecoVision, \
-	including support for the Super Game Module.
+DESCRIPTION := JollyCV is a highly accurate emulator for the ColecoVision \
+	(with Super Game Module), CreatiVision (experimental) and My Vision.
 
 SRCDIR := $(SOURCEDIR)/src
 

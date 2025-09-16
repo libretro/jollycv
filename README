@@ -1,8 +1,7 @@
 JollyCV
 -------
-JollyCV is a highly accurate emulator for the ColecoVision, including support
-for the Super Game Module. CreatiVision (experimental) and My Vision are also
-supported.
+JollyCV is a highly accurate emulator for the ColecoVision (with Super Game
+Module), CreatiVision (experimental) and My Vision.
 
 JollyCV was the first emulator written specifically for The Jolly Good API.
 It is designed to document the ColecoVision for educational purposes through
