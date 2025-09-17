@@ -51,6 +51,13 @@ void (*jcv_exec)(void) = NULL;
 // Log callback
 void (*jcv_log)(int, const char *, ...) = NULL;
 
+// Function pointers for state functions
+size_t (*jcv_state_size)(void);
+void (*jcv_state_load_raw)(const void*);
+int (*jcv_state_load)(const char*);
+const void* (*jcv_state_save_raw)(void);
+int (*jcv_state_save)(const char*);
+
 // System being emulated
 static unsigned sys = 0;
 
@@ -80,7 +87,6 @@ void jcv_init(void) {
             jcv_mixer_init(sys);
             jcv_z80_init();
             jcv_vdp_set_vblint(&jcv_z80_nmi);
-            jcv_exec = &jcv_coleco_exec;
             break;
         }
         case JCV_SYS_CRVISION: {

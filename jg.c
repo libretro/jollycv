@@ -634,7 +634,7 @@ int jg_game_load(void) {
         char savename[292];
         snprintf(savename, sizeof(savename),
             "%s/%s.srm", pathinfo.save, gameinfo.name);
-        int sramstat = jcv_sram_load((const char*)savename);
+        int sramstat = jcv_coleco_sram_load((const char*)savename);
 
         if (sramstat == 1)
             jg_cb_log(JG_LOG_DBG, "SRAM/EEPROM Loaded: %s\n", savename);
@@ -679,7 +679,7 @@ int jg_game_unload(void) {
     char savename[292];
     snprintf(savename, sizeof(savename),
         "%s/%s.srm", pathinfo.save, gameinfo.name);
-    int srmstat = jcv_sram_save((const char*)savename);
+    int srmstat = jcv_coleco_sram_save((const char*)savename);
 
     if (srmstat == 1)
         jg_cb_log(JG_LOG_DBG, "SRAM Saved: %s\n", savename);

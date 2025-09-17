@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020-2022 Rupert Carmichael
+Copyright (c) 2020-2025 Rupert Carmichael
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -82,6 +82,163 @@ static eep24cxx_t eep24cxx; // 24Cxx EEPROM Context (Activision PCBs)
 void jcv_coleco_input_set_callback(uint16_t (*cb)(const void*, int), void *u) {
     jcv_coleco_input_cb = cb;
     udata_input = u;
+}
+
+// Return the size of a state
+static size_t jcv_coleco_state_size(void) {
+    return SIZE_STATE + savesize;
+}
+
+// Load raw state data into the running system
+static void jcv_coleco_state_load_raw(const void *sstate) {
+    uint8_t *st = (uint8_t*)sstate;
+    jcv_serial_begin();
+    jcv_serial_popblk(cvsys.ram, st, SIZE_CVRAM);
+    jcv_serial_popblk(cvsys.sgmram, st, SIZE_32K);
+    cvsys.cseg = jcv_serial_pop8(st);
+    cvsys.ctrl[0] = jcv_serial_pop16(st);
+    cvsys.ctrl[1] = jcv_serial_pop16(st);
+    for (int i = 0; i < 4; ++i) rompage[i] = jcv_serial_pop32(st);
+    sn76489_state_load(&psg, st);
+    ay38910_state_load(&sgmpsg, st);
+    jcv_vdp_state_load(st);
+    jcv_z80_state_load(st);
+    sgm_upper = jcv_serial_pop8(st);
+    sgm_lower = jcv_serial_pop8(st);
+    if (carttype == CART_ACTIVISION) { // EEPROM
+        eep24cxx.sda = jcv_serial_pop8(st);
+        eep24cxx.scl = jcv_serial_pop8(st);
+        eep24cxx.out = jcv_serial_pop8(st);
+        eep24cxx.wp = jcv_serial_pop8(st);
+        eep24cxx.mode = jcv_serial_pop8(st);
+        eep24cxx.cmd = jcv_serial_pop8(st);
+        eep24cxx.clk = jcv_serial_pop8(st);
+        eep24cxx.shift = jcv_serial_pop8(st);
+        eep24cxx.addr = jcv_serial_pop16(st);
+        jcv_serial_popblk(eep24cxx.data, st, eep24cxx.datasize);
+    }
+    else if (carttype == CART_SRAM) {
+        jcv_serial_popblk(savedata, st, SIZE_2K);
+    }
+}
+
+// Load a state from a file
+static int jcv_coleco_state_load(const char *filename) {
+    FILE *file;
+    size_t filesize, result;
+    void *sstatefile;
+
+    // Open the file for reading
+    file = fopen(filename, "rb");
+    if (!file)
+        return 0;
+
+    // Find out the file's size
+    fseek(file, 0, SEEK_END);
+    filesize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    // Allocate memory to read the file into
+    sstatefile = (void*)calloc(filesize, sizeof(uint8_t));
+    if (sstatefile == NULL)
+        return 0;
+
+    // Read the file into memory and then close it
+    result = fread(sstatefile, sizeof(uint8_t), filesize, file);
+    if (result != filesize)
+        return 0;
+    fclose(file);
+
+    // File has been read, now copy it into the emulator
+    jcv_state_load_raw((const void*)sstatefile);
+
+    // Free the allocated memory
+    free(sstatefile);
+
+    return 1; // Success!
+}
+
+// Snapshot the running state and return the address of the raw data
+static const void* jcv_coleco_state_save_raw(void) {
+    jcv_serial_begin();
+    jcv_serial_pushblk(state, cvsys.ram, SIZE_CVRAM);
+    jcv_serial_pushblk(state, cvsys.sgmram, SIZE_32K);
+    jcv_serial_push8(state, cvsys.cseg);
+    jcv_serial_push16(state, cvsys.ctrl[0]);
+    jcv_serial_push16(state, cvsys.ctrl[1]);
+    for (int i = 0; i < 4; ++i) jcv_serial_push32(state, rompage[i]);
+    sn76489_state_save(&psg, state);
+    ay38910_state_save(&sgmpsg, state);
+    jcv_vdp_state_save(state);
+    jcv_z80_state_save(state);
+    jcv_serial_push8(state, sgm_upper);
+    jcv_serial_push8(state, sgm_lower);
+    if (carttype == CART_ACTIVISION) { // EEPROM
+        jcv_serial_push8(state, eep24cxx.sda);
+        jcv_serial_push8(state, eep24cxx.scl);
+        jcv_serial_push8(state, eep24cxx.out);
+        jcv_serial_push8(state, eep24cxx.wp);
+        jcv_serial_push8(state, eep24cxx.mode);
+        jcv_serial_push8(state, eep24cxx.cmd);
+        jcv_serial_push8(state, eep24cxx.clk);
+        jcv_serial_push8(state, eep24cxx.shift);
+        jcv_serial_push16(state, eep24cxx.addr);
+        jcv_serial_pushblk(state, eep24cxx.data, eep24cxx.datasize);
+    }
+    else if (carttype == CART_SRAM) {
+        jcv_serial_pushblk(state, savedata, SIZE_2K);
+    }
+    return (const void*)state;
+}
+
+// Save a state to a file
+static int jcv_coleco_state_save(const char *filename) {
+    // Open the file for writing
+    FILE *file;
+    file = fopen(filename, "wb");
+    if (!file)
+        return 0;
+
+    // Snapshot the running state and get the memory address
+    uint8_t *sstate = (uint8_t*)jcv_state_save_raw();
+
+    // Write and close the file
+    fwrite(sstate, jcv_state_size(), sizeof(uint8_t), file);
+    fclose(file);
+
+    return 1; // Success!
+}
+
+// Load SRAM
+int jcv_coleco_sram_load(const char *filename) {
+    FILE *file;
+    size_t filesize, result;
+
+    // Open the file for reading
+    file = fopen(filename, "rb");
+    if (!file)
+        return 2;
+
+    // Find out the file's size
+    fseek(file, 0, SEEK_END);
+    filesize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    if (filesize > savesize) {
+        fclose(file);
+        return 0;
+    }
+
+    // Read the file into the system's Cartridge RAM slot and then close it
+    result = fread(savedata, sizeof(uint8_t), filesize, file);
+    if (result != filesize) {
+        fclose(file);
+        return 0;
+    }
+
+    fclose(file);
+
+    return 1; // Success!
 }
 
 // Read a byte of data from an I/O port
@@ -391,6 +548,14 @@ void jcv_coleco_init(void) {
     cvsys.cseg = 0; // Controller Strobe Segment
     cvsys.ctrl[0] = cvsys.ctrl[1] = 0; // Reset input states to empty
 
+    // Set ColecoVision function pointers
+    jcv_exec = &jcv_coleco_exec;
+    jcv_state_load = jcv_coleco_state_load;
+    jcv_state_load_raw = jcv_coleco_state_load_raw;
+    jcv_state_save = jcv_coleco_state_save;
+    jcv_state_save_raw = jcv_coleco_state_save_raw;
+    jcv_state_size = jcv_coleco_state_size;
+
     // Set Z80 function pointers
     jcv_z80_io_rd = jcv_coleco_io_rd;
     jcv_z80_io_wr = jcv_coleco_io_wr;
@@ -418,165 +583,8 @@ void jcv_coleco_set_region(unsigned region) {
     numscanlines = region ? CV_VDP_SCANLINES_PAL : CV_VDP_SCANLINES;
 }
 
-// Return the size of a state
-size_t jcv_state_size(void) {
-    return SIZE_STATE + savesize;
-}
-
-// Load raw state data into the running system
-void jcv_state_load_raw(const void *sstate) {
-    uint8_t *st = (uint8_t*)sstate;
-    jcv_serial_begin();
-    jcv_serial_popblk(cvsys.ram, st, SIZE_CVRAM);
-    jcv_serial_popblk(cvsys.sgmram, st, SIZE_32K);
-    cvsys.cseg = jcv_serial_pop8(st);
-    cvsys.ctrl[0] = jcv_serial_pop16(st);
-    cvsys.ctrl[1] = jcv_serial_pop16(st);
-    for (int i = 0; i < 4; ++i) rompage[i] = jcv_serial_pop32(st);
-    sn76489_state_load(&psg, st);
-    ay38910_state_load(&sgmpsg, st);
-    jcv_vdp_state_load(st);
-    jcv_z80_state_load(st);
-    sgm_upper = jcv_serial_pop8(st);
-    sgm_lower = jcv_serial_pop8(st);
-    if (carttype == CART_ACTIVISION) { // EEPROM
-        eep24cxx.sda = jcv_serial_pop8(st);
-        eep24cxx.scl = jcv_serial_pop8(st);
-        eep24cxx.out = jcv_serial_pop8(st);
-        eep24cxx.wp = jcv_serial_pop8(st);
-        eep24cxx.mode = jcv_serial_pop8(st);
-        eep24cxx.cmd = jcv_serial_pop8(st);
-        eep24cxx.clk = jcv_serial_pop8(st);
-        eep24cxx.shift = jcv_serial_pop8(st);
-        eep24cxx.addr = jcv_serial_pop16(st);
-        jcv_serial_popblk(eep24cxx.data, st, eep24cxx.datasize);
-    }
-    else if (carttype == CART_SRAM) {
-        jcv_serial_popblk(savedata, st, SIZE_2K);
-    }
-}
-
-// Load a state from a file
-int jcv_state_load(const char *filename) {
-    FILE *file;
-    size_t filesize, result;
-    void *sstatefile;
-
-    // Open the file for reading
-    file = fopen(filename, "rb");
-    if (!file)
-        return 0;
-
-    // Find out the file's size
-    fseek(file, 0, SEEK_END);
-    filesize = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    // Allocate memory to read the file into
-    sstatefile = (void*)calloc(filesize, sizeof(uint8_t));
-    if (sstatefile == NULL)
-        return 0;
-
-    // Read the file into memory and then close it
-    result = fread(sstatefile, sizeof(uint8_t), filesize, file);
-    if (result != filesize)
-        return 0;
-    fclose(file);
-
-    // File has been read, now copy it into the emulator
-    jcv_state_load_raw((const void*)sstatefile);
-
-    // Free the allocated memory
-    free(sstatefile);
-
-    return 1; // Success!
-}
-
-// Snapshot the running state and return the address of the raw data
-const void* jcv_state_save_raw(void) {
-    jcv_serial_begin();
-    jcv_serial_pushblk(state, cvsys.ram, SIZE_CVRAM);
-    jcv_serial_pushblk(state, cvsys.sgmram, SIZE_32K);
-    jcv_serial_push8(state, cvsys.cseg);
-    jcv_serial_push16(state, cvsys.ctrl[0]);
-    jcv_serial_push16(state, cvsys.ctrl[1]);
-    for (int i = 0; i < 4; ++i) jcv_serial_push32(state, rompage[i]);
-    sn76489_state_save(&psg, state);
-    ay38910_state_save(&sgmpsg, state);
-    jcv_vdp_state_save(state);
-    jcv_z80_state_save(state);
-    jcv_serial_push8(state, sgm_upper);
-    jcv_serial_push8(state, sgm_lower);
-    if (carttype == CART_ACTIVISION) { // EEPROM
-        jcv_serial_push8(state, eep24cxx.sda);
-        jcv_serial_push8(state, eep24cxx.scl);
-        jcv_serial_push8(state, eep24cxx.out);
-        jcv_serial_push8(state, eep24cxx.wp);
-        jcv_serial_push8(state, eep24cxx.mode);
-        jcv_serial_push8(state, eep24cxx.cmd);
-        jcv_serial_push8(state, eep24cxx.clk);
-        jcv_serial_push8(state, eep24cxx.shift);
-        jcv_serial_push16(state, eep24cxx.addr);
-        jcv_serial_pushblk(state, eep24cxx.data, eep24cxx.datasize);
-    }
-    else if (carttype == CART_SRAM) {
-        jcv_serial_pushblk(state, savedata, SIZE_2K);
-    }
-    return (const void*)state;
-}
-
-// Save a state to a file
-int jcv_state_save(const char *filename) {
-    // Open the file for writing
-    FILE *file;
-    file = fopen(filename, "wb");
-    if (!file)
-        return 0;
-
-    // Snapshot the running state and get the memory address
-    uint8_t *sstate = (uint8_t*)jcv_state_save_raw();
-
-    // Write and close the file
-    fwrite(sstate, jcv_state_size(), sizeof(uint8_t), file);
-    fclose(file);
-
-    return 1; // Success!
-}
-
-// Load SRAM
-int jcv_sram_load(const char *filename) {
-    FILE *file;
-    size_t filesize, result;
-
-    // Open the file for reading
-    file = fopen(filename, "rb");
-    if (!file)
-        return 2;
-
-    // Find out the file's size
-    fseek(file, 0, SEEK_END);
-    filesize = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    if (filesize > savesize) {
-        fclose(file);
-        return 0;
-    }
-
-    // Read the file into the system's Cartridge RAM slot and then close it
-    result = fread(savedata, sizeof(uint8_t), filesize, file);
-    if (result != filesize) {
-        fclose(file);
-        return 0;
-    }
-
-    fclose(file);
-
-    return 1; // Success!
-}
-
 // Save SRAM
-int jcv_sram_save(const char *filename) {
+int jcv_coleco_sram_save(const char *filename) {
     if (!(carttype == CART_SRAM || carttype == CART_ACTIVISION))
         return 2;
 
