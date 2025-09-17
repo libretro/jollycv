@@ -28,8 +28,9 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+#include <stdio.h>
 #include <stdint.h>
-#include <stddef.h>
+#include <stdlib.h>
 
 #include "jcv.h"
 
@@ -54,9 +55,7 @@ void (*jcv_log)(int, const char *, ...) = NULL;
 // Function pointers for state functions
 size_t (*jcv_state_size)(void);
 void (*jcv_state_load_raw)(const void*);
-int (*jcv_state_load)(const char*);
 const void* (*jcv_state_save_raw)(void);
-int (*jcv_state_save)(const char*);
 
 // System being emulated
 static unsigned sys = 0;
@@ -153,4 +152,58 @@ void jcv_reset(int hard) {
             break;
         }
     }
+}
+
+// Load a state from a file
+int jcv_state_load(const char *filename) {
+    FILE *file;
+    size_t filesize, result;
+    void *sstatefile;
+
+    // Open the file for reading
+    file = fopen(filename, "rb");
+    if (!file)
+        return 0;
+
+    // Find out the file's size
+    fseek(file, 0, SEEK_END);
+    filesize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    // Allocate memory to read the file into
+    sstatefile = (void*)calloc(filesize, sizeof(uint8_t));
+    if (sstatefile == NULL)
+        return 0;
+
+    // Read the file into memory and then close it
+    result = fread(sstatefile, sizeof(uint8_t), filesize, file);
+    if (result != filesize)
+        return 0;
+    fclose(file);
+
+    // File has been read, now copy it into the emulator
+    jcv_state_load_raw((const void*)sstatefile);
+
+    // Free the allocated memory
+    free(sstatefile);
+
+    return 1; // Success!
+}
+
+// Save a state to a file
+int jcv_state_save(const char *filename) {
+    // Open the file for writing
+    FILE *file;
+    file = fopen(filename, "wb");
+    if (!file)
+        return 0;
+
+    // Snapshot the running state and get the memory address
+    uint8_t *sstate = (uint8_t*)jcv_state_save_raw();
+
+    // Write and close the file
+    fwrite(sstate, jcv_state_size(), sizeof(uint8_t), file);
+    fclose(file);
+
+    return 1; // Success!
 }

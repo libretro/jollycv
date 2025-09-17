@@ -122,42 +122,6 @@ static void jcv_coleco_state_load_raw(const void *sstate) {
     }
 }
 
-// Load a state from a file
-static int jcv_coleco_state_load(const char *filename) {
-    FILE *file;
-    size_t filesize, result;
-    void *sstatefile;
-
-    // Open the file for reading
-    file = fopen(filename, "rb");
-    if (!file)
-        return 0;
-
-    // Find out the file's size
-    fseek(file, 0, SEEK_END);
-    filesize = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    // Allocate memory to read the file into
-    sstatefile = (void*)calloc(filesize, sizeof(uint8_t));
-    if (sstatefile == NULL)
-        return 0;
-
-    // Read the file into memory and then close it
-    result = fread(sstatefile, sizeof(uint8_t), filesize, file);
-    if (result != filesize)
-        return 0;
-    fclose(file);
-
-    // File has been read, now copy it into the emulator
-    jcv_state_load_raw((const void*)sstatefile);
-
-    // Free the allocated memory
-    free(sstatefile);
-
-    return 1; // Success!
-}
-
 // Snapshot the running state and return the address of the raw data
 static const void* jcv_coleco_state_save_raw(void) {
     jcv_serial_begin();
@@ -189,24 +153,6 @@ static const void* jcv_coleco_state_save_raw(void) {
         jcv_serial_pushblk(state, savedata, SIZE_2K);
     }
     return (const void*)state;
-}
-
-// Save a state to a file
-static int jcv_coleco_state_save(const char *filename) {
-    // Open the file for writing
-    FILE *file;
-    file = fopen(filename, "wb");
-    if (!file)
-        return 0;
-
-    // Snapshot the running state and get the memory address
-    uint8_t *sstate = (uint8_t*)jcv_state_save_raw();
-
-    // Write and close the file
-    fwrite(sstate, jcv_state_size(), sizeof(uint8_t), file);
-    fclose(file);
-
-    return 1; // Success!
 }
 
 // Load SRAM
@@ -550,9 +496,7 @@ void jcv_coleco_init(void) {
 
     // Set ColecoVision function pointers
     jcv_exec = &jcv_coleco_exec;
-    jcv_state_load = jcv_coleco_state_load;
     jcv_state_load_raw = jcv_coleco_state_load_raw;
-    jcv_state_save = jcv_coleco_state_save;
     jcv_state_save_raw = jcv_coleco_state_save_raw;
     jcv_state_size = jcv_coleco_state_size;
 

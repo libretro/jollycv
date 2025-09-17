@@ -63,6 +63,9 @@ void jcv_init(void);
 void jcv_deinit(void);
 void jcv_reset(int);
 
+int jcv_state_load(const char*);
+int jcv_state_save(const char*);
+
 void jcv_log_set_callback(void (*)(int, const char *, ...));
 
 extern void (*jcv_exec)(void);
@@ -70,8 +73,6 @@ extern void (*jcv_log)(int, const char *, ...);
 
 extern size_t (*jcv_state_size)(void);
 extern void (*jcv_state_load_raw)(const void*);
-extern int (*jcv_state_load)(const char*);
 extern const void* (*jcv_state_save_raw)(void);
-extern int (*jcv_state_save)(const char*);
 
 #endif
