@@ -49,7 +49,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SIZE_STATE 50392
 static uint8_t state[SIZE_STATE + SIZE_32K];
 
-static uint16_t (*jcv_coleco_input_cb)(void*, int); // Input poll callback
+static uint16_t (*jcv_coleco_input_cb)(const void*, int); // Input callback
 static void *udata_input; // Input callback userdata
 
 static uint8_t *cvbios = NULL; // BIOS ROM
@@ -268,7 +268,7 @@ static void jcv_coleco_mem_wr(uint16_t addr, uint8_t data) {
 }
 
 // Load the ColecoVision BIOS
-int jcv_bios_load_file(const char *biospath) {
+int jcv_coleco_bios_load_file(const char *biospath) {
     FILE *file;
     long size;
 
@@ -301,14 +301,15 @@ int jcv_bios_load_file(const char *biospath) {
 }
 
 // Load the ColecoVision BIOS from a memory buffer
-int jcv_bios_load(void *data, size_t size) {
-    if (size) { }
+int jcv_coleco_bios_load(void *data, size_t size) {
     cvbios = data;
+    if (size != SIZE_CVBIOS)
+        return 0;
     return 1;
 }
 
 // Load a ColecoVision ROM Image
-int jcv_rom_load(void *data, size_t size) {
+int jcv_coleco_rom_load(void *data, size_t size) {
     romdata = (uint8_t*)data; // Assign internal ROM pointer
     romsize = size; // Record the true size of the ROM data in bytes
 
@@ -367,7 +368,7 @@ int jcv_rom_load(void *data, size_t size) {
     return 1;
 }
 
-void jcv_rom_set_carttype(unsigned ctype, unsigned special) {
+void jcv_coleco_set_carttype(unsigned ctype, unsigned special) {
     carttype = ctype;
     if (carttype == CART_SRAM)
         savesize = SIZE_2K;

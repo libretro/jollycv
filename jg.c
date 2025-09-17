@@ -604,13 +604,13 @@ int jg_game_load(void) {
         if (sys == JCV_SYS_CRVISION)
             jcv_crvision_bios_load(biosinfo.data, biosinfo.size);
         else
-            jcv_bios_load(biosinfo.data, biosinfo.size);
+            jcv_coleco_bios_load(biosinfo.data, biosinfo.size);
     }
     else {
         char bpath[256];
         if (sys == JCV_SYS_COLECO) {
             snprintf(bpath, sizeof(bpath), "%s/coleco.rom", pathinfo.bios);
-            if (!jcv_bios_load_file(bpath))
+            if (!jcv_coleco_bios_load_file(bpath))
                 jg_cb_log(JG_LOG_ERR, "Failed to load bios %s\n", bpath);
         }
         else if (sys == JCV_SYS_CRVISION) {
@@ -622,14 +622,14 @@ int jg_game_load(void) {
 
     for (size_t i = 0; i < (sizeof(gamedb) / sizeof(dbentry_t)); ++i) {
         if (!strcmp(gamedb[i].md5, gameinfo.md5)) {
-            jcv_rom_set_carttype(gamedb[i].carttype, gamedb[i].special);
+            jcv_coleco_set_carttype(gamedb[i].carttype, gamedb[i].special);
             break;
         }
     }
 
     // Load the ROM
     if (sys == JCV_SYS_COLECO) {
-        if (!jcv_rom_load(gameinfo.data, gameinfo.size))
+        if (!jcv_coleco_rom_load(gameinfo.data, gameinfo.size))
             return 0;
         char savename[292];
         snprintf(savename, sizeof(savename),
