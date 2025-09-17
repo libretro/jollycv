@@ -101,7 +101,6 @@ void jcv_init(void) {
             jcv_mixer_init(sys);
             jcv_z80_init();
             jcv_vdp_set_vblint(&jcv_z80_irq_ff);
-            jcv_exec = &jcv_myvision_exec;
             break;
         }
     }

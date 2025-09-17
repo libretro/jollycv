@@ -30,8 +30,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // Nichibutsu My Vision
 
-#include <stdlib.h>
 #include <stdint.h>
+#include <stddef.h>
 
 #include "jcv_myvision.h"
 #include "jcv_mixer.h"
@@ -45,6 +45,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define NUM_SCANLINES 262   // Total number of video scanlines
 #define Z80_CYC_LINE 228    // Z80 CPU cycles per scanline (227.99873)
 
+#define SIZE_STATE 18558
+static uint8_t state[SIZE_STATE];
+static uint32_t state_version = ('J' << 24) | ('C' << 16) | ('V' << 8) | 0x00;
+
 static ay38910_t psg;       // PSG Context
 
 static uint8_t ram[SIZE_2K];        // System RAM
@@ -55,6 +59,34 @@ static size_t romsize = 0;          // Size of the ROM in bytes
 static size_t psgcycs = 0;
 
 static uint8_t (*jcv_myvision_input_cb)(int); // Input poll callback
+
+// Return the size of a state
+static size_t jcv_myvision_state_size(void) {
+    return SIZE_STATE;
+}
+
+// Load raw state data into the running system
+static void jcv_myvision_state_load_raw(const void *sstate) {
+    uint8_t *st = (uint8_t*)sstate;
+    jcv_serial_begin();
+    uint32_t ver = jcv_serial_pop32(st);
+    (void)ver;
+    jcv_serial_popblk(ram, st, SIZE_2K);
+    ay38910_state_load(&psg, st);
+    jcv_vdp_state_load(st);
+    jcv_z80_state_load(st);
+}
+
+// Snapshot the running state and return the address of the raw data
+static const void* jcv_myvision_state_save_raw(void) {
+    jcv_serial_begin();
+    jcv_serial_push32(state, state_version);
+    jcv_serial_pushblk(state, ram, SIZE_2K);
+    ay38910_state_save(&psg, state);
+    jcv_vdp_state_save(state);
+    jcv_z80_state_save(state);
+    return (const void*)state;
+}
 
 void jcv_myvision_input_set_callback(uint8_t (*cb)(int)) {
     jcv_myvision_input_cb = cb;
@@ -134,6 +166,12 @@ void jcv_myvision_init(void) {
     // Clear RAM
     for (unsigned i = 0; i < sizeof(ram); ++i)
         ram[i] = 0xff;
+
+    // Set My Vision function pointers
+    jcv_exec = &jcv_myvision_exec;
+    jcv_state_load_raw = jcv_myvision_state_load_raw;
+    jcv_state_save_raw = jcv_myvision_state_save_raw;
+    jcv_state_size = jcv_myvision_state_size;
 
     // Set Z80 function pointers
     jcv_z80_io_rd = jcv_myvision_io_rd;
