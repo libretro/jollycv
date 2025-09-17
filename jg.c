@@ -216,8 +216,9 @@ static uint16_t cv_input_map[] = {
     CV_INPUT_7, CV_INPUT_8, CV_INPUT_9, CV_INPUT_0, CV_INPUT_STR, CV_INPUT_PND
 };
 
-static uint16_t jcv_input_poll(int port) {
-    uint16_t b = 0x8080; // Always preset bit 7 for both segments
+static uint16_t jcv_coleco_input_poll(const void *udata, int port) {
+    (void)udata;
+    uint16_t b = 0x0000;
 
     for (int i = 0; i < NDEFS_COLECOPAD; ++i)
         if (input_device[port]->button[i]) b |= cv_input_map[i];
@@ -226,14 +227,16 @@ static uint16_t jcv_input_poll(int port) {
 }
 
 // Unconnected Port
-static uint16_t jcv_input_poll_null(int port) {
+static uint16_t jcv_coleco_input_poll_null(const void *udata, int port) {
+    (void)udata;
     (void)port;
-    return 0x8080;
+    return 0x0000;
 }
 
 // ColecoVision Roller Controller
-static uint16_t jcv_input_poll_roller(int port) {
-    uint16_t b = 0x8080; // Always preset bit 7 for both segments
+static uint16_t jcv_coleco_input_poll_roller(const void *udata, int port) {
+    (void)udata;
+    uint16_t b = 0x0000;
 
     for (int i = 0; i < NDEFS_COLECOPAD; ++i)
         if (input_device[port]->button[i]) b |= cv_input_map[i];
@@ -261,8 +264,9 @@ static uint16_t cv_input_map_sac[] = {
     CV_INPUT_7, CV_INPUT_8, CV_INPUT_9, CV_INPUT_0, CV_INPUT_STR, CV_INPUT_PND,
 };
 
-static uint16_t jcv_input_poll_sac(int port) {
-    uint16_t b = 0x8080; // Always preset bit 7 for both segments
+static uint16_t jcv_coleco_input_poll_sac(const void *udata, int port) {
+    (void)udata;
+    uint16_t b = 0x0000;
 
     for (int i = 0; i < NDEFS_COLECOSAC - 2; ++i)
         if (input_device[port]->button[i]) b |= cv_input_map_sac[i];
@@ -293,8 +297,9 @@ static uint16_t cv_input_map_wheel[] = {
     CV_INPUT_7, CV_INPUT_8, CV_INPUT_9, CV_INPUT_0, CV_INPUT_STR, CV_INPUT_PND,
 };
 
-static uint16_t jcv_input_poll_wheel(int port) {
-    uint16_t b = 0x8080; // Always preset bit 7 for both segments
+static uint16_t jcv_coleco_input_poll_wheel(const void *udata, int port) {
+    (void)udata;
+    uint16_t b = 0x0000;
 
     if (port == 0) { // Steering Wheel and Pedal on first port
         int rel = input_device[0]->rel[port] / 3;
@@ -510,32 +515,32 @@ static void jcv_input_setup(void) {
         default: case 0: case JG_COLECO_PAD: {
             inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_PAD);
             inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_PAD);
-            jcv_input_set_callback(&jcv_input_poll);
+            jcv_coleco_input_set_callback(&jcv_coleco_input_poll, NULL);
             break;
         }
         case JG_COLECO_ROLLER: {
             inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_ROLLER);
             inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_ROLLER);
-            jcv_input_set_callback(&jcv_input_poll_roller);
+            jcv_coleco_input_set_callback(&jcv_coleco_input_poll_roller, NULL);
             break;
         }
         case JG_COLECO_SAC: {
             inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_SAC);
             inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_SAC);
-            jcv_input_set_callback(&jcv_input_poll_sac);
+            jcv_coleco_input_set_callback(&jcv_coleco_input_poll_sac, NULL);
             break;
         }
         case JG_COLECO_SKETCH: {
             inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_UNCONNECTED);
             inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_UNCONNECTED);
-            jcv_input_set_callback(&jcv_input_poll_null);
+            jcv_coleco_input_set_callback(&jcv_coleco_input_poll_null, NULL);
             jg_cb_log(JG_LOG_WRN, "Super Sketch not supported\n");
             break;
         }
         case JG_COLECO_WHEEL: {
             inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_WHEEL);
             inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_UNCONNECTED);
-            jcv_input_set_callback(&jcv_input_poll_wheel);
+            jcv_coleco_input_set_callback(&jcv_coleco_input_poll_wheel, NULL);
             break;
         }
     }
@@ -559,7 +564,7 @@ void jg_set_cb_rumble(jg_cb_rumble_t func) {
 }
 
 int jg_init(void) {
-    jcv_input_set_callback(&jcv_input_poll);
+    jcv_coleco_input_set_callback(&jcv_coleco_input_poll, NULL);
     jcv_crvision_input_set_callback(&jcv_crvision_input_poll);
     jcv_myvision_input_set_callback(&jcv_myvision_input_poll);
 

@@ -78,7 +78,7 @@ typedef struct _cv_sys_t {
     uint16_t ctrl[2]; // Controller Input state
 } cv_sys_t;
 
-void jcv_input_set_callback(uint16_t (*)(int));
+void jcv_coleco_input_set_callback(uint16_t (*)(const void*, int), void*);
 
 void jcv_coleco_init(void);
 void jcv_coleco_deinit(void);

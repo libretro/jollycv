@@ -49,7 +49,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define SIZE_STATE 50392
 static uint8_t state[SIZE_STATE + SIZE_32K];
 
-static uint16_t (*jcv_input_cb)(int); // Input poll callback
+static uint16_t (*jcv_coleco_input_cb)(void*, int); // Input poll callback
+static void *udata_input; // Input callback userdata
 
 static uint8_t *cvbios = NULL; // BIOS ROM
 static uint8_t bios_internal = 0; // BIOS loaded internally
@@ -78,8 +79,9 @@ static sn76489_t psg; // PSG Context
 static ay38910_t sgmpsg; // SGM PSG Context
 static eep24cxx_t eep24cxx; // 24Cxx EEPROM Context (Activision PCBs)
 
-void jcv_input_set_callback(uint16_t (*cb)(int)) {
-    jcv_input_cb = cb;
+void jcv_coleco_input_set_callback(uint16_t (*cb)(const void*, int), void *u) {
+    jcv_coleco_input_cb = cb;
+    udata_input = u;
 }
 
 // Read a byte of data from an I/O port
@@ -94,7 +96,8 @@ static uint8_t jcv_coleco_io_rd(uint16_t port) {
         }
         case 0xe0: { // Strobe controller ports for input state
             uint8_t p = (port & 0x02) >> 1; // Port variable for convenience
-            cvsys.ctrl[p] = jcv_input_cb(p); // Call frontend for input state
+            // Read frontend input state, always set bit 7 for both segments
+            cvsys.ctrl[p] = jcv_coleco_input_cb(udata_input, p) | 0x8080;
 
             // Return the complement of the value
             return cvsys.cseg ? // Two strobes are done for two sets of buttons
