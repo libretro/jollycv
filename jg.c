@@ -209,6 +209,11 @@ static dbentry_t gamedb[] = {
     "a31facd8adc1134942d9f4102dd3fa9f", // Victory (Europe)
 };*/
 
+static void jcv_cb_audio(const void *udata, size_t samps) {
+    (void)udata;
+    jg_cb_audio(samps);
+}
+
 // ColecoVision Paddle
 static uint16_t cv_input_map[] = {
     CV_INPUT_U, CV_INPUT_D, CV_INPUT_L, CV_INPUT_R, CV_INPUT_FL, CV_INPUT_FR,
@@ -568,7 +573,7 @@ int jg_init(void) {
     jcv_crvision_input_set_callback(&jcv_crvision_input_poll);
     jcv_myvision_input_set_callback(&jcv_myvision_input_poll);
 
-    jcv_mixer_set_callback(jg_cb_audio);
+    jcv_mixer_set_callback(jcv_cb_audio, NULL);
     jcv_mixer_set_rate(SAMPLERATE);
     jcv_mixer_set_rsqual(settings_jcv[RSQUAL].val);
 

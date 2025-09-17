@@ -50,7 +50,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 static uint8_t state[SIZE_STATE + SIZE_32K];
 
 static uint16_t (*jcv_coleco_input_cb)(const void*, int); // Input callback
-static void *udata_input; // Input callback userdata
+static void *udata_input = NULL; // Input callback userdata
 
 static uint8_t *cvbios = NULL; // BIOS ROM
 static uint8_t bios_internal = 0; // BIOS loaded internally
@@ -569,8 +569,8 @@ void jcv_coleco_init(void) {
     // Initialize sound chips
     sn76489_init(&psg);
     ay38910_init(&sgmpsg);
-    jcv_mixer_set_psg(&psg);
-    jcv_mixer_set_sgm(&sgmpsg);
+    jcv_mixer_set_sn76489(&psg);
+    jcv_mixer_set_ay38910(&sgmpsg);
 }
 
 // Deinitialize any allocated memory
@@ -654,7 +654,7 @@ void jcv_coleco_exec(void) {
     }
 
     // Resample audio and push to the frontend
-    jcv_mixer_resamp(psg.bufpos);
+    jcv_mixer_resamp();
 
     // Store the leftover cycle count
     jcv_z80_cyc_store(extcycs);

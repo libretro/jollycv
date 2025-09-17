@@ -36,29 +36,76 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "jcv.h"
 #include "jcv_mixer.h"
 
-#define SAMPLERATE_PSG 224009 // Approximate PSG sample rate (Hz)
-#define SAMPLERATE_PSG_CRV 125000 // PSG sample rate (CreatiVision)
-#define SAMPLERATE_PSG_MYV 170673 // PSG sample rate (MyVision)
+#define SAMPLERATE_COLECO 224009 // PSG sample rate (ColecoVision)
+#define SAMPLERATE_CRV 125121 // PSG sample rate (CreatiVision)
+#define SAMPLERATE_MYV 170673 // PSG sample rate (MyVision)
 #define SIZE_PSGBUF 4800 // Size of the PSG buffers
 
 static int16_t *abuf = NULL; // Buffer to output resampled data into
 
-static sn76489_t *psg = NULL; // Pointer to active PSG context
-static int16_t *psgbuf = NULL; // PSG buffer
+static sn76489_t *sn76489 = NULL;
+static int16_t *sn76489buf = NULL;
 
-static ay38910_t *sgmpsg = NULL;
-static int16_t *sgmbuf = NULL; // SGM PSG buffer
+static ay38910_t *ay38910 = NULL;
+static int16_t *ay38910buf = NULL;
 
 static size_t samplerate = 48000; // Default sample rate is 48000Hz
 static unsigned framerate = 60; // Default to 60 for NTSC
 static unsigned rsq = 3; // Default resampler quality is 3
+
+static int sys = JCV_SYS_COLECO;
 
 // Speex
 static SpeexResamplerState *resampler = NULL;
 static int err;
 
 // Callback to notify the fronted that N samples are ready
-static void (*jcv_mixer_cb)(size_t);
+static void (*jcv_mixer_cb)(const void*, size_t);
+static void *udata_mixer = NULL;
+
+// ColecoVision (SN76489 and AY-3-8910)
+static void jcv_mixer_resamp_coleco(size_t in_psg) {
+    // Reset buffer position for both chips
+    sn76489->bufpos = 0;
+    ay38910->bufpos = 0;
+
+    spx_uint32_t in_len = in_psg;
+
+    // Mix in the SGM samples
+    for (size_t i = 0; i < in_len; ++i)
+        sn76489buf[i] += ay38910buf[i];
+
+    spx_uint32_t outsamps = samplerate / framerate;
+    err = speex_resampler_process_int(resampler, 0, (spx_int16_t*)sn76489buf,
+        &in_len, (spx_int16_t*)abuf, &outsamps);
+    jcv_mixer_cb(udata_mixer, outsamps);
+}
+
+// CreatiVision (SN76489 PSG only)
+static void jcv_mixer_resamp_crvision(size_t in_psg) {
+    // Reset buffer position
+    sn76489->bufpos = 0;
+
+    spx_uint32_t in_len = in_psg;
+
+    spx_uint32_t outsamps = samplerate / framerate;
+    err = speex_resampler_process_int(resampler, 0, (spx_int16_t*)sn76489buf,
+        &in_len, (spx_int16_t*)abuf, &outsamps);
+    jcv_mixer_cb(udata_mixer, outsamps);
+}
+
+// My Vision (AY-3-8910 PSG only)
+static void jcv_mixer_resamp_myvision(size_t in_psg) {
+    // Reset buffer position
+    ay38910->bufpos = 0;
+
+    spx_uint32_t in_len = in_psg;
+
+    spx_uint32_t outsamps = samplerate / framerate;
+    err = speex_resampler_process_int(resampler, 0, (spx_int16_t*)ay38910buf,
+        &in_len, (spx_int16_t*)abuf, &outsamps);
+    jcv_mixer_cb(udata_mixer, outsamps);
+}
 
 // Set the output sample rate
 void jcv_mixer_set_rate(size_t rate) {
@@ -88,16 +135,17 @@ void jcv_mixer_set_buffer(int16_t *ptr) {
 }
 
 // Set the callback that notifies the frontend that N audio samples are ready
-void jcv_mixer_set_callback(void (*cb)(size_t)) {
+void jcv_mixer_set_callback(void (*cb)(const void*, size_t), void *u) {
     jcv_mixer_cb = cb;
+    udata_mixer = u;
 }
 
-void jcv_mixer_set_psg(sn76489_t *ptr) {
-    psg = ptr;
+void jcv_mixer_set_sn76489(sn76489_t *ptr) {
+    sn76489 = ptr;
 }
 
-void jcv_mixer_set_sgm(ay38910_t *ptr) {
-    sgmpsg = ptr;
+void jcv_mixer_set_ay38910(ay38910_t *ptr) {
+    ay38910 = ptr;
 }
 
 // Deinitialize the resampler
@@ -107,78 +155,48 @@ void jcv_mixer_deinit(void) {
         resampler = NULL;
     }
 
-    if (psgbuf)
-        free(psgbuf);
+    if (sn76489buf)
+        free(sn76489buf);
 
-    if (sgmbuf)
-        free(sgmbuf);
+    if (ay38910buf)
+        free(ay38910buf);
 }
 
 // Bring up the Speex resampler
-void jcv_mixer_init(unsigned sys) {
+void jcv_mixer_init(unsigned s) {
+    sys = s;
     if (sys == JCV_SYS_CRVISION) { // CreatiVision
-        resampler = speex_resampler_init(1, SAMPLERATE_PSG_CRV, samplerate,
+        resampler = speex_resampler_init(1, SAMPLERATE_CRV, samplerate,
             rsq, &err);
-        psgbuf = (int16_t*)calloc(1, SIZE_PSGBUF * sizeof(int16_t));
-        psg->buf = psgbuf;
+        sn76489buf = (int16_t*)calloc(1, SIZE_PSGBUF * sizeof(int16_t));
+        sn76489->buf = sn76489buf;
         return;
     }
     else if (sys == JCV_SYS_MYVISION) { // MyVision
-        resampler = speex_resampler_init(1, SAMPLERATE_PSG_MYV, samplerate,
+        resampler = speex_resampler_init(1, SAMPLERATE_MYV, samplerate,
             rsq, &err);
-        sgmbuf = (int16_t*)calloc(1, SIZE_PSGBUF * sizeof(int16_t));
-        sgmpsg->buf = sgmbuf;
+        ay38910buf = (int16_t*)calloc(1, SIZE_PSGBUF * sizeof(int16_t));
+        ay38910->buf = ay38910buf;
         return;
     }
 
     // ColecoVision
-    resampler = speex_resampler_init(1, SAMPLERATE_PSG, samplerate, rsq, &err);
-    psgbuf = (int16_t*)calloc(1, SIZE_PSGBUF * sizeof(int16_t));
-    sgmbuf = (int16_t*)calloc(1, SIZE_PSGBUF * sizeof(int16_t));
-    psg->buf = psgbuf;
-    sgmpsg->buf = sgmbuf;
+    resampler = speex_resampler_init(1, SAMPLERATE_COLECO, samplerate,
+        rsq, &err);
+    sn76489buf = (int16_t*)calloc(1, SIZE_PSGBUF * sizeof(int16_t));
+    ay38910buf = (int16_t*)calloc(1, SIZE_PSGBUF * sizeof(int16_t));
+    sn76489->buf = sn76489buf;
+    ay38910->buf = ay38910buf;
 }
 
-// Resample raw audio and execute the callback
-void jcv_mixer_resamp(size_t in_psg) {
-    // Reset buffer position for both chips
-    psg->bufpos = 0;
-    sgmpsg->bufpos = 0;
-
-    spx_uint32_t in_len = in_psg;
-
-    // Mix in the SGM samples
-    for (size_t i = 0; i < in_len; ++i)
-        psgbuf[i] += sgmbuf[i];
-
-    spx_uint32_t outsamps = samplerate / framerate;
-    err = speex_resampler_process_int(resampler, 0, (spx_int16_t*)psgbuf,
-        &in_len, (spx_int16_t*)abuf, &outsamps);
-    jcv_mixer_cb(outsamps);
-}
-
-// Resample raw audio and execute the callback - CreatiVision (SN76489 PSG only)
-void jcv_mixer_resamp_crvision(size_t in_psg) {
-    // Reset buffer position
-    psg->bufpos = 0;
-
-    spx_uint32_t in_len = in_psg;
-
-    spx_uint32_t outsamps = samplerate / framerate;
-    err = speex_resampler_process_int(resampler, 0, (spx_int16_t*)psgbuf,
-        &in_len, (spx_int16_t*)abuf, &outsamps);
-    jcv_mixer_cb(outsamps);
-}
-
-// Resample raw audio and execute the callback - My Vision (AY-3-8910 PSG only)
-void jcv_mixer_resamp_myvision(size_t in_psg) {
-    // Reset buffer position
-    sgmpsg->bufpos = 0;
-
-    spx_uint32_t in_len = in_psg;
-
-    spx_uint32_t outsamps = samplerate / framerate;
-    err = speex_resampler_process_int(resampler, 0, (spx_int16_t*)sgmbuf,
-        &in_len, (spx_int16_t*)abuf, &outsamps);
-    jcv_mixer_cb(outsamps);
+void jcv_mixer_resamp(void) {
+    switch (sys) {
+        default: case JCV_SYS_COLECO:
+            jcv_mixer_resamp_coleco(sn76489->bufpos);
+            break;
+        case JCV_SYS_CRVISION: jcv_mixer_resamp_crvision(sn76489->bufpos);
+            break;
+        case JCV_SYS_MYVISION: jcv_mixer_resamp_myvision(ay38910->bufpos);
+            break;
+    }
 }

@@ -339,7 +339,7 @@ void jcv_crvision_mem_wr(uint16_t addr, uint8_t data) {
 void jcv_crvision_init(void) {
     // Initialize sound chip
     sn76489_init(&psg);
-    jcv_mixer_set_psg(&psg);
+    jcv_mixer_set_sn76489(&psg);
 
     // Clear RAM
     for (unsigned i = 0; i < sizeof(ram); ++i)
@@ -400,7 +400,7 @@ void jcv_crvision_exec(void) {
     }
 
     // Resample audio and push to the frontend
-    jcv_mixer_resamp_crvision(psg.bufpos);
+    jcv_mixer_resamp();
 
     // Store the leftover cycle count
     jcv_m6502_cyc_store(extcycs);

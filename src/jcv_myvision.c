@@ -129,7 +129,7 @@ int jcv_myvision_rom_load(void *data, size_t size) {
 void jcv_myvision_init(void) {
     // Initialize sound chip
     ay38910_init(&psg);
-    jcv_mixer_set_sgm(&psg);
+    jcv_mixer_set_ay38910(&psg);
 
     // Clear RAM
     for (unsigned i = 0; i < sizeof(ram); ++i)
@@ -180,7 +180,7 @@ void jcv_myvision_exec(void) {
     }
 
     // Resample audio and push to the frontend
-    jcv_mixer_resamp_myvision(psg.bufpos);
+    jcv_mixer_resamp();
 
     // Store the leftover cycle count
     jcv_z80_cyc_store(extcycs);

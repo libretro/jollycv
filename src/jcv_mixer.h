@@ -38,15 +38,13 @@ void jcv_mixer_deinit(void);
 void jcv_mixer_init(unsigned);
 
 void jcv_mixer_set_buffer(int16_t*);
-void jcv_mixer_set_callback(void (*)(size_t));
+void jcv_mixer_set_callback(void (*)(const void*, size_t), void*);
 void jcv_mixer_set_rate(size_t);
 void jcv_mixer_set_region(unsigned);
 void jcv_mixer_set_rsqual(unsigned);
-void jcv_mixer_resamp(size_t);
-void jcv_mixer_resamp_crvision(size_t);
-void jcv_mixer_resamp_myvision(size_t);
+void jcv_mixer_resamp(void);
 
-void jcv_mixer_set_psg(sn76489_t*);
-void jcv_mixer_set_sgm(ay38910_t*);
+void jcv_mixer_set_sn76489(sn76489_t*);
+void jcv_mixer_set_ay38910(ay38910_t*);
 
 #endif
