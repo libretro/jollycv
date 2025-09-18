@@ -49,6 +49,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "jcv_crvision.h"
 #include "jcv_myvision.h"
 
+#include "jcv_db.h"
 #include "jcv_mixer.h"
 #include "jcv_vdp.h"
 #include "jcv_z80.h"
@@ -141,73 +142,7 @@ enum {
 
 // System being emulated
 static int sys = JCV_SYS_COLECO;
-
-typedef struct _dbentry_t {
-    const char *md5; unsigned input; unsigned carttype; unsigned special;
-} dbentry_t;
-
-static dbentry_t gamedb[] = {
-    // Super Action Controller
-    // Front Line (USA, Europe)
-        { "4520ee5d8d0fcf151a3332966f7ebda0", JG_COLECO_SAC, 0, 0 },
-    // Front Line (USA, Europe) (Green Version)
-        { "d145de191e3f694c7f0920787ccbda48", JG_COLECO_SAC, 0, 0 },
-    // Rocky - Super Action Boxing (USA, Europe)
-        { "d35fdb81f4a733925b0a33dfb53d9d78", JG_COLECO_SAC, 0, 0 },
-    // Spy Hunter (USA)
-        { "f96a21f920e889d1e21abbf00f4d381d", JG_COLECO_SAC, 0, 0 },
-    // Spy Hunter (USA) (Beta)
-        { "7da9f2fda17e1e34a41b180d1ceb0c37", JG_COLECO_SAC, 0, 0 },
-    // Star Trek - Strategic Operations Simulator (USA)
-        { "45006eaf52ee16ddcadd1dca68b265c8", JG_COLECO_SAC, 0, 0 },
-    // Super Action Baseball (USA)
-        { "4c4b25a93301e59b86decb0df7a0ee51", JG_COLECO_SAC, 0, 0 },
-    // Super Action Football (Europe)
-        { "8aabed060476fde3cc706c6463f02980", JG_COLECO_SAC, 0, 0 },
-    // Super Action Football (USA)
-        { "bee90a110d14b29d2e64f0ff0f303bc6", JG_COLECO_SAC, 0 , 0},
-
-    // Roller Controller
-    // Slither (USA, Europe)
-        { "7cdc148dff40389fa1ad012d4734ceed", JG_COLECO_ROLLER, 0, 0 },
-    // Victory (Europe)
-        { "a31facd8adc1134942d9f4102dd3fa9f", JG_COLECO_ROLLER, 0, 0 },
-    // Victory (USA)
-        { "200aa603996bfd2734e353098ebe8dd5", JG_COLECO_ROLLER, 0, 0 },
-
-    // Steering Wheel
-    // Destructor (USA, Europe)
-        { "ec72a0e3bebe07ba631a8dcb750c1591", JG_COLECO_WHEEL, 0, 0 },
-    // Dukes of Hazzard, The (USA)
-        { "dbd4f21702be17775e84b2fb6c534c94", JG_COLECO_WHEEL, 0, 0 },
-    // Turbo (USA, Europe)
-        { "6f146d9bd3f64bbc006a761f59e2a1cf", JG_COLECO_WHEEL, 0, 0 },
-
-    // Super Sketch
-    //Super Sketch - Sketch Master (USA)
-        { "a46d20d65533ed979933fc1cfe6c0ad7", JG_COLECO_SKETCH, 0, 0 },
-
-    // Games containing SRAM
-    // Lord of the Dungeon (USA) (Beta)
-        { "d5964ac4e7b1fd3ae91a8008ef57a3cc", JG_COLECO_PAD, CART_SRAM, 0 },
-
-    // Games containing an EEPROM (Activision style)
-    // Boxxle
-        { "6acf055212043cd047202adc3316e85c", JG_COLECO_PAD, CART_ACTIVISION,
-            SIZE_32K },
-    // Black Onyx, The
-        { "aa9c71e6b97a1ec3ff8ec4e7905a5da6", JG_COLECO_PAD, CART_ACTIVISION,
-            0x100 }, // 256B
-};
-
-// There may be more PAL-only releases, but many dumps marked as "Europe" are
-// actually worldwide releases - for now, don't use this list for anything
-/*static const char *gamedb_pal[] = { // PAL games
-    "3ae1ddd596faaced37274dd407d5523c", // Cosmic Crisis (Europe)
-    "8f1f9e8267b51d8b9b29fb62f0c050ec", // Meteoric Shower (Europe)
-    "8aabed060476fde3cc706c6463f02980", // Super Action Football (Europe)
-    "a31facd8adc1134942d9f4102dd3fa9f", // Victory (Europe)
-};*/
+static uint32_t dbflags = 0;
 
 static void jcv_cb_audio(const void *udata, size_t samps) {
     (void)udata;
@@ -508,11 +443,11 @@ static void jcv_input_setup(void) {
     int itype = settings_jcv[INPUT].val;
 
     if (!itype) {
-        for (size_t i = 0; i < (sizeof(gamedb) / sizeof(dbentry_t)); ++i) {
-            if (!strcmp(gamedb[i].md5, gameinfo.md5)) {
-                itype = gamedb[i].input;
-                break;
-            }
+        switch (dbflags) {
+            case DB_COLECO_ROLLER: itype = JG_COLECO_ROLLER; break;
+            case DB_COLECO_SAC: itype = JG_COLECO_SAC; break;
+            case DB_COLECO_SKETCH: itype = JG_COLECO_SKETCH; break;
+            case DB_COLECO_WHEEL: itype = JG_COLECO_WHEEL; break;
         }
     }
 
@@ -625,17 +560,12 @@ int jg_game_load(void) {
         }
     }
 
-    for (size_t i = 0; i < (sizeof(gamedb) / sizeof(dbentry_t)); ++i) {
-        if (!strcmp(gamedb[i].md5, gameinfo.md5)) {
-            jcv_coleco_set_carttype(gamedb[i].carttype, gamedb[i].special);
-            break;
-        }
-    }
-
     // Load the ROM
     if (sys == JCV_SYS_COLECO) {
+        dbflags = jcv_db_process_coleco(gameinfo.md5);
         if (!jcv_coleco_rom_load(gameinfo.data, gameinfo.size))
             return 0;
+
         char savename[292];
         snprintf(savename, sizeof(savename),
             "%s/%s.srm", pathinfo.save, gameinfo.name);
