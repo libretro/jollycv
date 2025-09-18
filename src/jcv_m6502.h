@@ -41,8 +41,8 @@ void jcv_m6502_delay(uint32_t);
 uint32_t jcv_m6502_exec(void);
 uint32_t jcv_m6502_run(uint32_t);
 
-/*void jcv_m6502_state_load(uint8_t*);
-void jcv_m6502_state_save(uint8_t*);*/
+void jcv_m6502_state_load(uint8_t*);
+void jcv_m6502_state_save(uint8_t*);
 
 
 #endif

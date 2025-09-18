@@ -105,3 +105,45 @@ uint32_t jcv_m6502_exec(void) {
 
     return retcyc;
 }
+
+// Restore the 6502's state from external data
+void jcv_m6502_state_load(uint8_t *st) {
+    extracycs = jcv_serial_pop32(st);
+    delaycycs = jcv_serial_pop32(st);
+    m65ctx.pc = jcv_serial_pop16(st);
+    m65ctx.a = jcv_serial_pop8(st);
+    m65ctx.x = jcv_serial_pop8(st);
+    m65ctx.y = jcv_serial_pop8(st);
+    m65ctx.sp = jcv_serial_pop8(st);
+    m65ctx.cf = jcv_serial_pop8(st);
+    m65ctx.zf = jcv_serial_pop8(st);
+    m65ctx.idf = jcv_serial_pop8(st);
+    m65ctx.df = jcv_serial_pop8(st);
+    m65ctx.bf = jcv_serial_pop8(st);
+    m65ctx.vf = jcv_serial_pop8(st);
+    m65ctx.nf = jcv_serial_pop8(st);
+    m65ctx.page_crossed = jcv_serial_pop8(st);
+    m65ctx.stop = jcv_serial_pop8(st);
+    m65ctx.wait = jcv_serial_pop8(st);
+}
+
+// Export the 6502's state
+void jcv_m6502_state_save(uint8_t *st) {
+    jcv_serial_push32(st, extracycs);
+    jcv_serial_push32(st, delaycycs);
+    jcv_serial_push16(st, m65ctx.pc);
+    jcv_serial_push8(st, m65ctx.a);
+    jcv_serial_push8(st, m65ctx.x);
+    jcv_serial_push8(st, m65ctx.y);
+    jcv_serial_push8(st, m65ctx.sp);
+    jcv_serial_push8(st, m65ctx.cf);
+    jcv_serial_push8(st, m65ctx.zf);
+    jcv_serial_push8(st, m65ctx.idf);
+    jcv_serial_push8(st, m65ctx.df);
+    jcv_serial_push8(st, m65ctx.bf);
+    jcv_serial_push8(st, m65ctx.vf);
+    jcv_serial_push8(st, m65ctx.nf);
+    jcv_serial_push8(st, m65ctx.page_crossed);
+    jcv_serial_push8(st, m65ctx.stop);
+    jcv_serial_push8(st, m65ctx.wait);
+}
