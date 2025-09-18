@@ -93,7 +93,6 @@ void jcv_init(void) {
             jcv_mixer_init(sys);
             jcv_m6502_init();
             jcv_vdp_set_vblint(&jcv_m6502_irq);
-            jcv_exec = &jcv_crvision_exec;
             break;
         }
         case JCV_SYS_MYVISION: {

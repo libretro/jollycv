@@ -28,6 +28,8 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
+// VTech CreatiVision (also known as Dick Smith Wizzard, FunVision)
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
@@ -44,8 +46,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define M6502_CYC_LINE 128  // 6502 CPU cycles per scanline (127.79553)
 #define NUM_SCANLINES 313   // Total number of video scanlines
 
-static uint8_t (*jcv_crvision_rom_rd40)(uint16_t);
-static uint8_t (*jcv_crvision_rom_rd80)(uint16_t);
+#define SIZE_STATE 17501
+static uint8_t state[SIZE_STATE];
+static uint32_t state_version = ('J' << 24) | ('C' << 16) | ('V' << 8) | 0x00;
 
 static sn76489_t psg;           // PSG Context
 
@@ -57,11 +60,10 @@ static uint8_t bios_internal = 0;   // BIOS loaded internally
 static uint8_t *biosdata = NULL;    // BIOS ROM
 static size_t biossize = 0;         // Size of the BIOS in bytes
 
-
 // Frame execution related variables
 static size_t psgcycs = 0;
 
-// Stub implementation of the PIA
+// Stub implementation of the 6822 PIA
 typedef struct _pia_t {
     uint8_t ddr[2]; // Data Direction Register
     uint8_t or[2]; // Output Register
@@ -69,15 +71,56 @@ typedef struct _pia_t {
 } pia_t;
 static pia_t pia;
 
-// Keyboard Table
-static uint8_t kbtbl[16];
-
 static uint8_t (*jcv_crvision_input_cb)(int); // Input poll callback
+
+// Mapper callbacks
+static uint8_t (*jcv_crvision_rom_rd40)(uint16_t);
+static uint8_t (*jcv_crvision_rom_rd80)(uint16_t);
 
 // Pointers for 18K ROMs (Chopper Rescue)
 static uint8_t *rombank1_8k = NULL; // First 8K bank
 static uint8_t *rombank2_8k = NULL; // Second 8K bank
 static uint8_t *rombank_2k = NULL;  // 2K bank
+
+// Return the size of a state
+static size_t jcv_crvision_state_size(void) {
+    return SIZE_STATE;
+}
+
+// Load raw state data into the running system
+static void jcv_crvision_state_load_raw(const void *sstate) {
+    uint8_t *st = (uint8_t*)sstate;
+    jcv_serial_begin();
+    uint32_t ver = jcv_serial_pop32(st);
+    (void)ver;
+    jcv_serial_popblk(ram, st, SIZE_1K);
+    pia.ddr[0] = jcv_serial_pop8(st);
+    pia.ddr[1] = jcv_serial_pop8(st);
+    pia.or[0] = jcv_serial_pop8(st);
+    pia.or[1] = jcv_serial_pop8(st);
+    pia.cr[0] = jcv_serial_pop8(st);
+    pia.cr[1] = jcv_serial_pop8(st);
+    sn76489_state_load(&psg, st);
+    jcv_vdp_state_load(st);
+    jcv_m6502_state_load(st);
+}
+
+// Snapshot the running state and return the address of the raw data
+static const void* jcv_crvision_state_save_raw(void) {
+    jcv_serial_begin();
+    jcv_serial_push32(state, state_version);
+    jcv_serial_pushblk(state, ram, SIZE_1K);
+    jcv_serial_push8(state, pia.ddr[0]);
+    jcv_serial_push8(state, pia.ddr[1]);
+    jcv_serial_push8(state, pia.or[0]);
+    jcv_serial_push8(state, pia.or[1]);
+    jcv_serial_push8(state, pia.cr[0]);
+    jcv_serial_push8(state, pia.cr[1]);
+    sn76489_state_save(&psg, state);
+    jcv_vdp_state_save(state);
+    jcv_m6502_state_save(state);
+    return (const void*)state;
+}
 
 static uint8_t jcv_crvision_rom_null_rd40(uint16_t addr) {
     (void)addr;
@@ -349,9 +392,11 @@ void jcv_crvision_init(void) {
     pia.or[0] = pia.ddr[0] = pia.cr[0] = 0;
     pia.or[1] = pia.ddr[1] = pia.cr[1] = 0;
 
-    // Initialize keyboard table
-    for (int i = 0; i < 16; i++)
-        kbtbl[i] = 0xff;
+    // Set CreatiVision function pointers
+    jcv_exec = &jcv_crvision_exec;
+    jcv_state_load_raw = jcv_crvision_state_load_raw;
+    jcv_state_save_raw = jcv_crvision_state_save_raw;
+    jcv_state_size = jcv_crvision_state_size;
 }
 
 // Deinitialize any allocated memory
