@@ -60,7 +60,7 @@ void eep24cxx_init(eep24cxx_t* const eep, uint8_t *savedata, unsigned sz) {
     else if (sz >= 0x200) // 24C16, 24C08, 24C04
         eep->pagesize = 0x10;
     else // 24C01, 24C02
-        eep->pagesize = 0x04;
+        eep->pagesize = 0x08; // Atmel EEPROMs use 4 byte, none known in use
 
     // Set the default value to all 1s
     for (size_t i = 0; i < sz; ++i)
@@ -105,7 +105,7 @@ void eep24cxx_wr(eep24cxx_t* const eep, uint8_t sda, uint8_t scl) {
         if (eep->mode == DATA_RD) { // Read mode, shift data onto output pin
             if (eep->clk == 0) { // Start fresh
                 eep->shift = eep->data[eep->addr];
-                eep24cxx_addr_inc(eep);
+                eep->addr = (eep->addr + 1) & (eep->datasize - 1);
             }
 
             eep->out = (eep->shift >> 7) & 0x01;
