@@ -99,6 +99,9 @@ static dbentry_t db_coleco[] = {
     // Black Onyx, The
         { "aa9c71e6b97a1ec3ff8ec4e7905a5da6", DB_COLECO_PAD, CART_ACTIVISION,
             0x100 }, // 256B
+    // Jewel Panic
+        { "46fbe0b1d921e7970ede44200f5141a4", DB_COLECO_PAD, CART_ACTIVISION,
+            0x100 }, // 256B
 };
 
 uint32_t jcv_db_process_coleco(const char *md5) {
