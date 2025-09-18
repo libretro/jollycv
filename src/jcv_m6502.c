@@ -95,10 +95,8 @@ void jcv_m6502_delay(uint32_t delay) {
 }
 
 uint32_t jcv_m6502_exec(void) {
-    unsigned oldcyc = m65ctx.cyc;
-    m6502_step(&m65ctx);
+    uint32_t retcyc = m6502_step(&m65ctx);
     //m6502_debug_output(&m65ctx);
-    uint32_t retcyc = m65ctx.cyc - oldcyc;
 
     if (delaycycs) {
         retcyc += delaycycs;

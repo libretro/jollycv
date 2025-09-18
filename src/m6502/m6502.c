@@ -711,9 +711,10 @@ void m6502_init(m6502* const c) {
 
 // executes one instruction stored at the address pointed by
 // the program counter
-void m6502_step(m6502* const c) {
+unsigned m6502_step(m6502* const c) {
+    c->cyc = 0;
     if (c->stop || c->wait) {
-        return;
+        return 1;
     }
 
     const uint8_t opcode = m6502_rb(c, c->pc++);
@@ -927,6 +928,8 @@ void m6502_step(m6502* const c) {
     if (c->page_crossed) {
         c->cyc += INSTRUCTIONS_PAGE_CROSSED_CYCLES[opcode];
     }
+
+    return c->cyc;
 }
 
 // prints to the standard output the current state of the emulation,

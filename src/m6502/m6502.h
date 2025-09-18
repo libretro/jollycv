@@ -33,8 +33,7 @@ typedef struct m6502 {
     uint8_t (*read_byte)(void*, uint16_t); // user function to read from memory
     void (*write_byte)(void*, uint16_t, uint8_t); // same for writing to memory
     void* userdata; // user custom pointer
-
-    unsigned long cyc; // cycle count
+    unsigned cyc; // cycle count
 
     uint16_t pc; // program counter
     uint8_t a, x, y, sp; // register A, X, Y and stack pointer
@@ -51,8 +50,8 @@ typedef struct m6502 {
 } m6502;
 
 void m6502_init(m6502* const c);
-void m6502_step(m6502* const c);
 void m6502_debug_output(m6502* const c);
+unsigned m6502_step(m6502* const c);
 
 // interrupts
 void m6502_gen_nmi(m6502* const c);
