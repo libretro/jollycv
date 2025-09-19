@@ -39,6 +39,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "jcv_crvision.h"
 #include "jcv_myvision.h"
 
+#include "jcv_db.h"
 #include "jcv_mixer.h"
 #include "jcv_z80.h"
 #include "jcv_m6502.h"
@@ -111,6 +112,13 @@ unsigned jcv_get_system(void) {
 // Set the emulated system
 void jcv_set_system(unsigned s) {
     sys = s;
+}
+
+// Get database flags
+uint32_t jcv_get_dbflags(const char *md5) {
+    switch (sys) {
+        default: case JCV_SYS_COLECO: return jcv_db_process_coleco(md5);
+    }
 }
 
 void jcv_exec(void) {

@@ -49,7 +49,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "jcv_crvision.h"
 #include "jcv_myvision.h"
 
-#include "jcv_db.h"
 #include "jcv_mixer.h"
 
 #include "version.h"
@@ -445,10 +444,10 @@ static void jcv_input_setup(void) {
 
     if (!itype) {
         switch (dbflags) {
-            case DB_COLECO_ROLLER: itype = JG_COLECO_ROLLER; break;
-            case DB_COLECO_SAC: itype = JG_COLECO_SAC; break;
-            case DB_COLECO_SKETCH: itype = JG_COLECO_SKETCH; break;
-            case DB_COLECO_WHEEL: itype = JG_COLECO_WHEEL; break;
+            case JCV_DB_COLECO_ROLLER: itype = JG_COLECO_ROLLER; break;
+            case JCV_DB_COLECO_SAC: itype = JG_COLECO_SAC; break;
+            case JCV_DB_COLECO_SKETCH: itype = JG_COLECO_SKETCH; break;
+            case JCV_DB_COLECO_WHEEL: itype = JG_COLECO_WHEEL; break;
         }
     }
 
@@ -563,7 +562,7 @@ int jg_game_load(void) {
 
     // Load the ROM
     if (sys == JCV_SYS_COLECO) {
-        dbflags = jcv_db_process_coleco(gameinfo.md5);
+        dbflags = jcv_get_dbflags(gameinfo.md5);
         if (!jcv_coleco_rom_load(gameinfo.data, gameinfo.size))
             return 0;
 

@@ -61,6 +61,14 @@ void jcv_set_region(unsigned r);
 unsigned jcv_get_system(void);
 void jcv_set_system(unsigned s);
 
+#define JCV_DB_COLECO_PAD           0x00000001
+#define JCV_DB_COLECO_ROLLER        0x00000002
+#define JCV_DB_COLECO_SAC           0x00000004
+#define JCV_DB_COLECO_SKETCH        0x00000008
+#define JCV_DB_COLECO_WHEEL         0x00000010
+
+uint32_t jcv_get_dbflags(const char *md5);
+
 #define JCV_COLECO_INPUT_U          0x00000001
 #define JCV_COLECO_INPUT_D          0x00000002
 #define JCV_COLECO_INPUT_L          0x00000004

@@ -31,12 +31,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JCV_DB_H
 #define JCV_DB_H
 
-#define DB_COLECO_PAD       0x00000001
-#define DB_COLECO_ROLLER    0x00000002
-#define DB_COLECO_SAC       0x00000004
-#define DB_COLECO_SKETCH    0x00000008
-#define DB_COLECO_WHEEL     0x00000010
-
 uint32_t jcv_db_process_coleco(const char*);
 
 #endif

@@ -32,6 +32,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stddef.h>
 #include <string.h>
 
+#include "jcv.h"
+
 #include "jcv_db.h"
 
 #include "jcv_coleco.h"
@@ -50,58 +52,58 @@ typedef struct _dbentry_t {
 static dbentry_t db_coleco[] = {
     // Super Action Controller
     // Front Line (USA, Europe)
-        { "4520ee5d8d0fcf151a3332966f7ebda0", DB_COLECO_SAC, 0, 0 },
+        { "4520ee5d8d0fcf151a3332966f7ebda0", JCV_DB_COLECO_SAC, 0, 0 },
     // Front Line (USA, Europe) (Green Version)
-        { "d145de191e3f694c7f0920787ccbda48", DB_COLECO_SAC, 0, 0 },
+        { "d145de191e3f694c7f0920787ccbda48", JCV_DB_COLECO_SAC, 0, 0 },
     // Rocky - Super Action Boxing (USA, Europe)
-        { "d35fdb81f4a733925b0a33dfb53d9d78", DB_COLECO_SAC, 0, 0 },
+        { "d35fdb81f4a733925b0a33dfb53d9d78", JCV_DB_COLECO_SAC, 0, 0 },
     // Spy Hunter (USA)
-        { "f96a21f920e889d1e21abbf00f4d381d", DB_COLECO_SAC, 0, 0 },
+        { "f96a21f920e889d1e21abbf00f4d381d", JCV_DB_COLECO_SAC, 0, 0 },
     // Spy Hunter (USA) (Beta)
-        { "7da9f2fda17e1e34a41b180d1ceb0c37", DB_COLECO_SAC, 0, 0 },
+        { "7da9f2fda17e1e34a41b180d1ceb0c37", JCV_DB_COLECO_SAC, 0, 0 },
     // Star Trek - Strategic Operations Simulator (USA)
-        { "45006eaf52ee16ddcadd1dca68b265c8", DB_COLECO_SAC, 0, 0 },
+        { "45006eaf52ee16ddcadd1dca68b265c8", JCV_DB_COLECO_SAC, 0, 0 },
     // Super Action Baseball (USA)
-        { "4c4b25a93301e59b86decb0df7a0ee51", DB_COLECO_SAC, 0, 0 },
+        { "4c4b25a93301e59b86decb0df7a0ee51", JCV_DB_COLECO_SAC, 0, 0 },
     // Super Action Football (Europe)
-        { "8aabed060476fde3cc706c6463f02980", DB_COLECO_SAC, 0, 0 },
+        { "8aabed060476fde3cc706c6463f02980", JCV_DB_COLECO_SAC, 0, 0 },
     // Super Action Football (USA)
-        { "bee90a110d14b29d2e64f0ff0f303bc6", DB_COLECO_SAC, 0 , 0},
+        { "bee90a110d14b29d2e64f0ff0f303bc6", JCV_DB_COLECO_SAC, 0 , 0},
 
     // Roller Controller
     // Slither (USA, Europe)
-        { "7cdc148dff40389fa1ad012d4734ceed", DB_COLECO_ROLLER, 0, 0 },
+        { "7cdc148dff40389fa1ad012d4734ceed", JCV_DB_COLECO_ROLLER, 0, 0 },
     // Victory (Europe)
-        { "a31facd8adc1134942d9f4102dd3fa9f", DB_COLECO_ROLLER, 0, 0 },
+        { "a31facd8adc1134942d9f4102dd3fa9f", JCV_DB_COLECO_ROLLER, 0, 0 },
     // Victory (USA)
-        { "200aa603996bfd2734e353098ebe8dd5", DB_COLECO_ROLLER, 0, 0 },
+        { "200aa603996bfd2734e353098ebe8dd5", JCV_DB_COLECO_ROLLER, 0, 0 },
 
     // Steering Wheel
     // Destructor (USA, Europe)
-        { "ec72a0e3bebe07ba631a8dcb750c1591", DB_COLECO_WHEEL, 0, 0 },
+        { "ec72a0e3bebe07ba631a8dcb750c1591", JCV_DB_COLECO_WHEEL, 0, 0 },
     // Dukes of Hazzard, The (USA)
-        { "dbd4f21702be17775e84b2fb6c534c94", DB_COLECO_WHEEL, 0, 0 },
+        { "dbd4f21702be17775e84b2fb6c534c94", JCV_DB_COLECO_WHEEL, 0, 0 },
     // Turbo (USA, Europe)
-        { "6f146d9bd3f64bbc006a761f59e2a1cf", DB_COLECO_WHEEL, 0, 0 },
+        { "6f146d9bd3f64bbc006a761f59e2a1cf", JCV_DB_COLECO_WHEEL, 0, 0 },
 
     // Super Sketch
     //Super Sketch - Sketch Master (USA)
-        { "a46d20d65533ed979933fc1cfe6c0ad7", DB_COLECO_SKETCH, 0, 0 },
+        { "a46d20d65533ed979933fc1cfe6c0ad7", JCV_DB_COLECO_SKETCH, 0, 0 },
 
     // Games containing SRAM
     // Lord of the Dungeon (USA) (Beta)
-        { "d5964ac4e7b1fd3ae91a8008ef57a3cc", DB_COLECO_PAD, CART_SRAM, 0 },
+        { "d5964ac4e7b1fd3ae91a8008ef57a3cc", JCV_DB_COLECO_PAD, CART_SRAM, 0 },
 
     // Games containing an EEPROM (Activision style)
     // Boxxle
-        { "6acf055212043cd047202adc3316e85c", DB_COLECO_PAD, CART_ACTIVISION,
-            SIZE_32K },
+        { "6acf055212043cd047202adc3316e85c", JCV_DB_COLECO_PAD,
+            CART_ACTIVISION, SIZE_32K },
     // Black Onyx, The
-        { "aa9c71e6b97a1ec3ff8ec4e7905a5da6", DB_COLECO_PAD, CART_ACTIVISION,
-            0x100 }, // 256B
+        { "aa9c71e6b97a1ec3ff8ec4e7905a5da6", JCV_DB_COLECO_PAD,
+            CART_ACTIVISION, 0x100 }, // 256B
     // Jewel Panic
-        { "46fbe0b1d921e7970ede44200f5141a4", DB_COLECO_PAD, CART_ACTIVISION,
-            0x100 }, // 256B
+        { "46fbe0b1d921e7970ede44200f5141a4", JCV_DB_COLECO_PAD,
+            CART_ACTIVISION, 0x100 }, // 256B
 };
 
 uint32_t jcv_db_process_coleco(const char *md5) {
