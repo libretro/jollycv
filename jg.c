@@ -105,7 +105,7 @@ static jg_inputstate_t *input_device[NUMINPUTS];
 
 // Emulator settings
 static jg_setting_t settings_jcv[] = {
-    { "input", "Input Devices (ColecoVision)",
+    { "input_coleco", "Input Devices (ColecoVision)",
       "0 = Auto, 1 = ColecoVision Paddle, 2 = Roller Controller, "
       "3 = Super Action Controller, 4 = Super Sketch, 5 = Steering Wheel",
       "Select the desired input device(s)",
@@ -116,7 +116,7 @@ static jg_setting_t settings_jcv[] = {
       "Show or Mask Overscan regions bordering the rendered gameplay area",
       0, 0, 1, JG_SETTING_RESTART
     },
-    { "palette", "Colour Palette",
+    { "palette_tms9918", "Colour Palette (TMS9918)",
       "0 = TeaTime, 1 = SYoung, 2 = GCDatasheet",
       "Select a colour palette. TeaTime is a custom palette, SYoung is the "
       "palette widely available in many emulator, and GCDatasheet is based "
@@ -136,9 +136,9 @@ static jg_setting_t settings_jcv[] = {
 };
 
 enum {
-    INPUT,
+    INPUT_COLECO,
     MASKOVERSCAN,
-    PALETTE,
+    PALETTE_TMS9918,
     RSQUAL,
     REGION,
 };
@@ -438,7 +438,7 @@ static void jcv_input_setup(void) {
         return;
     }
 
-    int itype = settings_jcv[INPUT].val;
+    int itype = settings_jcv[INPUT_COLECO].val;
 
     if (!itype) {
         switch (dbflags) {
@@ -510,7 +510,7 @@ int jg_init(void) {
     jcv_audio_set_rate(SAMPLERATE);
     jcv_audio_set_rsqual(settings_jcv[RSQUAL].val);
 
-    jcv_video_set_palette_tms9918(settings_jcv[PALETTE].val);
+    jcv_video_set_palette_tms9918(settings_jcv[PALETTE_TMS9918].val);
 
     jcv_set_system(sys);
 
@@ -658,7 +658,7 @@ void jg_cheat_set(const char *code) {
 }
 
 void jg_rehash(void) {
-    jcv_video_set_palette_tms9918(settings_jcv[PALETTE].val);
+    jcv_video_set_palette_tms9918(settings_jcv[PALETTE_TMS9918].val);
     jcv_input_setup();
 }
 

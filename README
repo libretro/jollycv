@@ -78,10 +78,14 @@ Input Notes
 
 Settings
 --------
+input_coleco = 0
+0 = Auto, 1 = ColecoVision Paddle, 2 = Roller Controller,
+3 = Super Action Controller, 4 = Super Sketch, 5 = Steering Wheel
+
 mask_overscan = 0
 0 = Show Overscan, 1 = Mask Overscan
 
-palette = 0 
+palette_tms9918 = 0
 0 = TeaTime, 1 = SYoung, 2 = GCDatasheet
 
 rsqual = 3
