@@ -539,21 +539,18 @@ void jg_exec_frame(void) {
 int jg_game_load(void) {
     // Try to load the BIOS as an auxiliary file
     if (biosinfo.size) {
-        if (sys == JCV_SYS_CRVISION)
-            jcv_crvision_bios_load(biosinfo.data, biosinfo.size);
-        else
-            jcv_coleco_bios_load(biosinfo.data, biosinfo.size);
+        jcv_bios_load(biosinfo.data, biosinfo.size);
     }
     else {
         char bpath[256];
         if (sys == JCV_SYS_COLECO) {
             snprintf(bpath, sizeof(bpath), "%s/coleco.rom", pathinfo.bios);
-            if (!jcv_coleco_bios_load_file(bpath))
+            if (!jcv_bios_load_file(bpath))
                 jg_cb_log(JG_LOG_ERR, "Failed to load bios %s\n", bpath);
         }
         else if (sys == JCV_SYS_CRVISION) {
             snprintf(bpath, sizeof(bpath), "%s/bioscv.rom", pathinfo.bios);
-            if (!jcv_crvision_bios_load_file(bpath))
+            if (!jcv_bios_load_file(bpath))
                 jg_cb_log(JG_LOG_ERR, "Failed to load bios %s\n", bpath);
         }
     }

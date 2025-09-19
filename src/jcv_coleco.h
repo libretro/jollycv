@@ -59,7 +59,6 @@ const void* jcv_coleco_state_save_raw(void);
 void jcv_coleco_init(void);
 void jcv_coleco_deinit(void);
 
-int jcv_coleco_bios_load_file(const char*);
 int jcv_coleco_bios_load(void*, size_t);
 int jcv_coleco_rom_load(void*, size_t);
 void jcv_coleco_set_carttype(unsigned, unsigned);

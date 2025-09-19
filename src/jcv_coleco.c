@@ -28,7 +28,6 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
 #include <string.h>
@@ -53,7 +52,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 static uint8_t state[SIZE_STATE + SIZE_32K];
 
 static uint8_t *cvbios = NULL; // BIOS ROM
-static uint8_t bios_internal = 0; // BIOS loaded internally
 static uint8_t *romdata = NULL; // Game ROM
 static size_t romsize = 0; // Size of the ROM in bytes
 static uint8_t rompages = 0; // Number of 8K ROM pages
@@ -364,44 +362,12 @@ static void jcv_coleco_mem_wr(uint16_t addr, uint8_t data) {
     }
 }
 
-// Load the ColecoVision BIOS
-int jcv_coleco_bios_load_file(const char *biospath) {
-    FILE *file;
-    long size;
-
-    if (!(file = fopen(biospath, "rb")))
-        return 0;
-
-    // Find out the file's size
-    fseek(file, 0, SEEK_END);
-    size = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    // Make sure it is the correct size before attempting to load it
-    if (size != SIZE_CVBIOS) {
-        fclose(file);
-        return 0;
-    }
-
-    // Allocate memory for the BIOS
-    cvbios = (uint8_t*)calloc(SIZE_CVBIOS, sizeof(uint8_t));
-
-    if (!fread(cvbios, SIZE_CVBIOS, 1, file)) {
-        fclose(file);
-        return 0;
-    }
-
-    fclose(file);
-
-    bios_internal = 1;
-    return 1;
-}
-
 // Load the ColecoVision BIOS from a memory buffer
 int jcv_coleco_bios_load(void *data, size_t size) {
-    cvbios = data;
     if (size != SIZE_CVBIOS)
         return 0;
+    cvbios = (uint8_t*)calloc(SIZE_CVBIOS, sizeof(uint8_t));
+    memcpy(cvbios, data, size);
     return 1;
 }
 
@@ -507,7 +473,7 @@ void jcv_coleco_init(void) {
 
 // Deinitialize any allocated memory
 void jcv_coleco_deinit(void) {
-    if (cvbios && bios_internal)
+    if (cvbios)
         free(cvbios);
 }
 

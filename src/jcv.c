@@ -366,3 +366,39 @@ size_t jcv_get_savesize(void) {
         return 0;
     return jcv_coleco_get_savesize();
 }
+
+int jcv_bios_load(void *data, size_t size) {
+    switch (sys) {
+        case JCV_SYS_COLECO: return jcv_coleco_bios_load(data, size);
+        case JCV_SYS_CRVISION: return jcv_crvision_bios_load(data, size);
+    }
+    return 0;
+}
+
+int jcv_bios_load_file(const char *biospath) {
+    FILE *file;
+    size_t size;
+
+    if (!(file = fopen(biospath, "rb")))
+        return 0;
+
+    // Find out the file's size
+    fseek(file, 0, SEEK_END);
+    size = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    // Allocate memory for the BIOS
+    uint8_t *bios = (uint8_t*)calloc(size, sizeof(uint8_t));
+
+    if (!fread(bios, size, 1, file)) {
+        free(bios);
+        fclose(file);
+        return 0;
+    }
+
+    jcv_bios_load(bios, size);
+
+    free(bios);
+    fclose(file);
+    return 1;
+}
