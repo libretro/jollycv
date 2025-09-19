@@ -95,6 +95,8 @@ uint32_t jcv_get_dbflags(const char *md5);
 #define JCV_COLECO_INPUT_SP_MINUS   0x00800000
 #define JCV_COLECO_INPUT_IRQ        0x01000000
 
+void jcv_input_set_callback_coleco(unsigned (*)(const void*, int), void*);
+
 void jcv_audio_set_buffer(void *buf);
 void jcv_audio_set_callback(void (*cb)(const void*, size_t), void *udata);
 void jcv_audio_set_rate(size_t rate);

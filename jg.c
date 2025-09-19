@@ -45,7 +45,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "jcv.h"
 
-#include "jcv_coleco.h"
 #include "jcv_crvision.h"
 #include "jcv_myvision.h"
 
@@ -453,32 +452,32 @@ static void jcv_input_setup(void) {
         default: case 0: case JG_COLECO_PAD: {
             inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_PAD);
             inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_PAD);
-            jcv_coleco_input_set_callback(&jcv_coleco_input_poll, NULL);
+            jcv_input_set_callback_coleco(&jcv_coleco_input_poll, NULL);
             break;
         }
         case JG_COLECO_ROLLER: {
             inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_ROLLER);
             inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_ROLLER);
-            jcv_coleco_input_set_callback(&jcv_coleco_input_poll_roller, NULL);
+            jcv_input_set_callback_coleco(&jcv_coleco_input_poll_roller, NULL);
             break;
         }
         case JG_COLECO_SAC: {
             inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_SAC);
             inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_SAC);
-            jcv_coleco_input_set_callback(&jcv_coleco_input_poll_sac, NULL);
+            jcv_input_set_callback_coleco(&jcv_coleco_input_poll_sac, NULL);
             break;
         }
         case JG_COLECO_SKETCH: {
             inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_UNCONNECTED);
             inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_UNCONNECTED);
-            jcv_coleco_input_set_callback(&jcv_coleco_input_poll_null, NULL);
+            jcv_input_set_callback_coleco(&jcv_coleco_input_poll_null, NULL);
             jg_cb_log(JG_LOG_WRN, "Super Sketch not supported\n");
             break;
         }
         case JG_COLECO_WHEEL: {
             inputinfo[0] = jg_coleco_inputinfo(0, JG_COLECO_WHEEL);
             inputinfo[1] = jg_coleco_inputinfo(1, JG_COLECO_UNCONNECTED);
-            jcv_coleco_input_set_callback(&jcv_coleco_input_poll_wheel, NULL);
+            jcv_input_set_callback_coleco(&jcv_coleco_input_poll_wheel, NULL);
             break;
         }
     }
@@ -502,7 +501,7 @@ void jg_set_cb_rumble(jg_cb_rumble_t func) {
 }
 
 int jg_init(void) {
-    jcv_coleco_input_set_callback(&jcv_coleco_input_poll, NULL);
+    jcv_input_set_callback_coleco(&jcv_coleco_input_poll, NULL);
     jcv_crvision_input_set_callback(&jcv_crvision_input_poll);
     jcv_myvision_input_set_callback(&jcv_myvision_input_poll);
 

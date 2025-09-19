@@ -121,6 +121,10 @@ uint32_t jcv_get_dbflags(const char *md5) {
     }
 }
 
+void jcv_input_set_callback_coleco(unsigned (*cb)(const void*, int), void *u) {
+    jcv_coleco_input_set_callback(cb, u);
+}
+
 void jcv_exec(void) {
     jcv_exec_fn();
 }
