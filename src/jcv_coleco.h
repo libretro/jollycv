@@ -52,6 +52,8 @@ typedef struct _cv_sys_t {
 
 void jcv_coleco_input_set_callback(unsigned (*)(const void*, int), void*);
 
+void* jcv_coleco_get_ram_data(void);
+
 size_t jcv_coleco_state_size(void);
 void jcv_coleco_state_load_raw(const void*);
 const void* jcv_coleco_state_save_raw(void);
@@ -63,8 +65,8 @@ int jcv_coleco_bios_load(void*, size_t);
 int jcv_coleco_rom_load(void*, size_t);
 void jcv_coleco_set_carttype(unsigned, unsigned);
 
-uint8_t* jcv_coleco_get_savedata(void);
-size_t jcv_coleco_get_savesize(void);
+uint8_t* jcv_coleco_get_save_data(void);
+size_t jcv_coleco_get_save_size(void);
 
 void jcv_coleco_set_region(unsigned);
 

@@ -33,6 +33,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "jcv_sizes.h"
 
+#define SIZE_MYVRAM     SIZE_2K
+
 #define MYV_INPUT_1     0x80
 #define MYV_INPUT_2     0x80
 #define MYV_INPUT_3     0x80
@@ -54,6 +56,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define MYV_INPUT_E     0x10
 
 void jcv_myvision_input_set_callback(uint8_t (*)(int));
+
+void* jcv_myvision_get_ram_data(void);
 
 size_t jcv_myvision_state_size(void);
 void jcv_myvision_state_load_raw(const void*);

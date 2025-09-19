@@ -33,7 +33,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "jcv_sizes.h"
 
-#define SIZE_CRVBIOS SIZE_2K
+#define SIZE_CRVBIOS    SIZE_2K
+#define SIZE_CRVRAM     SIZE_1K
 
 // Cardinal and Diagonal directions
 #define CRV_INPUT_UP        0x08
@@ -101,6 +102,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CRV_INPUT_M         0x48
 
 void jcv_crvision_input_set_callback(uint8_t (*)(int));
+
+void* jcv_crvision_get_ram_data(void);
 
 size_t jcv_crvision_state_size(void);
 void jcv_crvision_state_load_raw(const void*);

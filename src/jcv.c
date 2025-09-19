@@ -321,13 +321,14 @@ int jcv_savedata_load(const char *filename) {
     filesize = ftell(file);
     fseek(file, 0, SEEK_SET);
 
-    if (filesize > jcv_coleco_get_savesize()) {
+    if (filesize > jcv_memory_get_size(JCV_MEM_SAVEDATA)) {
         fclose(file);
         return 0;
     }
 
     // Read the file into the memory block and then close it
-    result = fread(jcv_coleco_get_savedata(), sizeof(uint8_t), filesize, file);
+    result = fread(jcv_memory_get_data(JCV_MEM_SAVEDATA),
+        sizeof(uint8_t), filesize, file);
     if (result != filesize) {
         fclose(file);
         return JCV_SAVE_FAIL;
@@ -339,7 +340,7 @@ int jcv_savedata_load(const char *filename) {
 }
 
 int jcv_savedata_save(const char *filename) {
-    if (!jcv_coleco_get_savesize())
+    if (!jcv_memory_get_size(JCV_MEM_SAVEDATA))
         return JCV_SAVE_NONE;
 
     FILE *file;
@@ -348,23 +349,11 @@ int jcv_savedata_save(const char *filename) {
         return JCV_SAVE_FAIL;
 
     // Write and close the file
-    fwrite(jcv_coleco_get_savedata(), jcv_coleco_get_savesize(),
+    fwrite(jcv_coleco_get_save_data(), jcv_coleco_get_save_size(),
         sizeof(uint8_t), file);
     fclose(file);
 
     return JCV_SAVE_SUCCEED;
-}
-
-uint8_t* jcv_get_savedata(void) {
-    if (sys != JCV_SYS_COLECO)
-        return NULL;
-    return jcv_coleco_get_savedata();
-}
-
-size_t jcv_get_savesize(void) {
-    if (sys != JCV_SYS_COLECO)
-        return 0;
-    return jcv_coleco_get_savesize();
 }
 
 int jcv_bios_load(void *data, size_t size) {
@@ -408,6 +397,48 @@ int jcv_media_load(void *data, size_t size) {
         case JCV_SYS_COLECO: return jcv_coleco_rom_load(data, size);
         case JCV_SYS_CRVISION: return jcv_crvision_rom_load(data, size);
         case JCV_SYS_MYVISION: return jcv_myvision_rom_load(data, size);
+    }
+    return 0;
+}
+
+void* jcv_memory_get_data(unsigned type) {
+    switch (type) {
+        case JCV_MEM_SYSTEM: {
+            switch (sys) {
+                case JCV_SYS_COLECO: return jcv_coleco_get_ram_data();
+                case JCV_SYS_CRVISION: return jcv_crvision_get_ram_data();
+                case JCV_SYS_MYVISION: return jcv_myvision_get_ram_data();
+            }
+            break;
+        }
+        case JCV_MEM_VRAM: return tms9918_get_vram_data();
+        case JCV_MEM_SAVEDATA: {
+            switch (sys) {
+                case JCV_SYS_COLECO: return jcv_coleco_get_save_data();
+            }
+            break;
+        }
+    }
+    return NULL;
+}
+
+size_t jcv_memory_get_size(unsigned type) {
+    switch (type) {
+        case JCV_MEM_SYSTEM: {
+            switch (sys) {
+                case JCV_SYS_COLECO: return SIZE_CVRAM;
+                case JCV_SYS_CRVISION: return SIZE_CRVRAM;
+                case JCV_SYS_MYVISION: return SIZE_MYVRAM;
+            }
+            break;
+        }
+        case JCV_MEM_VRAM: return SIZE_TMS9918_VRAM;
+        case JCV_MEM_SAVEDATA: {
+            switch (sys) {
+                case JCV_SYS_COLECO: return jcv_coleco_get_save_size();
+            }
+            break;
+        }
     }
     return 0;
 }

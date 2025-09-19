@@ -53,7 +53,7 @@ static uint32_t state_version = ('J' << 24) | ('C' << 16) | ('V' << 8) | 0x00;
 
 static ay38910_t psg;       // PSG Context
 
-static uint8_t ram[SIZE_2K];        // System RAM
+static uint8_t ram[SIZE_MYVRAM];    // System RAM
 static uint8_t *romdata = NULL;     // Game ROM
 static size_t romsize = 0;          // Size of the ROM in bytes
 
@@ -61,6 +61,10 @@ static size_t romsize = 0;          // Size of the ROM in bytes
 static size_t psgcycs = 0;
 
 static uint8_t (*jcv_myvision_input_cb)(int); // Input poll callback
+
+void* jcv_myvision_get_ram_data(void) {
+    return &ram[0];
+}
 
 // Return the size of a state
 size_t jcv_myvision_state_size(void) {

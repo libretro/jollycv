@@ -107,6 +107,11 @@ static inline void tms9918_pixel(uint32_t c, int line, int dot) {
     vbuf[((line + TMS9918_OVERSCAN) * TMS9918_WIDTH_OVERSCAN) + dot] = c;
 }
 
+// Return the memory location of the VRAM
+void* tms9918_get_vram_data(void) {
+    return &vdp.vram[0];
+}
+
 // Set the video output buffer to be written to
 void tms9918_set_buffer(uint32_t *ptr) {
     vbuf = ptr;

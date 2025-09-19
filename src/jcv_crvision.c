@@ -53,7 +53,7 @@ static uint32_t state_version = ('J' << 24) | ('C' << 16) | ('V' << 8) | 0x00;
 
 static sn76489_t psg;           // PSG Context
 
-static uint8_t ram[SIZE_1K];        // System RAM
+static uint8_t ram[SIZE_CRVRAM];    // System RAM
 static uint8_t *biosdata = NULL;    // BIOS ROM
 static uint8_t *romdata = NULL;     // Game ROM
 static size_t romsize = 0;          // Size of the ROM in bytes
@@ -79,6 +79,10 @@ static uint8_t (*jcv_crvision_rom_rd80)(uint16_t);
 static uint8_t *rombank1_8k = NULL; // First 8K bank
 static uint8_t *rombank2_8k = NULL; // Second 8K bank
 static uint8_t *rombank_2k = NULL;  // 2K bank
+
+void* jcv_crvision_get_ram_data(void) {
+    return &ram[0];
+}
 
 // Return the size of a state
 size_t jcv_crvision_state_size(void) {
@@ -159,6 +163,8 @@ void jcv_crvision_input_set_callback(uint8_t (*cb)(int)) {
 
 // Load the CreatiVision BIOS from a memory buffer
 int jcv_crvision_bios_load(void *data, size_t size) {
+    if (size != SIZE_CRVBIOS)
+        return 0;
     biosdata = (uint8_t*)calloc(size, sizeof(uint8_t));
     memcpy(biosdata, data, size);
     return 1;

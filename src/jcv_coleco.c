@@ -108,6 +108,10 @@ static unsigned jcv_coleco_input_rd(int port) {
     return bits;
 }
 
+void* jcv_coleco_get_ram_data(void) {
+    return &cvsys.ram[0];
+}
+
 // Return the size of a state
 size_t jcv_coleco_state_size(void) {
     return SIZE_STATE + savesize;
@@ -481,11 +485,11 @@ void jcv_coleco_set_region(unsigned region) {
     numscanlines = region ? TMS9918_SCANLINES_PAL : TMS9918_SCANLINES;
 }
 
-uint8_t* jcv_coleco_get_savedata(void) {
+uint8_t* jcv_coleco_get_save_data(void) {
     return &savedata[0];
 }
 
-size_t jcv_coleco_get_savesize(void) {
+size_t jcv_coleco_get_save_size(void) {
     return savesize;
 }
 

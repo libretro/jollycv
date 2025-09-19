@@ -59,6 +59,8 @@ typedef struct _tms9918_t {
 
 void tms9918_init(void);
 
+void* tms9918_get_vram_data(void);
+
 void tms9918_set_buffer(uint32_t*);
 void tms9918_set_vblint(void (*)(void));
 void tms9918_set_palette(unsigned);
@@ -76,5 +78,6 @@ void tms9918_exec(void);
 
 void tms9918_state_load(uint8_t*);
 void tms9918_state_save(uint8_t*);
+
 
 #endif

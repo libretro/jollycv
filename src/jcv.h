@@ -126,13 +126,20 @@ enum jcv_saveresult {
 
 int jcv_savedata_load(const char *filename);
 int jcv_savedata_save(const char *filename);
-uint8_t* jcv_get_savedata(void);
-size_t jcv_get_savesize(void);
 
 int jcv_bios_load(void *data, size_t size);
 int jcv_bios_load_file(const char *biospath);
 
 int jcv_media_load(void *data, size_t size);
+
+enum jcv_memtype {
+    JCV_MEM_SYSTEM,
+    JCV_MEM_VRAM,
+    JCV_MEM_SAVEDATA
+};
+
+void* jcv_memory_get_data(unsigned type);
+size_t jcv_memory_get_size(unsigned type);
 
 #ifdef __cplusplus
 }
