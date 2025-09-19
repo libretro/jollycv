@@ -69,8 +69,16 @@ static jg_cb_frametime_t jg_cb_frametime;
 static jg_cb_log_t jg_cb_log;
 static jg_cb_rumble_t jg_cb_rumble;
 
-static jg_coreinfo_t coreinfo = {
+static jg_coreinfo_t coreinfo_coleco = {
     "jollycv", "JollyCV", JG_VERSION, "coleco", NUMINPUTS, 0x00
+};
+
+static jg_coreinfo_t coreinfo_crvision = {
+    "jollycv", "JollyCV", JG_VERSION, "crvision", NUMINPUTS, 0x00
+};
+
+static jg_coreinfo_t coreinfo_myvision = {
+    "jollycv", "JollyCV", JG_VERSION, "myvision", NUMINPUTS, 0x00
 };
 
 static jg_videoinfo_t vidinfo = {
@@ -669,11 +677,15 @@ void jg_data_push(uint32_t type, int port, const void *ptr, size_t size) {
 }
 
 jg_coreinfo_t* jg_get_coreinfo(const char *subsys) {
-    if (!strcmp(subsys, "crvision"))
+    if (!strcmp(subsys, "crvision")) {
         sys = JCV_SYS_CRVISION;
-    else if (!strcmp(subsys, "myvision"))
+        return &coreinfo_crvision;
+    }
+    else if (!strcmp(subsys, "myvision")) {
         sys = JCV_SYS_MYVISION;
-    return &coreinfo;
+        return &coreinfo_myvision;
+    }
+    return &coreinfo_coleco;
 }
 
 jg_videoinfo_t* jg_get_videoinfo(void) {
