@@ -216,6 +216,23 @@ void jcv_reset(int hard) {
     }
 }
 
+// Wrappers for audio/video functions
+void jcv_audio_set_buffer(void *buf) {
+    jcv_mixer_set_buffer((int16_t*)buf);
+}
+
+void jcv_audio_set_callback(void (*cb)(const void*, size_t), void *udata) {
+    jcv_mixer_set_callback(cb, udata);
+}
+
+void jcv_audio_set_rate(size_t rate) {
+    jcv_mixer_set_rate(rate);
+}
+
+void jcv_audio_set_rsqual(unsigned rsqual) {
+    jcv_mixer_set_rsqual(rsqual);
+}
+
 void jcv_video_set_buffer(uint32_t *buf) {
     tms9918_set_buffer(buf);
 }

@@ -49,8 +49,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "jcv_crvision.h"
 #include "jcv_myvision.h"
 
-#include "jcv_mixer.h"
-
 #include "version.h"
 
 #define SAMPLERATE 48000
@@ -508,9 +506,9 @@ int jg_init(void) {
     jcv_crvision_input_set_callback(&jcv_crvision_input_poll);
     jcv_myvision_input_set_callback(&jcv_myvision_input_poll);
 
-    jcv_mixer_set_callback(jcv_cb_audio, NULL);
-    jcv_mixer_set_rate(SAMPLERATE);
-    jcv_mixer_set_rsqual(settings_jcv[RSQUAL].val);
+    jcv_audio_set_callback(jcv_cb_audio, NULL);
+    jcv_audio_set_rate(SAMPLERATE);
+    jcv_audio_set_rsqual(settings_jcv[RSQUAL].val);
 
     jcv_video_set_palette_tms9918(settings_jcv[PALETTE].val);
 
@@ -708,7 +706,7 @@ void jg_setup_video(void) {
 }
 
 void jg_setup_audio(void) {
-    jcv_mixer_set_buffer(audinfo.buf);
+    jcv_audio_set_buffer(audinfo.buf);
 }
 
 void jg_set_inputstate(jg_inputstate_t *ptr, int port) {
