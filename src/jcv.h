@@ -132,6 +132,8 @@ size_t jcv_get_savesize(void);
 int jcv_bios_load(void *data, size_t size);
 int jcv_bios_load_file(const char *biospath);
 
+int jcv_media_load(void *data, size_t size);
+
 #ifdef __cplusplus
 }
 #endif

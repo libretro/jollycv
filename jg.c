@@ -558,7 +558,7 @@ int jg_game_load(void) {
     // Load the ROM
     if (sys == JCV_SYS_COLECO) {
         dbflags = jcv_get_dbflags(gameinfo.md5);
-        if (!jcv_coleco_rom_load(gameinfo.data, gameinfo.size))
+        if (!jcv_media_load(gameinfo.data, gameinfo.size))
             return 0;
 
         char savename[292];
@@ -586,14 +586,14 @@ int jg_game_load(void) {
         }
     }
     else if (sys == JCV_SYS_CRVISION) {
-        if (!jcv_crvision_rom_load(gameinfo.data, gameinfo.size))
+        if (!jcv_media_load(gameinfo.data, gameinfo.size))
             return 0;
         vidinfo.aspect = ASPECT_PAL;
         audinfo.spf = (SAMPLERATE / FRAMERATE_PAL) * CHANNELS;
         jg_cb_frametime(FRAMERATE_PAL);
     }
     else if (sys == JCV_SYS_MYVISION) {
-        if (!jcv_myvision_rom_load(gameinfo.data, gameinfo.size))
+        if (!jcv_media_load(gameinfo.data, gameinfo.size))
             return 0;
         vidinfo.aspect = ASPECT_NTSC;
         audinfo.spf = (SAMPLERATE / FRAMERATE) * CHANNELS;

@@ -402,3 +402,12 @@ int jcv_bios_load_file(const char *biospath) {
     fclose(file);
     return 1;
 }
+
+int jcv_media_load(void *data, size_t size) {
+    switch (sys) {
+        case JCV_SYS_COLECO: return jcv_coleco_rom_load(data, size);
+        case JCV_SYS_CRVISION: return jcv_crvision_rom_load(data, size);
+        case JCV_SYS_MYVISION: return jcv_myvision_rom_load(data, size);
+    }
+    return 0;
+}
