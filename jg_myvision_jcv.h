@@ -28,7 +28,7 @@ enum jg_myvision_input_type {
 };
 
 static const char *jg_myvision_input_name[] = {
-    "MyVision System"
+    "My Vision System"
 };
 
 #define NDEFS_MYVISION 19
