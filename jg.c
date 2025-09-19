@@ -567,11 +567,11 @@ int jg_game_load(void) {
         char savename[292];
         snprintf(savename, sizeof(savename),
             "%s/%s.srm", pathinfo.save, gameinfo.name);
-        int sramstat = jcv_coleco_sram_load((const char*)savename);
+        int sramstat = jcv_savedata_load((const char*)savename);
 
-        if (sramstat == 1)
+        if (sramstat == JCV_SAVE_SUCCEED)
             jg_cb_log(JG_LOG_DBG, "SRAM/EEPROM Loaded: %s\n", savename);
-        else if (sramstat == 2)
+        else if (sramstat == JCV_SAVE_NONE)
             jg_cb_log(JG_LOG_DBG, "SRAM/EEPROM File Missing: %s\n", savename);
         else
             jg_cb_log(JG_LOG_DBG, "SRAM/EEPROM Load Failed: %s\n", savename);
@@ -612,11 +612,11 @@ int jg_game_unload(void) {
     char savename[292];
     snprintf(savename, sizeof(savename),
         "%s/%s.srm", pathinfo.save, gameinfo.name);
-    int srmstat = jcv_coleco_sram_save((const char*)savename);
+    int srmstat = jcv_savedata_save((const char*)savename);
 
-    if (srmstat == 1)
+    if (srmstat == JCV_SAVE_SUCCEED)
         jg_cb_log(JG_LOG_DBG, "SRAM Saved: %s\n", savename);
-    else if (srmstat == 2)
+    else if (srmstat == JCV_SAVE_NONE)
         jg_cb_log(JG_LOG_DBG, "Cartridge does not contain SRAM\n");
     else
         jg_cb_log(JG_LOG_DBG, "SRAM Save Failed: %s\n", savename);

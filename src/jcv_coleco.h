@@ -64,8 +64,8 @@ int jcv_coleco_bios_load(void*, size_t);
 int jcv_coleco_rom_load(void*, size_t);
 void jcv_coleco_set_carttype(unsigned, unsigned);
 
-int jcv_coleco_sram_load(const char*);
-int jcv_coleco_sram_save(const char*);
+uint8_t* jcv_coleco_get_savedata(void);
+size_t jcv_coleco_get_savesize(void);
 
 void jcv_coleco_set_region(unsigned);
 

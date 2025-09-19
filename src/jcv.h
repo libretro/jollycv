@@ -118,6 +118,17 @@ size_t jcv_state_size(void);
 void jcv_state_load_raw(const void *s);
 const void* jcv_state_save_raw(void);
 
+enum jcv_saveresult {
+    JCV_SAVE_FAIL,
+    JCV_SAVE_SUCCEED,
+    JCV_SAVE_NONE
+};
+
+int jcv_savedata_load(const char *filename);
+int jcv_savedata_save(const char *filename);
+uint8_t* jcv_get_savedata(void);
+size_t jcv_get_savesize(void);
+
 #ifdef __cplusplus
 }
 #endif

@@ -515,53 +515,12 @@ void jcv_coleco_set_region(unsigned region) {
     numscanlines = region ? TMS9918_SCANLINES_PAL : TMS9918_SCANLINES;
 }
 
-// Load SRAM
-int jcv_coleco_sram_load(const char *filename) {
-    FILE *file;
-    size_t filesize, result;
-
-    // Open the file for reading
-    file = fopen(filename, "rb");
-    if (!file)
-        return 2;
-
-    // Find out the file's size
-    fseek(file, 0, SEEK_END);
-    filesize = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    if (filesize > savesize) {
-        fclose(file);
-        return 0;
-    }
-
-    // Read the file into the system's Cartridge RAM slot and then close it
-    result = fread(savedata, sizeof(uint8_t), filesize, file);
-    if (result != filesize) {
-        fclose(file);
-        return 0;
-    }
-
-    fclose(file);
-
-    return 1; // Success!
+uint8_t* jcv_coleco_get_savedata(void) {
+    return &savedata[0];
 }
 
-// Save SRAM
-int jcv_coleco_sram_save(const char *filename) {
-    if (!(carttype == CART_SRAM || carttype == CART_ACTIVISION))
-        return 2;
-
-    FILE *file;
-    file = fopen(filename, "wb");
-    if (!file)
-        return 0;
-
-    // Write and close the file
-    fwrite(savedata, savesize, sizeof(uint8_t), file);
-    fclose(file);
-
-    return 1; // Success!
+size_t jcv_coleco_get_savesize(void) {
+    return savesize;
 }
 
 // Run emulation for one frame

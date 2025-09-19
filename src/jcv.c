@@ -306,3 +306,63 @@ void jcv_state_load_raw(const void *s) {
 const void* jcv_state_save_raw(void) {
     return jcv_state_save_raw_fn();
 }
+
+int jcv_savedata_load(const char *filename) {
+    FILE *file;
+    size_t filesize, result;
+
+    // Open the file for reading
+    file = fopen(filename, "rb");
+    if (!file)
+        return JCV_SAVE_NONE;
+
+    // Find out the file's size
+    fseek(file, 0, SEEK_END);
+    filesize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    if (filesize > jcv_coleco_get_savesize()) {
+        fclose(file);
+        return 0;
+    }
+
+    // Read the file into the memory block and then close it
+    result = fread(jcv_coleco_get_savedata(), sizeof(uint8_t), filesize, file);
+    if (result != filesize) {
+        fclose(file);
+        return JCV_SAVE_FAIL;
+    }
+
+    fclose(file);
+
+    return JCV_SAVE_SUCCEED;
+}
+
+int jcv_savedata_save(const char *filename) {
+    if (!jcv_coleco_get_savesize())
+        return JCV_SAVE_NONE;
+
+    FILE *file;
+    file = fopen(filename, "wb");
+    if (!file)
+        return JCV_SAVE_FAIL;
+
+    // Write and close the file
+    fwrite(jcv_coleco_get_savedata(), jcv_coleco_get_savesize(),
+        sizeof(uint8_t), file);
+    fclose(file);
+
+    return JCV_SAVE_SUCCEED;
+}
+
+uint8_t* jcv_get_savedata(void) {
+    if (sys != JCV_SYS_COLECO)
+        return NULL;
+    return jcv_coleco_get_savedata();
+}
+
+size_t jcv_get_savesize(void) {
+    if (sys != JCV_SYS_COLECO)
+        return 0;
+    return jcv_coleco_get_savesize();
+}
