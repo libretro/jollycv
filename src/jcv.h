@@ -122,7 +122,7 @@ const void* jcv_state_save_raw(void);
 
 enum jcv_saveresult {
     JCV_SAVE_FAIL,
-    JCV_SAVE_SUCCEED,
+    JCV_SAVE_SUCCESS,
     JCV_SAVE_NONE
 };
 

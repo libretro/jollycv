@@ -340,7 +340,7 @@ int jcv_savedata_load(const char *filename) {
 
     fclose(file);
 
-    return JCV_SAVE_SUCCEED;
+    return JCV_SAVE_SUCCESS;
 }
 
 int jcv_savedata_save(const char *filename) {
@@ -357,7 +357,7 @@ int jcv_savedata_save(const char *filename) {
         sizeof(uint8_t), file);
     fclose(file);
 
-    return JCV_SAVE_SUCCEED;
+    return JCV_SAVE_SUCCESS;
 }
 
 int jcv_bios_load(void *data, size_t size) {
