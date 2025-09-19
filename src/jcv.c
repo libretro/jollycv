@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdio.h>
 #include <stdint.h>
 #include <stdlib.h>
+#include <stdarg.h>
 
 #include "jcv.h"
 
@@ -47,30 +48,64 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "tms9918.h"
 
 // Function pointer for execution of one frame of emulation
-void (*jcv_exec)(void) = NULL;
+static void (*jcv_exec_fn)(void) = NULL;
 
 // Log callback
-void (*jcv_log)(int, const char *, ...) = NULL;
+static void (*jcv_log_cb)(int, const char *, ...) = NULL;
 
 // Function pointers for state functions
-size_t (*jcv_state_size)(void);
-void (*jcv_state_load_raw)(const void*);
-const void* (*jcv_state_save_raw)(void);
+size_t (*jcv_state_size_fn)(void);
+void (*jcv_state_load_raw_fn)(const void*);
+const void* (*jcv_state_save_raw_fn)(void);
 
 // System being emulated
-static unsigned sys = 0;
+static unsigned sys = JCV_SYS_COLECO;
+
+// System region
+static unsigned region = JCV_REGION_NTSC;
+
+static void jcv_log_default(int level, const char *fmt, ...) {
+    char buffer[512];
+    va_list va;
+    va_start(va, fmt);
+    vsnprintf(buffer, sizeof(buffer), fmt, va);
+    va_end(va);
+
+    FILE *fout = level == 1 ? stdout : stderr;
+    fprintf(fout, "%s", buffer);
+    fflush(fout);
+}
 
 // Set the log callback
 void jcv_log_set_callback(void (*cb)(int, const char *, ...)) {
-    jcv_log = cb;
+    jcv_log_cb = cb;
+}
+
+void jcv_log(int level, const char *fmt, ...) {
+    char buffer[256];
+    va_list args;
+    va_start(args, fmt);
+    vsnprintf(buffer, sizeof(buffer), fmt, args);
+    va_end(args);
+    jcv_log_cb(level, buffer);
+}
+
+// Get the region
+unsigned jcv_get_region(void) {
+    return region;
 }
 
 // Set the region
-void jcv_set_region(unsigned region) {
-    // 313 scanlines for PAL, 262 scanlines for NTSC (192 visible for both)
+void jcv_set_region(unsigned r) {
+    region = r;
     jcv_coleco_set_region(region);
     jcv_mixer_set_region(region);
     tms9918_set_region(region);
+}
+
+// Get the emulated system
+unsigned jcv_get_system(void) {
+    return sys;
 }
 
 // Set the emulated system
@@ -78,10 +113,23 @@ void jcv_set_system(unsigned s) {
     sys = s;
 }
 
+void jcv_exec(void) {
+    jcv_exec_fn();
+}
+
 // Initialize
 void jcv_init(void) {
+    // Ensure there is a log callback
+    if (jcv_log_cb == NULL)
+        jcv_log_cb = jcv_log_default;
+
+    // Set up the desired system to emulate
     switch (sys) {
         default: case JCV_SYS_COLECO: {
+            jcv_exec_fn = &jcv_coleco_exec;
+            jcv_state_load_raw_fn = &jcv_coleco_state_load_raw;
+            jcv_state_save_raw_fn = &jcv_coleco_state_save_raw;
+            jcv_state_size_fn = &jcv_coleco_state_size;
             jcv_coleco_init();
             jcv_mixer_init(sys);
             jcv_z80_init();
@@ -89,6 +137,10 @@ void jcv_init(void) {
             break;
         }
         case JCV_SYS_CRVISION: {
+            jcv_exec_fn = &jcv_crvision_exec;
+            jcv_state_load_raw_fn = &jcv_crvision_state_load_raw;
+            jcv_state_save_raw_fn = &jcv_crvision_state_save_raw;
+            jcv_state_size_fn = &jcv_crvision_state_size;
             jcv_crvision_init();
             jcv_mixer_init(sys);
             jcv_m6502_init();
@@ -96,6 +148,10 @@ void jcv_init(void) {
             break;
         }
         case JCV_SYS_MYVISION: {
+            jcv_exec_fn = &jcv_myvision_exec;
+            jcv_state_load_raw_fn = &jcv_myvision_state_load_raw;
+            jcv_state_save_raw_fn = &jcv_myvision_state_save_raw;
+            jcv_state_size_fn = &jcv_myvision_state_size;
             jcv_myvision_init();
             jcv_mixer_init(sys);
             jcv_z80_init();
@@ -204,4 +260,16 @@ int jcv_state_save(const char *filename) {
     fclose(file);
 
     return 1; // Success!
+}
+
+size_t jcv_state_size(void) {
+    return jcv_state_size_fn();
+}
+
+void jcv_state_load_raw(const void *s) {
+    jcv_state_load_raw_fn(s);
+}
+
+const void* jcv_state_save_raw(void) {
+    return jcv_state_save_raw_fn();
 }

@@ -33,21 +33,42 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JCV_H
 #define JCV_H
 
-#define REGION_NTSC 0
-#define REGION_PAL  1
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-#define SIZE_1K     0x400
-#define SIZE_2K     0x800
-#define SIZE_4K     0x1000
-#define SIZE_8K     0x2000
-#define SIZE_12K    0x3000
-#define SIZE_16K    0x4000
-#define SIZE_18K    0x4800
-#define SIZE_32K    0x8000
+#define JCV_REGION_NTSC             0
+#define JCV_REGION_PAL              1
 
-#define JCV_SYS_COLECO      0x00
-#define JCV_SYS_CRVISION    0x01
-#define JCV_SYS_MYVISION    0x02
+#define JCV_SYS_COLECO              0x00
+#define JCV_SYS_CRVISION            0x01
+#define JCV_SYS_MYVISION            0x02
+
+#define JCV_COLECO_INPUT_U          0x00000001
+#define JCV_COLECO_INPUT_D          0x00000002
+#define JCV_COLECO_INPUT_L          0x00000004
+#define JCV_COLECO_INPUT_R          0x00000008
+#define JCV_COLECO_INPUT_FL         0x00000010
+#define JCV_COLECO_INPUT_FR         0x00000020
+#define JCV_COLECO_INPUT_1          0x00000040
+#define JCV_COLECO_INPUT_2          0x00000080
+#define JCV_COLECO_INPUT_3          0x00000100
+#define JCV_COLECO_INPUT_4          0x00000200
+#define JCV_COLECO_INPUT_5          0x00000400
+#define JCV_COLECO_INPUT_6          0x00000800
+#define JCV_COLECO_INPUT_7          0x00001000
+#define JCV_COLECO_INPUT_8          0x00002000
+#define JCV_COLECO_INPUT_9          0x00004000
+#define JCV_COLECO_INPUT_0          0x00008000
+#define JCV_COLECO_INPUT_STAR       0x00010000
+#define JCV_COLECO_INPUT_POUND      0x00020000
+#define JCV_COLECO_INPUT_Y          0x00040000
+#define JCV_COLECO_INPUT_O          0x00080000
+#define JCV_COLECO_INPUT_P          0x00100000
+#define JCV_COLECO_INPUT_B          0x00200000
+#define JCV_COLECO_INPUT_SP_PLUS    0x00400000
+#define JCV_COLECO_INPUT_SP_MINUS   0x00800000
+#define JCV_COLECO_INPUT_IRQ        0x01000000
 
 enum jcv_loglevel {
     JCV_LOG_DBG,
@@ -57,22 +78,28 @@ enum jcv_loglevel {
     JCV_LOG_SCR
 };
 
-void jcv_set_region(unsigned);
-void jcv_set_system(unsigned);
+void jcv_log_set_callback(void (*cb)(int, const char*, ...));
+void jcv_log(int level, const char *fmt, ...);
+
+unsigned jcv_get_region(void);
+void jcv_set_region(unsigned r);
+
+unsigned jcv_get_system(void);
+void jcv_set_system(unsigned s);
+
 void jcv_init(void);
 void jcv_deinit(void);
-void jcv_reset(int);
+void jcv_reset(int hard);
 
-int jcv_state_load(const char*);
-int jcv_state_save(const char*);
+void jcv_exec(void);
 
-void jcv_log_set_callback(void (*)(int, const char *, ...));
+int jcv_state_load(const char *filename);
+int jcv_state_save(const char *filename);
+size_t jcv_state_size(void);
+void jcv_state_load_raw(const void *s);
+const void* jcv_state_save_raw(void);
 
-extern void (*jcv_exec)(void);
-extern void (*jcv_log)(int, const char *, ...);
-
-extern size_t (*jcv_state_size)(void);
-extern void (*jcv_state_load_raw)(const void*);
-extern const void* (*jcv_state_save_raw)(void);
-
+#ifdef __cplusplus
+}
+#endif
 #endif

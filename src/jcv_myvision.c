@@ -33,11 +33,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include <stddef.h>
 
+#include "jcv.h"
+
 #include "jcv_myvision.h"
 #include "jcv_mixer.h"
 #include "jcv_serial.h"
 
-#include "jcv.h"
 #include "jcv_z80.h"
 
 #include "tms9918.h"
@@ -62,12 +63,12 @@ static size_t psgcycs = 0;
 static uint8_t (*jcv_myvision_input_cb)(int); // Input poll callback
 
 // Return the size of a state
-static size_t jcv_myvision_state_size(void) {
+size_t jcv_myvision_state_size(void) {
     return SIZE_STATE;
 }
 
 // Load raw state data into the running system
-static void jcv_myvision_state_load_raw(const void *sstate) {
+void jcv_myvision_state_load_raw(const void *sstate) {
     uint8_t *st = (uint8_t*)sstate;
     jcv_serial_begin();
     uint32_t ver = jcv_serial_pop32(st);
@@ -79,7 +80,7 @@ static void jcv_myvision_state_load_raw(const void *sstate) {
 }
 
 // Snapshot the running state and return the address of the raw data
-static const void* jcv_myvision_state_save_raw(void) {
+const void* jcv_myvision_state_save_raw(void) {
     jcv_serial_begin();
     jcv_serial_push32(state, state_version);
     jcv_serial_pushblk(state, ram, SIZE_2K);
@@ -167,12 +168,6 @@ void jcv_myvision_init(void) {
     // Clear RAM
     for (unsigned i = 0; i < sizeof(ram); ++i)
         ram[i] = 0xff;
-
-    // Set My Vision function pointers
-    jcv_exec = &jcv_myvision_exec;
-    jcv_state_load_raw = jcv_myvision_state_load_raw;
-    jcv_state_save_raw = jcv_myvision_state_save_raw;
-    jcv_state_size = jcv_myvision_state_size;
 
     // Set Z80 function pointers
     jcv_z80_io_rd = jcv_myvision_io_rd;

@@ -31,7 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JCV_CRVISION_H
 #define JCV_CRVISION_H
 
-#include "jcv.h"
+#include "jcv_sizes.h"
 
 #define SIZE_CRVBIOS SIZE_2K
 
@@ -101,6 +101,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define CRV_INPUT_M         0x48
 
 void jcv_crvision_input_set_callback(uint8_t (*)(int));
+
+size_t jcv_crvision_state_size(void);
+void jcv_crvision_state_load_raw(const void*);
+const void* jcv_crvision_state_save_raw(void);
 
 int jcv_crvision_bios_load_file(const char*);
 int jcv_crvision_bios_load(void*, size_t);

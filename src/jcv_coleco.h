@@ -31,36 +31,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JCV_COLECO_H
 #define JCV_COLECO_H
 
-#include "jcv.h"
+#include "jcv_sizes.h"
 
 #define SIZE_CVBIOS SIZE_8K
 #define SIZE_CVRAM SIZE_1K
-
-#define COLECO_INPUT_U          0x00000001
-#define COLECO_INPUT_D          0x00000002
-#define COLECO_INPUT_L          0x00000004
-#define COLECO_INPUT_R          0x00000008
-#define COLECO_INPUT_FL         0x00000010
-#define COLECO_INPUT_FR         0x00000020
-#define COLECO_INPUT_1          0x00000040
-#define COLECO_INPUT_2          0x00000080
-#define COLECO_INPUT_3          0x00000100
-#define COLECO_INPUT_4          0x00000200
-#define COLECO_INPUT_5          0x00000400
-#define COLECO_INPUT_6          0x00000800
-#define COLECO_INPUT_7          0x00001000
-#define COLECO_INPUT_8          0x00002000
-#define COLECO_INPUT_9          0x00004000
-#define COLECO_INPUT_0          0x00008000
-#define COLECO_INPUT_STAR       0x00010000
-#define COLECO_INPUT_POUND      0x00020000
-#define COLECO_INPUT_Y          0x00040000
-#define COLECO_INPUT_O          0x00080000
-#define COLECO_INPUT_P          0x00100000
-#define COLECO_INPUT_B          0x00200000
-#define COLECO_INPUT_SP_PLUS    0x00400000
-#define COLECO_INPUT_SP_MINUS   0x00800000
-#define COLECO_INPUT_IRQ        0x01000000
 
 typedef enum _cv_cart {
     CART_NORMAL,
@@ -77,6 +51,10 @@ typedef struct _cv_sys_t {
 } cv_sys_t;
 
 void jcv_coleco_input_set_callback(unsigned (*)(const void*, int), void*);
+
+size_t jcv_coleco_state_size(void);
+void jcv_coleco_state_load_raw(const void*);
+const void* jcv_coleco_state_save_raw(void);
 
 void jcv_coleco_init(void);
 void jcv_coleco_deinit(void);

@@ -34,6 +34,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 #include <time.h>
 
+#include "jcv.h"
+
 #include "jcv_coleco.h"
 #include "jcv_mixer.h"
 #include "jcv_serial.h"
@@ -102,19 +104,19 @@ static unsigned jcv_coleco_input_rd(int port) {
     for (unsigned i = 0; i < NUMINPUTDEFS; ++i)
         if (pstate & (1 << i)) bits |= cv_input_map[i];
 
-    if (pstate & COLECO_INPUT_IRQ)
+    if (pstate & JCV_COLECO_INPUT_IRQ)
         jcv_z80_irq(0);
 
     return bits;
 }
 
 // Return the size of a state
-static size_t jcv_coleco_state_size(void) {
+size_t jcv_coleco_state_size(void) {
     return SIZE_STATE + savesize;
 }
 
 // Load raw state data into the running system
-static void jcv_coleco_state_load_raw(const void *sstate) {
+void jcv_coleco_state_load_raw(const void *sstate) {
     uint8_t *st = (uint8_t*)sstate;
     jcv_serial_begin();
     jcv_serial_popblk(cvsys.ram, st, SIZE_CVRAM);
@@ -147,7 +149,7 @@ static void jcv_coleco_state_load_raw(const void *sstate) {
 }
 
 // Snapshot the running state and return the address of the raw data
-static const void* jcv_coleco_state_save_raw(void) {
+const void* jcv_coleco_state_save_raw(void) {
     jcv_serial_begin();
     jcv_serial_pushblk(state, cvsys.ram, SIZE_CVRAM);
     jcv_serial_pushblk(state, cvsys.sgmram, SIZE_32K);
@@ -177,38 +179,6 @@ static const void* jcv_coleco_state_save_raw(void) {
         jcv_serial_pushblk(state, savedata, SIZE_2K);
     }
     return (const void*)state;
-}
-
-// Load SRAM
-int jcv_coleco_sram_load(const char *filename) {
-    FILE *file;
-    size_t filesize, result;
-
-    // Open the file for reading
-    file = fopen(filename, "rb");
-    if (!file)
-        return 2;
-
-    // Find out the file's size
-    fseek(file, 0, SEEK_END);
-    filesize = ftell(file);
-    fseek(file, 0, SEEK_SET);
-
-    if (filesize > savesize) {
-        fclose(file);
-        return 0;
-    }
-
-    // Read the file into the system's Cartridge RAM slot and then close it
-    result = fread(savedata, sizeof(uint8_t), filesize, file);
-    if (result != filesize) {
-        fclose(file);
-        return 0;
-    }
-
-    fclose(file);
-
-    return 1; // Success!
 }
 
 // Read a byte of data from an I/O port
@@ -518,12 +488,6 @@ void jcv_coleco_init(void) {
     cvsys.cseg = 0; // Controller Strobe Segment
     cvsys.ctrl[0] = cvsys.ctrl[1] = 0; // Reset input states to empty
 
-    // Set ColecoVision function pointers
-    jcv_exec = &jcv_coleco_exec;
-    jcv_state_load_raw = jcv_coleco_state_load_raw;
-    jcv_state_save_raw = jcv_coleco_state_save_raw;
-    jcv_state_size = jcv_coleco_state_size;
-
     // Set Z80 function pointers
     jcv_z80_io_rd = jcv_coleco_io_rd;
     jcv_z80_io_wr = jcv_coleco_io_wr;
@@ -549,6 +513,38 @@ void jcv_coleco_deinit(void) {
 
 void jcv_coleco_set_region(unsigned region) {
     numscanlines = region ? TMS9918_SCANLINES_PAL : TMS9918_SCANLINES;
+}
+
+// Load SRAM
+int jcv_coleco_sram_load(const char *filename) {
+    FILE *file;
+    size_t filesize, result;
+
+    // Open the file for reading
+    file = fopen(filename, "rb");
+    if (!file)
+        return 2;
+
+    // Find out the file's size
+    fseek(file, 0, SEEK_END);
+    filesize = ftell(file);
+    fseek(file, 0, SEEK_SET);
+
+    if (filesize > savesize) {
+        fclose(file);
+        return 0;
+    }
+
+    // Read the file into the system's Cartridge RAM slot and then close it
+    result = fread(savedata, sizeof(uint8_t), filesize, file);
+    if (result != filesize) {
+        fclose(file);
+        return 0;
+    }
+
+    fclose(file);
+
+    return 1; // Success!
 }
 
 // Save SRAM

@@ -28,7 +28,7 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-// ColecoVision VDP - Texas Instruments TMS9928A
+// Texas Instruments TMS9918 Family Video Display Processor
 
 #include <stdint.h>
 #include <string.h>

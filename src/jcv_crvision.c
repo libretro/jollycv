@@ -34,6 +34,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <stdint.h>
 
+#include "jcv.h"
+
 #include "jcv_crvision.h"
 #include "jcv_mixer.h"
 #include "jcv_m6502.h"
@@ -82,12 +84,12 @@ static uint8_t *rombank2_8k = NULL; // Second 8K bank
 static uint8_t *rombank_2k = NULL;  // 2K bank
 
 // Return the size of a state
-static size_t jcv_crvision_state_size(void) {
+size_t jcv_crvision_state_size(void) {
     return SIZE_STATE;
 }
 
 // Load raw state data into the running system
-static void jcv_crvision_state_load_raw(const void *sstate) {
+void jcv_crvision_state_load_raw(const void *sstate) {
     uint8_t *st = (uint8_t*)sstate;
     jcv_serial_begin();
     uint32_t ver = jcv_serial_pop32(st);
@@ -105,7 +107,7 @@ static void jcv_crvision_state_load_raw(const void *sstate) {
 }
 
 // Snapshot the running state and return the address of the raw data
-static const void* jcv_crvision_state_save_raw(void) {
+const void* jcv_crvision_state_save_raw(void) {
     jcv_serial_begin();
     jcv_serial_push32(state, state_version);
     jcv_serial_pushblk(state, ram, SIZE_1K);
@@ -390,12 +392,6 @@ void jcv_crvision_init(void) {
     // Initialize PIA registers
     pia.or[0] = pia.ddr[0] = pia.cr[0] = 0;
     pia.or[1] = pia.ddr[1] = pia.cr[1] = 0;
-
-    // Set CreatiVision function pointers
-    jcv_exec = &jcv_crvision_exec;
-    jcv_state_load_raw = jcv_crvision_state_load_raw;
-    jcv_state_save_raw = jcv_crvision_state_save_raw;
-    jcv_state_size = jcv_crvision_state_size;
 }
 
 // Deinitialize any allocated memory
