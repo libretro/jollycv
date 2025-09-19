@@ -36,11 +36,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "jcv_crvision.h"
 #include "jcv_mixer.h"
+#include "jcv_m6502.h"
 #include "jcv_serial.h"
 
-#include "jcv_m6502.h"
-#include "jcv_vdp.h"
-#include "sn76489.h"
+#include "tms9918.h"
 
 #define DIV_PSG 16          // PSG Clock Divider
 #define M6502_CYC_LINE 128  // 6502 CPU cycles per scanline (127.79553)
@@ -101,7 +100,7 @@ static void jcv_crvision_state_load_raw(const void *sstate) {
     pia.cr[0] = jcv_serial_pop8(st);
     pia.cr[1] = jcv_serial_pop8(st);
     sn76489_state_load(&psg, st);
-    jcv_vdp_state_load(st);
+    tms9918_state_load(st);
     jcv_m6502_state_load(st);
 }
 
@@ -117,7 +116,7 @@ static const void* jcv_crvision_state_save_raw(void) {
     jcv_serial_push8(state, pia.cr[0]);
     jcv_serial_push8(state, pia.cr[1]);
     sn76489_state_save(&psg, state);
-    jcv_vdp_state_save(state);
+    tms9918_state_save(state);
     jcv_m6502_state_save(state);
     return (const void*)state;
 }
@@ -301,7 +300,7 @@ uint8_t jcv_crvision_mem_rd(uint16_t addr) {
         return 0xff; // Other PIA registers
     }
     else if (addr < 0x3000) { // VDP
-        return addr & 1 ? jcv_vdp_rd_stat() : jcv_vdp_rd_data();
+        return addr & 1 ? tms9918_rd_stat() : tms9918_rd_data();
     }
     else if (addr < 0x4000) { // Empty
         return 0xff;
@@ -367,7 +366,7 @@ void jcv_crvision_mem_wr(uint16_t addr, uint8_t data) {
             break;
         }
         case 0x3000: { // VDP
-            addr & 1 ? jcv_vdp_wr_ctrl(data) : jcv_vdp_wr_data(data);
+            addr & 1 ? tms9918_wr_ctrl(data) : tms9918_wr_data(data);
             return;
         }
         case 0xe000: {
@@ -429,7 +428,7 @@ void jcv_crvision_exec(void) {
             itercycs = jcv_m6502_exec(); // Run a single CPU instruction
             linecycs += itercycs; // Add the number of cycles to the total
 
-            jcv_vdp_intchk(); // Keep IRQ line asserted if necessary
+            tms9918_intchk(); // Keep IRQ line asserted if necessary
 
             for (size_t s = 0; s < itercycs; ++s) { // Catch PSG up to the CPU
                 if (++psgcycs % DIV_PSG == 0) {
@@ -441,7 +440,7 @@ void jcv_crvision_exec(void) {
 
         extcycs = linecycs - reqcycs; // Store extra cycle count
 
-        jcv_vdp_exec(); // Draw a scanline of pixel data
+        tms9918_exec(); // Draw a scanline of pixel data
     }
 
     // Resample audio and push to the frontend

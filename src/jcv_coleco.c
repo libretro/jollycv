@@ -37,10 +37,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "jcv_coleco.h"
 #include "jcv_mixer.h"
 #include "jcv_serial.h"
-#include "jcv_vdp.h"
 #include "jcv_z80.h"
-#include "ay38910.h"
-#include "sn76489.h"
+
+#include "tms9918.h"
 #include "eep24cxx.h"
 
 #define DIV_PSG 16 // PSG Clock Divider
@@ -71,7 +70,7 @@ static uint8_t savedata[SIZE_32K];
 static size_t savesize = 0;
 
 // Frame execution related variables
-static size_t numscanlines = CV_VDP_SCANLINES;
+static size_t numscanlines = TMS9918_SCANLINES;
 static size_t psgcycs = 0;
 
 static cv_sys_t cvsys; // ColecoVision System Context
@@ -101,7 +100,7 @@ static void jcv_coleco_state_load_raw(const void *sstate) {
     for (int i = 0; i < 4; ++i) rompage[i] = jcv_serial_pop32(st);
     sn76489_state_load(&psg, st);
     ay38910_state_load(&sgmpsg, st);
-    jcv_vdp_state_load(st);
+    tms9918_state_load(st);
     jcv_z80_state_load(st);
     sgm_upper = jcv_serial_pop8(st);
     sgm_lower = jcv_serial_pop8(st);
@@ -133,7 +132,7 @@ static const void* jcv_coleco_state_save_raw(void) {
     for (int i = 0; i < 4; ++i) jcv_serial_push32(state, rompage[i]);
     sn76489_state_save(&psg, state);
     ay38910_state_save(&sgmpsg, state);
-    jcv_vdp_state_save(state);
+    tms9918_state_save(state);
     jcv_z80_state_save(state);
     jcv_serial_push8(state, sgm_upper);
     jcv_serial_push8(state, sgm_lower);
@@ -195,7 +194,7 @@ static uint8_t jcv_coleco_io_rd(uint16_t port) {
     */
     switch (port & 0xe0) {
         case 0xa0: { // Video
-            return port & 0x01 ? jcv_vdp_rd_stat() : jcv_vdp_rd_data();
+            return port & 0x01 ? tms9918_rd_stat() : tms9918_rd_data();
         }
         case 0xe0: { // Strobe controller ports for input state
             uint8_t p = (port & 0x02) >> 1; // Port variable for convenience
@@ -230,7 +229,7 @@ static void jcv_coleco_io_wr(uint16_t port, uint8_t data) {
             break;
         }
         case 0xa0: { // Write to VDP Control Registers or VRAM
-            port & 0x01 ? jcv_vdp_wr_ctrl(data) : jcv_vdp_wr_data(data);
+            port & 0x01 ? tms9918_wr_ctrl(data) : tms9918_wr_data(data);
             break;
         }
         case 0xc0: { // Set Controller Strobe Segment to Joystick/FireL
@@ -524,7 +523,7 @@ void jcv_coleco_deinit(void) {
 }
 
 void jcv_coleco_set_region(unsigned region) {
-    numscanlines = region ? CV_VDP_SCANLINES_PAL : CV_VDP_SCANLINES;
+    numscanlines = region ? TMS9918_SCANLINES_PAL : TMS9918_SCANLINES;
 }
 
 // Save SRAM
@@ -594,7 +593,7 @@ void jcv_coleco_exec(void) {
 
         extcycs = linecycs - reqcycs; // Store extra cycle count
 
-        jcv_vdp_exec(); // Draw a scanline of pixel data
+        tms9918_exec(); // Draw a scanline of pixel data
     }
 
     // Resample audio and push to the frontend

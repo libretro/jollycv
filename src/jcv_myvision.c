@@ -38,8 +38,9 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "jcv_serial.h"
 
 #include "jcv.h"
-#include "jcv_vdp.h"
 #include "jcv_z80.h"
+
+#include "tms9918.h"
 
 #define DIV_PSG 21          // PSG Clock Divider - (CPU Frequency) / 3 / 7
 #define NUM_SCANLINES 262   // Total number of video scanlines
@@ -73,7 +74,7 @@ static void jcv_myvision_state_load_raw(const void *sstate) {
     (void)ver;
     jcv_serial_popblk(ram, st, SIZE_2K);
     ay38910_state_load(&psg, st);
-    jcv_vdp_state_load(st);
+    tms9918_state_load(st);
     jcv_z80_state_load(st);
 }
 
@@ -83,7 +84,7 @@ static const void* jcv_myvision_state_save_raw(void) {
     jcv_serial_push32(state, state_version);
     jcv_serial_pushblk(state, ram, SIZE_2K);
     ay38910_state_save(&psg, state);
-    jcv_vdp_state_save(state);
+    tms9918_state_save(state);
     jcv_z80_state_save(state);
     return (const void*)state;
 }
@@ -135,9 +136,9 @@ static uint8_t jcv_myvision_mem_rd(uint16_t addr) {
     else if (addr >= 0xa000 && addr < 0xa800)
         return ram[addr & 0x7ff];
     else if (addr == 0xe000)
-        return jcv_vdp_rd_data();
+        return tms9918_rd_data();
     else if (addr == 0xe002)
-        return jcv_vdp_rd_stat();
+        return tms9918_rd_stat();
     return 0xff;
 }
 
@@ -147,9 +148,9 @@ static void jcv_myvision_mem_wr(uint16_t addr, uint8_t data) {
     else if (addr < 0xa800)
         ram[addr & 0x7ff] = data;
     else if (addr == 0xe000)
-        jcv_vdp_wr_data(data);
+        tms9918_wr_data(data);
     else if (addr == 0xe002)
-        jcv_vdp_wr_ctrl(data);
+        tms9918_wr_ctrl(data);
 }
 
 int jcv_myvision_rom_load(void *data, size_t size) {
@@ -214,7 +215,7 @@ void jcv_myvision_exec(void) {
 
         extcycs = linecycs - reqcycs; // Store extra cycle count
 
-        jcv_vdp_exec(); // Draw a scanline of pixel data
+        tms9918_exec(); // Draw a scanline of pixel data
     }
 
     // Resample audio and push to the frontend

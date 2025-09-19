@@ -34,7 +34,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <string.h>
 
 #include "jcv_serial.h"
-#include "jcv_vdp.h"
+
+#include "tms9918.h"
 
 // The Carmichael Experience - Tweaked to Look Nice
 static const uint32_t palette_teatime[16] = {
@@ -62,62 +63,62 @@ static const uint32_t palette_gcdatasheet[16] = {
 
 static const uint32_t *palette = palette_teatime;
 
-static cv_vdp_t vdp; // VDP Context
+static tms9918_t vdp; // VDP Context
 
 static uint32_t *vbuf = NULL;
 
-static uint16_t numscanlines = CV_VDP_SCANLINES;
+static uint16_t numscanlines = TMS9918_SCANLINES;
 
-static void (*jcv_vdp_vblint)(void);
+static void (*tms9918_vblint)(void);
 
 // Increment address with wrap
-static inline void jcv_vdp_addr_inc(void) {
+static inline void tms9918_addr_inc(void) {
     vdp.addr = (vdp.addr + 1) & 0x3fff;
 }
 
 // Test if rendering is enabled or disabled (BL bit)
-static inline uint8_t jcv_vdp_rendering(void) {
+static inline uint8_t tms9918_rendering(void) {
     return vdp.ctrl[1] & 0x40;
 }
 
 // Test if the GINT bit is set in control register 1
-static inline uint8_t jcv_vdp_gint(void) {
+static inline uint8_t tms9918_gint(void) {
     return vdp.ctrl[1] & 0x20;
 }
 
 // Test if the INT bit is set in the status register
-static inline uint8_t jcv_vdp_int(void) {
+static inline uint8_t tms9918_int(void) {
     return vdp.stat & 0x80;
 }
 
 // Retrieve the current backdrop colour
-static inline uint32_t jcv_vdp_bdcol(void) {
+static inline uint32_t tms9918_bdcol(void) {
     return palette[vdp.ctrl[7] & 0x0f];
 }
 
 // Draw a line of backdrop colour
-static inline void jcv_vdp_bdline(int line) {
-    for (int i = 0; i < CV_VDP_WIDTH_OVERSCAN; ++i)
-        vbuf[(line * CV_VDP_WIDTH_OVERSCAN) + i] = jcv_vdp_bdcol();
+static inline void tms9918_bdline(int line) {
+    for (int i = 0; i < TMS9918_WIDTH_OVERSCAN; ++i)
+        vbuf[(line * TMS9918_WIDTH_OVERSCAN) + i] = tms9918_bdcol();
 }
 
 // Draw a single pixel onto the canvas
-static inline void jcv_vdp_pixel(uint32_t c, int line, int dot) {
-    vbuf[((line + CV_VDP_OVERSCAN) * CV_VDP_WIDTH_OVERSCAN) + dot] = c;
+static inline void tms9918_pixel(uint32_t c, int line, int dot) {
+    vbuf[((line + TMS9918_OVERSCAN) * TMS9918_WIDTH_OVERSCAN) + dot] = c;
 }
 
 // Set the video output buffer to be written to
-void jcv_vdp_set_buffer(uint32_t *ptr) {
+void tms9918_set_buffer(uint32_t *ptr) {
     vbuf = ptr;
 }
 
 // Set the VBLANK interrupt function pointer
-void jcv_vdp_set_vblint(void (*cb)(void)) {
-    jcv_vdp_vblint = cb;
+void tms9918_set_vblint(void (*cb)(void)) {
+    tms9918_vblint = cb;
 }
 
 // Set the video palette
-void jcv_vdp_set_palette(uint8_t p) {
+void tms9918_set_palette(uint8_t p) {
     switch (p) {
         case 0:
             palette = palette_teatime; break;
@@ -131,13 +132,13 @@ void jcv_vdp_set_palette(uint8_t p) {
 }
 
 // Set the region
-void jcv_vdp_set_region(uint8_t region) {
+void tms9918_set_region(uint8_t region) {
     // 313 scanlines for PAL, 262 scanlines for NTSC (192 visible for both)
-    numscanlines = region ? CV_VDP_SCANLINES_PAL : CV_VDP_SCANLINES;
+    numscanlines = region ? TMS9918_SCANLINES_PAL : TMS9918_SCANLINES;
 }
 
 // Set initial VDP values - also could be called reset
-void jcv_vdp_init(void) {
+void tms9918_init(void) {
     vdp.line = 0;
     vdp.dot = 0;
 
@@ -147,7 +148,7 @@ void jcv_vdp_init(void) {
 
     vdp.stat = 0x00; // Zero the Status register
 
-    memset(vdp.vram, 0x00, SIZE_VRAM); // Zero the VRAM
+    memset(vdp.vram, 0x00, SIZE_TMS9918_VRAM); // Zero the VRAM
 
     // Zero the latches and address register
     vdp.addr = 0x0000;
@@ -163,27 +164,27 @@ void jcv_vdp_init(void) {
 }
 
 // Check if the VBLANK interrupt should be asserted
-void jcv_vdp_intchk(void) {
-    if (jcv_vdp_int() && jcv_vdp_gint())
-        jcv_vdp_vblint(); // Keep calling this while INT flag is set
+void tms9918_intchk(void) {
+    if (tms9918_int() && tms9918_gint())
+        tms9918_vblint(); // Keep calling this while INT flag is set
 }
 
-uint8_t jcv_vdp_rd_data(void) {
+uint8_t tms9918_rd_data(void) {
     vdp.wlatch = 0; // Make sure the write latch is clear
     uint8_t rb = vdp.dlatch; // Store original latch value
     vdp.dlatch = vdp.vram[vdp.addr]; // Read new data into the latch
-    jcv_vdp_addr_inc(); // Increment address
+    tms9918_addr_inc(); // Increment address
     return rb; // Return the value before the read-ahead
 }
 
-uint8_t jcv_vdp_rd_stat(void) {
+uint8_t tms9918_rd_stat(void) {
     vdp.wlatch = 0; // Make sure the write latch is clear
     uint8_t sr = vdp.stat; // Store original register value for return
     vdp.stat &= 0x1f; // Clear INT, 5S, and C flags on this register
     return sr; // Return the old register value
 }
 
-static void jcv_vdp_wr_reg(uint8_t rnum, uint8_t data) {
+static void tms9918_wr_reg(uint8_t rnum, uint8_t data) {
     /*     |----------------------------------------------------------------|
        Bit |7       6       5       4       3       2       1       0       |
     Reg    |----------------------------------------------------------------|
@@ -201,7 +202,7 @@ static void jcv_vdp_wr_reg(uint8_t rnum, uint8_t data) {
     uint8_t dcmask[8] = { 0x03, 0xfb, 0x0f, 0xff, 0x07, 0x7f, 0x07, 0xff };
 
     // Save the GINT bit status before writing to a register
-    const uint8_t old_gint = jcv_vdp_gint();
+    const uint8_t old_gint = tms9918_gint();
 
     vdp.ctrl[rnum] = data & dcmask[rnum]; // Write to the register
 
@@ -217,8 +218,8 @@ static void jcv_vdp_wr_reg(uint8_t rnum, uint8_t data) {
             /* Fire the VBLANK interrupt if Status INT is set and Register 1
                GINT bit was set
             */
-            if (jcv_vdp_int() && jcv_vdp_gint() && !old_gint)
-                jcv_vdp_vblint();
+            if (tms9918_int() && tms9918_gint() && !old_gint)
+                tms9918_vblint();
             break;
         }
         case 2: { // Pattern Name Table
@@ -250,7 +251,7 @@ static void jcv_vdp_wr_reg(uint8_t rnum, uint8_t data) {
     }
 }
 
-void jcv_vdp_wr_ctrl(uint8_t data) {
+void tms9918_wr_ctrl(uint8_t data) {
     if (vdp.wlatch) { // Second Write
         vdp.wlatch = 0; // Flip the latch back to indicate the write is done
 
@@ -260,11 +261,11 @@ void jcv_vdp_wr_ctrl(uint8_t data) {
         switch (data & 0xc0) { // Check if this is a register write or not
             case 0x00: { // Read VRAM data into the latch and increment address
                 vdp.dlatch = vdp.vram[vdp.addr]; // Read data into data latch
-                jcv_vdp_addr_inc(); // Increment address
+                tms9918_addr_inc(); // Increment address
                 break;
             }
             case 0x80: { // Write the data latch value into the register
-                jcv_vdp_wr_reg(data & 0x07, vdp.dlatch); // 3 bits for register
+                tms9918_wr_reg(data & 0x07, vdp.dlatch); // 3 bits for register
                 break;
             }
             default:
@@ -279,14 +280,14 @@ void jcv_vdp_wr_ctrl(uint8_t data) {
 }
 
 // Write data to the VDP
-void jcv_vdp_wr_data(uint8_t data) {
+void tms9918_wr_data(uint8_t data) {
     vdp.wlatch = 0; // Make sure the write latch is clear
     vdp.dlatch = vdp.vram[vdp.addr] = data; // Write data to the latch and VRAM
-    jcv_vdp_addr_inc(); // Increment Address
+    tms9918_addr_inc(); // Increment Address
 }
 
 // Draw a single line of background pixels
-static void jcv_vdp_bgline(void) {
+static void tms9918_bgline(void) {
     uint32_t bg, fg; // Colour value of palette entries
     uint8_t pindex = 0; // Palette Index (upper 4 bits = fg, lower 4 bits = bg)
     uint8_t chpat = 0; // One row of pixel data (Character Pattern)
@@ -319,12 +320,12 @@ static void jcv_vdp_bgline(void) {
         ---------------------------
         */
         fg = palette[(vdp.ctrl[7] >> 4) & 0x0f];
-        bg = jcv_vdp_bdcol();
+        bg = tms9918_bdcol();
 
         // Draw 16 pixel left/right borders in text mode, using backdrop colour
-        for (int p = 0; p < CV_VDP_OVERSCAN << 1; ++p) {
-            jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, vdp.dot++);
-            jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, p + 256);
+        for (int p = 0; p < TMS9918_OVERSCAN << 1; ++p) {
+            tms9918_pixel(tms9918_bdcol(), vdp.line, vdp.dot++);
+            tms9918_pixel(tms9918_bdcol(), vdp.line, p + 256);
         }
 
         // The screen is divided into a grid of 40 text positions aross and 24
@@ -336,7 +337,7 @@ static void jcv_vdp_bgline(void) {
             // In Text Mode, the least significant two pixels are ignored (6x8)
             // All set bits are foreground, unset bits are background
             for (int p = 0x80; p > 0x02; p >>= 1)
-                jcv_vdp_pixel(pindex & p ? fg : bg, vdp.line, vdp.dot++);
+                tms9918_pixel(pindex & p ? fg : bg, vdp.line, vdp.dot++);
         }
 
         vdp.dot = 0; // Reset the dot counter
@@ -344,8 +345,8 @@ static void jcv_vdp_bgline(void) {
     }
 
     // Draw left overscan
-    for (int i = 0; i < CV_VDP_OVERSCAN; ++i)
-        jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, vdp.dot++);
+    for (int i = 0; i < TMS9918_OVERSCAN; ++i)
+        tms9918_pixel(tms9918_bdcol(), vdp.line, vdp.dot++);
 
     // Graphics 1/2 and Multicolor Modes - Info on shifts in Datasheet, 3-3
     for (int i = 0; i < 32; ++i) { // 256 pixels - 32 tiles, 8 pixels wide each
@@ -412,53 +413,53 @@ static void jcv_vdp_bgline(void) {
             pindex = vdp.vram[offset_col]; // Palette index
 
             // fg for left, bg for right - reusing variables for convenience
-            fg = pindex >> 4 ? palette[pindex >> 4] : jcv_vdp_bdcol();
-            bg = pindex & 0x0f ? palette[pindex & 0x0f] : jcv_vdp_bdcol();
+            fg = pindex >> 4 ? palette[pindex >> 4] : tms9918_bdcol();
+            bg = pindex & 0x0f ? palette[pindex & 0x0f] : tms9918_bdcol();
 
             // Draw left and right background data
             for (int p = 0; p < 4; ++p)
-                jcv_vdp_pixel(fg, vdp.line, vdp.dot++);
+                tms9918_pixel(fg, vdp.line, vdp.dot++);
 
             for (int p = 0; p < 4; ++p)
-                jcv_vdp_pixel(bg, vdp.line, vdp.dot++);
+                tms9918_pixel(bg, vdp.line, vdp.dot++);
 
             continue; // Pixels are already drawn, skip the rest of the loop
         }
 
         // Set foreground and background values, if 0 use the backdrop colour
-        bg = pindex & 0x0f ? palette[pindex & 0x0f] : jcv_vdp_bdcol();
-        fg = pindex >> 4 ? palette[pindex >> 4] : jcv_vdp_bdcol();
+        bg = pindex & 0x0f ? palette[pindex & 0x0f] : tms9918_bdcol();
+        fg = pindex >> 4 ? palette[pindex >> 4] : tms9918_bdcol();
 
         // Draw pattern data starting from the leftmost pixel
         for (int p = 0x80; p > 0x00; p >>= 1)
-            jcv_vdp_pixel(chpat & p ? fg : bg, vdp.line, vdp.dot++);
+            tms9918_pixel(chpat & p ? fg : bg, vdp.line, vdp.dot++);
     }
 
     // Draw right overscan
-    for (int i = 0; i < CV_VDP_OVERSCAN; ++i)
-        jcv_vdp_pixel(jcv_vdp_bdcol(), vdp.line, vdp.dot++);
+    for (int i = 0; i < TMS9918_OVERSCAN; ++i)
+        tms9918_pixel(tms9918_bdcol(), vdp.line, vdp.dot++);
 
     vdp.dot = 0; // Reset the dot counter
 }
 
 // Draw a single line of sprite pixels
-static void jcv_vdp_sprline(void) {
+static void tms9918_sprline(void) {
     uint8_t sprmag = vdp.ctrl[1] & 0x01; // Sprites are magnified (doubled)
     uint8_t sprsize = vdp.ctrl[1] & 0x02 ? 16 : 8; // 16x16 if SI bit set
 
     uint8_t numspr = 0;
 
     // Buffer palette entry data for this line
-    uint8_t linebuf[CV_VDP_WIDTH];
-    memset(linebuf, 0x00, CV_VDP_WIDTH);
+    uint8_t linebuf[TMS9918_WIDTH];
+    memset(linebuf, 0x00, TMS9918_WIDTH);
 
     /* Buffer sprite coincidence data (collision)
        This has to be handled separately from pixel data because the palette
        entry for an active pixel may be 0 (transparent). In this case it is
        still considered for collision calculation.
     */
-    uint8_t cbuf[CV_VDP_WIDTH];
-    memset(cbuf, 0x00, CV_VDP_WIDTH);
+    uint8_t cbuf[TMS9918_WIDTH];
+    memset(cbuf, 0x00, TMS9918_WIDTH);
 
     for (int i = 0; i < 32; ++i) {
         /* Sprite Attribute Table Entry - Datasheet 2-25
@@ -554,7 +555,7 @@ static void jcv_vdp_sprline(void) {
         // Loop through the sprite's pixel data - use shifts for magnification
         for (int p = 0; p < (sprsize << sprmag); ++p) {
             // Move to next iteration if the pixel is off screen, or empty
-            if (((x + p) < -sprsize) || ((x + p) >= CV_VDP_WIDTH) || (c == 0))
+            if (((x + p) < -sprsize) || ((x + p) >= TMS9918_WIDTH) || (c == 0))
                 continue;
 
             // Handle the second pattern byte of 16x16 sprites
@@ -577,28 +578,28 @@ static void jcv_vdp_sprline(void) {
     }
 
     // Draw values to the line
-    for (int i = 0; i < CV_VDP_WIDTH; ++i)
+    for (int i = 0; i < TMS9918_WIDTH; ++i)
         if (linebuf[i]) // Draw non-transparent pixels
-            jcv_vdp_pixel(palette[linebuf[i]], vdp.line, i + CV_VDP_OVERSCAN);
+            tms9918_pixel(palette[linebuf[i]], vdp.line, i + TMS9918_OVERSCAN);
 }
 
 // Draw a scanline to the canvas
-void jcv_vdp_exec(void) {
-    if (jcv_vdp_rendering() && vdp.line < CV_VDP_HEIGHT) {
-        jcv_vdp_bgline(); // Draw background
+void tms9918_exec(void) {
+    if (tms9918_rendering() && vdp.line < TMS9918_HEIGHT) {
+        tms9918_bgline(); // Draw background
         if (!(vdp.ctrl[1] & 0x10)) // Do not draw sprites in Text Mode
-            jcv_vdp_sprline(); // Draw sprites
+            tms9918_sprline(); // Draw sprites
     }
-    else if (vdp.line < CV_VDP_HEIGHT) {
-        jcv_vdp_bdline(vdp.line + CV_VDP_OVERSCAN);
+    else if (vdp.line < TMS9918_HEIGHT) {
+        tms9918_bdline(vdp.line + TMS9918_OVERSCAN);
     }
 
     // Increment the line number
     ++vdp.line;
 
-    if (vdp.line == CV_VDP_HEIGHT) { // Enter VBLANK
+    if (vdp.line == TMS9918_HEIGHT) { // Enter VBLANK
         // Save the state of the Status Register INT bit
-        uint8_t old_int = jcv_vdp_int();
+        uint8_t old_int = tms9918_int();
 
         // Set the INT bit on the Status Register
         vdp.stat |= 0x80;
@@ -609,8 +610,8 @@ void jcv_vdp_exec(void) {
            routine, and a read of the status register has not yet been done to
            clear the bit.
         */
-        if (jcv_vdp_gint() && !old_int)
-            jcv_vdp_vblint();
+        if (tms9918_gint() && !old_int)
+            tms9918_vblint();
     }
 
     // Start on the next frame when the end of this one is reached
@@ -618,17 +619,17 @@ void jcv_vdp_exec(void) {
         vdp.line = 0;
 
         // Draw backdrop colour on the vertical overscan lines
-        for (int i = 0; i < CV_VDP_OVERSCAN; ++i) {
-            jcv_vdp_bdline(i);
-            jcv_vdp_bdline(i + CV_VDP_HEIGHT + CV_VDP_OVERSCAN);
+        for (int i = 0; i < TMS9918_OVERSCAN; ++i) {
+            tms9918_bdline(i);
+            tms9918_bdline(i + TMS9918_HEIGHT + TMS9918_OVERSCAN);
         }
     }
 }
 
-void jcv_vdp_state_load(uint8_t *st) {
+void tms9918_state_load(uint8_t *st) {
     vdp.line = jcv_serial_pop16(st);
     vdp.dot = jcv_serial_pop16(st);
-    jcv_serial_popblk(vdp.vram, st, SIZE_VRAM);
+    jcv_serial_popblk(vdp.vram, st, SIZE_TMS9918_VRAM);
     vdp.addr = jcv_serial_pop16(st);
     vdp.dlatch = jcv_serial_pop8(st);
     vdp.wlatch = jcv_serial_pop8(st);
@@ -641,10 +642,10 @@ void jcv_vdp_state_load(uint8_t *st) {
     vdp.tbl_spgen = jcv_serial_pop16(st);
 }
 
-void jcv_vdp_state_save(uint8_t *st) {
+void tms9918_state_save(uint8_t *st) {
     jcv_serial_push16(st, vdp.line);
     jcv_serial_push16(st, vdp.dot);
-    jcv_serial_pushblk(st, vdp.vram, SIZE_VRAM);
+    jcv_serial_pushblk(st, vdp.vram, SIZE_TMS9918_VRAM);
     jcv_serial_push16(st, vdp.addr);
     jcv_serial_push8(st, vdp.dlatch);
     jcv_serial_push8(st, vdp.wlatch);

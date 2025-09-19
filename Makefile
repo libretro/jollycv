@@ -50,10 +50,10 @@ CSRCS := m6502/m6502.c \
 	jcv_mixer.c \
 	jcv_myvision.c \
 	jcv_serial.c \
-	jcv_vdp.c \
 	jcv_z80.c \
 	ay38910.c \
 	sn76489.c \
+	tms9918.c \
 	eep24cxx.c
 
 JGSRCS := jg.c

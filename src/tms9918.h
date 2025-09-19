@@ -28,23 +28,23 @@ OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 
-#ifndef JCV_VDP_H
-#define JCV_VDP_H
+#ifndef TMS9918_H
+#define TMS9918_H
 
-#define CV_VDP_OVERSCAN 8
-#define CV_VDP_WIDTH 256
-#define CV_VDP_HEIGHT 192
-#define CV_VDP_WIDTH_OVERSCAN 272
-#define CV_VDP_HEIGHT_OVERSCAN 208
-#define CV_VDP_SCANLINES 262
-#define CV_VDP_SCANLINES_PAL 313
+#define TMS9918_OVERSCAN        8
+#define TMS9918_WIDTH           256
+#define TMS9918_HEIGHT          192
+#define TMS9918_WIDTH_OVERSCAN  272
+#define TMS9918_HEIGHT_OVERSCAN 208
+#define TMS9918_SCANLINES       262
+#define TMS9918_SCANLINES_PAL   313
 
-#define SIZE_VRAM 0x4000
+#define SIZE_TMS9918_VRAM 0x4000
 
-typedef struct _cv_vdp_t {
+typedef struct _tms9918_t {
     uint16_t line; // Line currently being drawn
     uint16_t dot; // Dot currently being drawn
-    uint8_t vram[SIZE_VRAM]; // 16K VRAM
+    uint8_t vram[SIZE_TMS9918_VRAM]; // 16K VRAM
     uint16_t addr; // Memory Address - 14 bit address
     uint8_t dlatch; // Data Latch (general purpose 8-bit data register)
     uint8_t wlatch; // Write Latch
@@ -55,26 +55,26 @@ typedef struct _cv_vdp_t {
     uint16_t tbl_pname; // Address for Pattern Name table
     uint16_t tbl_sattr; // Address for Sprite Attribute table
     uint16_t tbl_spgen; // Addresss for Sprite Generator table
-} cv_vdp_t;
+} tms9918_t;
 
-void jcv_vdp_init(void);
+void tms9918_init(void);
 
-void jcv_vdp_set_buffer(uint32_t*);
-void jcv_vdp_set_vblint(void (*)(void));
-void jcv_vdp_set_palette(uint8_t);
-void jcv_vdp_set_region(uint8_t);
+void tms9918_set_buffer(uint32_t*);
+void tms9918_set_vblint(void (*)(void));
+void tms9918_set_palette(uint8_t);
+void tms9918_set_region(uint8_t);
 
-void jcv_vdp_intchk(void);
+void tms9918_intchk(void);
 
-uint8_t jcv_vdp_rd_data(void);
-uint8_t jcv_vdp_rd_stat(void);
+uint8_t tms9918_rd_data(void);
+uint8_t tms9918_rd_stat(void);
 
-void jcv_vdp_wr_ctrl(uint8_t);
-void jcv_vdp_wr_data(uint8_t);
+void tms9918_wr_ctrl(uint8_t);
+void tms9918_wr_data(uint8_t);
 
-void jcv_vdp_exec(void);
+void tms9918_exec(void);
 
-void jcv_vdp_state_load(uint8_t*);
-void jcv_vdp_state_save(uint8_t*);
+void tms9918_state_load(uint8_t*);
+void tms9918_state_save(uint8_t*);
 
 #endif

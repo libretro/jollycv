@@ -39,12 +39,12 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "jcv_myvision.h"
 
 #include "jcv_mixer.h"
-#include "jcv_vdp.h"
 #include "jcv_z80.h"
 #include "jcv_m6502.h"
 
 #include "ay38910.h"
 #include "sn76489.h"
+#include "tms9918.h"
 
 // Function pointer for execution of one frame of emulation
 void (*jcv_exec)(void) = NULL;
@@ -70,7 +70,7 @@ void jcv_set_region(unsigned region) {
     // 313 scanlines for PAL, 262 scanlines for NTSC (192 visible for both)
     jcv_coleco_set_region(region);
     jcv_mixer_set_region(region);
-    jcv_vdp_set_region(region);
+    tms9918_set_region(region);
 }
 
 // Set the emulated system
@@ -85,26 +85,26 @@ void jcv_init(void) {
             jcv_coleco_init();
             jcv_mixer_init(sys);
             jcv_z80_init();
-            jcv_vdp_set_vblint(&jcv_z80_nmi);
+            tms9918_set_vblint(&jcv_z80_nmi);
             break;
         }
         case JCV_SYS_CRVISION: {
             jcv_crvision_init();
             jcv_mixer_init(sys);
             jcv_m6502_init();
-            jcv_vdp_set_vblint(&jcv_m6502_irq);
+            tms9918_set_vblint(&jcv_m6502_irq);
             break;
         }
         case JCV_SYS_MYVISION: {
             jcv_myvision_init();
             jcv_mixer_init(sys);
             jcv_z80_init();
-            jcv_vdp_set_vblint(&jcv_z80_irq_ff);
+            tms9918_set_vblint(&jcv_z80_irq_ff);
             break;
         }
     }
 
-    jcv_vdp_init();
+    tms9918_init();
 }
 
 // Deinitialize
@@ -133,7 +133,7 @@ void jcv_reset(int hard) {
         default: case JCV_SYS_COLECO: {
             jcv_coleco_init(); // Init does the same thing reset needs to do
             jcv_z80_reset();
-            jcv_vdp_init();
+            tms9918_init();
             break;
         }
         case JCV_SYS_CRVISION: {
@@ -146,7 +146,7 @@ void jcv_reset(int hard) {
         case JCV_SYS_MYVISION: {
             jcv_myvision_init();
             jcv_z80_reset();
-            jcv_vdp_init();
+            tms9918_init();
             break;
         }
     }
