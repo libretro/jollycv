@@ -208,6 +208,14 @@ void jcv_reset(int hard) {
     }
 }
 
+void jcv_video_set_buffer(uint32_t *buf) {
+    tms9918_set_buffer(buf);
+}
+
+void jcv_video_set_palette_tms9918(unsigned p) {
+    tms9918_set_palette(p);
+}
+
 // Load a state from a file
 int jcv_state_load(const char *filename) {
     FILE *file;

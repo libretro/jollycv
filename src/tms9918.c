@@ -118,7 +118,7 @@ void tms9918_set_vblint(void (*cb)(void)) {
 }
 
 // Set the video palette
-void tms9918_set_palette(uint8_t p) {
+void tms9918_set_palette(unsigned p) {
     switch (p) {
         case 0:
             palette = palette_teatime; break;
@@ -132,7 +132,7 @@ void tms9918_set_palette(uint8_t p) {
 }
 
 // Set the region
-void tms9918_set_region(uint8_t region) {
+void tms9918_set_region(unsigned region) {
     // 313 scanlines for PAL, 262 scanlines for NTSC (192 visible for both)
     numscanlines = region ? TMS9918_SCANLINES_PAL : TMS9918_SCANLINES;
 }

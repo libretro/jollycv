@@ -52,8 +52,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "jcv_db.h"
 #include "jcv_mixer.h"
 
-#include "tms9918.h"
-
 #include "version.h"
 
 #define SAMPLERATE 48000
@@ -83,13 +81,13 @@ static jg_coreinfo_t coreinfo_myvision = {
 
 static jg_videoinfo_t vidinfo = {
     JG_PIXFMT_XRGB8888,         // pixfmt
-    TMS9918_WIDTH_OVERSCAN,     // wmax
-    TMS9918_HEIGHT_OVERSCAN,    // hmax
-    TMS9918_WIDTH_OVERSCAN - 12,// w
-    TMS9918_HEIGHT_OVERSCAN,    // h
+    JCV_VIDEO_WIDTH_MAX,        // wmax
+    JCV_VIDEO_HEIGHT_MAX,       // hmax
+    JCV_VIDEO_WIDTH_MAX - 12,   // w
+    JCV_VIDEO_HEIGHT_MAX,       // h
     6,                          // x
     0,                          // y
-    TMS9918_WIDTH_OVERSCAN,     // p
+    JCV_VIDEO_WIDTH_MAX,        // p
     ASPECT_NTSC,                // aspect
     NULL                        // buf
 };
@@ -515,7 +513,7 @@ int jg_init(void) {
     jcv_mixer_set_rate(SAMPLERATE);
     jcv_mixer_set_rsqual(settings_jcv[RSQUAL].val);
 
-    tms9918_set_palette(settings_jcv[PALETTE].val);
+    jcv_video_set_palette_tms9918(settings_jcv[PALETTE].val);
 
     jcv_set_system(sys);
 
@@ -663,7 +661,7 @@ void jg_cheat_set(const char *code) {
 }
 
 void jg_rehash(void) {
-    tms9918_set_palette(settings_jcv[PALETTE].val);
+    jcv_video_set_palette_tms9918(settings_jcv[PALETTE].val);
     jcv_input_setup();
 }
 
@@ -701,12 +699,12 @@ jg_setting_t* jg_get_settings(size_t *numsettings) {
 }
 
 void jg_setup_video(void) {
-    tms9918_set_buffer(vidinfo.buf);
+    jcv_video_set_buffer(vidinfo.buf);
 
     if (settings_jcv[MASKOVERSCAN].val) {
-        vidinfo.w = TMS9918_WIDTH;
-        vidinfo.h = TMS9918_HEIGHT;
-        vidinfo.x = vidinfo.y = TMS9918_OVERSCAN;
+        vidinfo.w = 256;
+        vidinfo.h = 192;
+        vidinfo.x = vidinfo.y = 8;
     }
 }
 

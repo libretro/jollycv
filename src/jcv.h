@@ -37,12 +37,29 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 extern "C" {
 #endif
 
+enum jcv_loglevel {
+    JCV_LOG_DBG,
+    JCV_LOG_INF,
+    JCV_LOG_WRN,
+    JCV_LOG_ERR,
+    JCV_LOG_SCR
+};
+
+void jcv_log_set_callback(void (*cb)(int, const char*, ...));
+void jcv_log(int level, const char *fmt, ...);
+
 #define JCV_REGION_NTSC             0
 #define JCV_REGION_PAL              1
+
+unsigned jcv_get_region(void);
+void jcv_set_region(unsigned r);
 
 #define JCV_SYS_COLECO              0x00
 #define JCV_SYS_CRVISION            0x01
 #define JCV_SYS_MYVISION            0x02
+
+unsigned jcv_get_system(void);
+void jcv_set_system(unsigned s);
 
 #define JCV_COLECO_INPUT_U          0x00000001
 #define JCV_COLECO_INPUT_D          0x00000002
@@ -70,22 +87,11 @@ extern "C" {
 #define JCV_COLECO_INPUT_SP_MINUS   0x00800000
 #define JCV_COLECO_INPUT_IRQ        0x01000000
 
-enum jcv_loglevel {
-    JCV_LOG_DBG,
-    JCV_LOG_INF,
-    JCV_LOG_WRN,
-    JCV_LOG_ERR,
-    JCV_LOG_SCR
-};
+#define JCV_VIDEO_WIDTH_MAX        272
+#define JCV_VIDEO_HEIGHT_MAX       208
 
-void jcv_log_set_callback(void (*cb)(int, const char*, ...));
-void jcv_log(int level, const char *fmt, ...);
-
-unsigned jcv_get_region(void);
-void jcv_set_region(unsigned r);
-
-unsigned jcv_get_system(void);
-void jcv_set_system(unsigned s);
+void jcv_video_set_buffer(uint32_t *buf);
+void jcv_video_set_palette_tms9918(unsigned p);
 
 void jcv_init(void);
 void jcv_deinit(void);
