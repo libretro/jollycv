@@ -45,11 +45,10 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define DIV_PSG 16 // PSG Clock Divider
 #define Z80_CYC_LINE 228 // Z80 CPU cycles per scanline (227.99873)
 
+#define NUMINPUTDEFS 24
+
 #define SIZE_STATE 50392
 static uint8_t state[SIZE_STATE + SIZE_32K];
-
-static uint16_t (*jcv_coleco_input_cb)(const void*, int); // Input callback
-static void *udata_input = NULL; // Input callback userdata
 
 static uint8_t *cvbios = NULL; // BIOS ROM
 static uint8_t bios_internal = 0; // BIOS loaded internally
@@ -78,9 +77,35 @@ static sn76489_t psg; // PSG Context
 static ay38910_t sgmpsg; // SGM PSG Context
 static eep24cxx_t eep24cxx; // 24Cxx EEPROM Context (Activision PCBs)
 
-void jcv_coleco_input_set_callback(uint16_t (*cb)(const void*, int), void *u) {
+static unsigned (*jcv_coleco_input_cb)(const void*, int); // Input callback
+static void *udata_input = NULL; // Input callback userdata
+
+void jcv_coleco_input_set_callback(unsigned (*cb)(const void*, int), void *u) {
     jcv_coleco_input_cb = cb;
     udata_input = u;
+}
+
+// Values with bits in the upper byte are strobed on strobe segment 2
+static unsigned cv_input_map[NUMINPUTDEFS] = {
+    //  Up    Down    Left   Right   FireL   FireR       1       2
+    0x0100, 0x0400, 0x0800, 0x0200, 0x4000, 0x0040, 0x0002, 0x0008,
+    //   3       4       5       6       7       8       9       0
+    0x0003, 0x000d, 0x000c, 0x0001, 0x000a, 0x000e, 0x0004, 0x0005,
+    //   *       #  Yellow  Orange  Purple    Blue   Spin+   Spin-
+    0x0006, 0x0009, 0x4000, 0x0040, 0x0007, 0x000b, 0x3000, 0x1000
+};
+
+static unsigned jcv_coleco_input_rd(int port) {
+    unsigned pstate = jcv_coleco_input_cb(udata_input, port);
+    unsigned bits = 0x8080; // Always set bit 7 for both strobe segments
+
+    for (unsigned i = 0; i < NUMINPUTDEFS; ++i)
+        if (pstate & (1 << i)) bits |= cv_input_map[i];
+
+    if (pstate & COLECO_INPUT_IRQ)
+        jcv_z80_irq(0);
+
+    return bits;
 }
 
 // Return the size of a state
@@ -197,9 +222,9 @@ static uint8_t jcv_coleco_io_rd(uint16_t port) {
             return port & 0x01 ? tms9918_rd_stat() : tms9918_rd_data();
         }
         case 0xe0: { // Strobe controller ports for input state
-            uint8_t p = (port & 0x02) >> 1; // Port variable for convenience
-            // Read frontend input state, always set bit 7 for both segments
-            cvsys.ctrl[p] = jcv_coleco_input_cb(udata_input, p) | 0x8080;
+            int p = (port & 0x02) >> 1; // Port variable for convenience
+            // Read frontend input state
+            cvsys.ctrl[p] = jcv_coleco_input_rd(p);
 
             // Return the complement of the value
             return cvsys.cseg ? // Two strobes are done for two sets of buttons

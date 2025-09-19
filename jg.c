@@ -51,7 +51,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "jcv_db.h"
 #include "jcv_mixer.h"
-#include "jcv_z80.h"
 
 #include "tms9918.h"
 
@@ -158,81 +157,84 @@ static void jcv_cb_audio(const void *udata, size_t samps) {
     jg_cb_audio(samps);
 }
 
-// ColecoVision Paddle
-static uint16_t cv_input_map[] = {
-    CV_INPUT_U, CV_INPUT_D, CV_INPUT_L, CV_INPUT_R, CV_INPUT_FL, CV_INPUT_FR,
-    CV_INPUT_1, CV_INPUT_2, CV_INPUT_3, CV_INPUT_4, CV_INPUT_5, CV_INPUT_6,
-    CV_INPUT_7, CV_INPUT_8, CV_INPUT_9, CV_INPUT_0, CV_INPUT_STR, CV_INPUT_PND
-};
-
-static uint16_t jcv_coleco_input_poll(const void *udata, int port) {
-    (void)udata;
-    uint16_t b = 0x0000;
-
-    for (int i = 0; i < NDEFS_COLECOPAD; ++i)
-        if (input_device[port]->button[i]) b |= cv_input_map[i];
-
-    return b;
-}
-
 // Unconnected Port
-static uint16_t jcv_coleco_input_poll_null(const void *udata, int port) {
+static unsigned jcv_coleco_input_poll_null(const void *udata, int port) {
     (void)udata;
     (void)port;
     return 0x0000;
 }
 
-// ColecoVision Roller Controller
-static uint16_t jcv_coleco_input_poll_roller(const void *udata, int port) {
+// ColecoVision Paddle
+static unsigned jcv_coleco_input_poll(const void *udata, int port) {
     (void)udata;
-    uint16_t b = 0x0000;
+    unsigned b = 0;
+    for (unsigned i = 0; i < NDEFS_COLECOPAD; ++i)
+        if (input_device[port]->button[i]) b |= (1 << i);
+    return b;
+}
 
-    for (int i = 0; i < NDEFS_COLECOPAD; ++i)
-        if (input_device[port]->button[i]) b |= cv_input_map[i];
+// ColecoVision Roller Controller
+static unsigned jcv_coleco_input_poll_roller(const void *udata, int port) {
+    (void)udata;
+    unsigned b = 0;
+
+    for (unsigned i = 0; i < NDEFS_COLECOPAD; ++i)
+        if (input_device[port]->button[i]) b |= (1 << i);
 
     int rel = input_device[0]->rel[port] / 4;
     input_device[0]->rel[port] -= rel;
 
     if (rel < 0) {
-        b |= port ? CV_INPUT_SP : CV_INPUT_SM;
-        jcv_z80_irq(0);
+        b |= port ? COLECO_INPUT_SP_PLUS : COLECO_INPUT_SP_MINUS;
+        b |= COLECO_INPUT_IRQ;
     }
     else if (rel > 0) {
-        b |= port ? CV_INPUT_SM : CV_INPUT_SP;
-        jcv_z80_irq(0);
+        b |= port ? COLECO_INPUT_SP_MINUS : COLECO_INPUT_SP_PLUS;
+        b |= COLECO_INPUT_IRQ;
     }
 
     return b;
 }
 
 // ColecoVision Super Action Controller
-static uint16_t cv_input_map_sac[] = {
-    CV_INPUT_U, CV_INPUT_D, CV_INPUT_L, CV_INPUT_R,
-    CV_INPUT_Y, CV_INPUT_O, CV_INPUT_P, CV_INPUT_B,
-    CV_INPUT_1, CV_INPUT_2, CV_INPUT_3, CV_INPUT_4, CV_INPUT_5, CV_INPUT_6,
-    CV_INPUT_7, CV_INPUT_8, CV_INPUT_9, CV_INPUT_0, CV_INPUT_STR, CV_INPUT_PND,
-};
-
-static uint16_t jcv_coleco_input_poll_sac(const void *udata, int port) {
+static unsigned jcv_coleco_input_poll_sac(const void *udata, int port) {
     (void)udata;
-    uint16_t b = 0x0000;
+    unsigned b = 0;
 
-    for (int i = 0; i < NDEFS_COLECOSAC - 2; ++i)
-        if (input_device[port]->button[i]) b |= cv_input_map_sac[i];
+    if (input_device[port]->button[0x00]) b |= COLECO_INPUT_U;
+    if (input_device[port]->button[0x01]) b |= COLECO_INPUT_D;
+    if (input_device[port]->button[0x02]) b |= COLECO_INPUT_L;
+    if (input_device[port]->button[0x03]) b |= COLECO_INPUT_R;
+    if (input_device[port]->button[0x04]) b |= COLECO_INPUT_Y;
+    if (input_device[port]->button[0x05]) b |= COLECO_INPUT_O;
+    if (input_device[port]->button[0x06]) b |= COLECO_INPUT_P;
+    if (input_device[port]->button[0x07]) b |= COLECO_INPUT_B;
+    if (input_device[port]->button[0x08]) b |= COLECO_INPUT_1;
+    if (input_device[port]->button[0x09]) b |= COLECO_INPUT_2;
+    if (input_device[port]->button[0x0a]) b |= COLECO_INPUT_3;
+    if (input_device[port]->button[0x0b]) b |= COLECO_INPUT_4;
+    if (input_device[port]->button[0x0c]) b |= COLECO_INPUT_5;
+    if (input_device[port]->button[0x0d]) b |= COLECO_INPUT_6;
+    if (input_device[port]->button[0x0e]) b |= COLECO_INPUT_7;
+    if (input_device[port]->button[0x0f]) b |= COLECO_INPUT_8;
+    if (input_device[port]->button[0x10]) b |= COLECO_INPUT_9;
+    if (input_device[port]->button[0x11]) b |= COLECO_INPUT_0;
+    if (input_device[port]->button[0x12]) b |= COLECO_INPUT_STAR;
+    if (input_device[port]->button[0x13]) b |= COLECO_INPUT_POUND;
 
     // Speed Rollers
-    if (input_device[port]->button[20]) {
-        b |= CV_INPUT_SP;
-        if (input_device[port]->button[20]++ > 1) {
-            input_device[port]->button[20] = 1;
-            jcv_z80_irq(0);
+    if (input_device[port]->button[0x14]) {
+        b |= COLECO_INPUT_SP_PLUS;
+        if (input_device[port]->button[0x14]++ > 1) {
+            input_device[port]->button[0x14] = 1;
+            b |= COLECO_INPUT_IRQ;
         }
     }
-    if (input_device[port]->button[21]) {
-        b |= CV_INPUT_SM;
-        if (input_device[port]->button[21]++ > 1) {
-            input_device[port]->button[21] = 1;
-            jcv_z80_irq(0);
+    if (input_device[port]->button[0x15]) {
+        b |= COLECO_INPUT_SP_MINUS;
+        if (input_device[port]->button[0x15]++ > 1) {
+            input_device[port]->button[0x15] = 1;
+            b |= COLECO_INPUT_IRQ;
         }
     }
 
@@ -240,36 +242,28 @@ static uint16_t jcv_coleco_input_poll_sac(const void *udata, int port) {
 }
 
 // ColecoVision Expansion Module #2 - Steering Wheel
-static uint16_t cv_input_map_wheel[] = {
-    CV_INPUT_U, CV_INPUT_D, CV_INPUT_L, CV_INPUT_R,
-    CV_INPUT_1, CV_INPUT_2, CV_INPUT_3, CV_INPUT_4, CV_INPUT_5, CV_INPUT_6,
-    CV_INPUT_7, CV_INPUT_8, CV_INPUT_9, CV_INPUT_0, CV_INPUT_STR, CV_INPUT_PND,
-};
-
-static uint16_t jcv_coleco_input_poll_wheel(const void *udata, int port) {
+static unsigned jcv_coleco_input_poll_wheel(const void *udata, int port) {
     (void)udata;
-    uint16_t b = 0x0000;
+    unsigned b = 0;
 
     if (port == 0) { // Steering Wheel and Pedal on first port
         int rel = input_device[0]->rel[port] / 3;
         input_device[0]->rel[0] -= rel;
 
-        if (rel < 0) {
-            b |= CV_INPUT_SM;
-            jcv_z80_irq(0);
-        }
-        else if (rel > 0) {
-            b |= CV_INPUT_SP;
-            jcv_z80_irq(0);
-        }
+        if (rel < 0)
+            b |= (COLECO_INPUT_SP_MINUS | COLECO_INPUT_IRQ);
+        else if (rel > 0)
+            b |= (COLECO_INPUT_SP_PLUS | COLECO_INPUT_IRQ);
 
         // Pedal uses the same signal as the FireL on the standard paddle
-        if (input_device[0]->button[0]) b |= CV_INPUT_FL;
+        if (input_device[0]->button[0]) b |= COLECO_INPUT_FL;
     }
     else if (port == 1) { // Numpad and Stick on second port
-        for (int i = 1; i < NDEFS_COLECOWHEEL; ++i)
-            // Hardcode to input device 0 as defined in the frontend
-            if (input_device[0]->button[i]) b |= cv_input_map_wheel[i - 1];
+        // Hardcode to frontend input device 0
+        for (unsigned i = 0; i < 4; ++i) // Stick U/D/L/R
+            if (input_device[0]->button[i + 1]) b |= (1 << i);
+        for (unsigned i = 0; i < 12; ++i) // Numpad
+            if (input_device[0]->button[i + 5]) b |= (COLECO_INPUT_1 << i);
     }
 
     return b;
