@@ -46,7 +46,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "jcv.h"
 
 #include "jcv_crvision.h"
-#include "jcv_myvision.h"
 
 #include "version.h"
 
@@ -386,43 +385,11 @@ static uint8_t jcv_crvision_input_poll(int keylatch) {
     return b;
 }
 
-static uint8_t jcv_myvision_input_poll(int column) {
-    uint8_t b = 0xff;
-
-    switch (column) {
-        case 0x80: {
-            if (input_device[0]->button[12]) b &= ~MYV_INPUT_13;
-            if (input_device[0]->button[16]) b &= ~MYV_INPUT_C;
-            if (input_device[0]->button[8]) b &= ~MYV_INPUT_9;
-            if (input_device[0]->button[4]) b &= ~MYV_INPUT_5;
-            if (input_device[0]->button[0]) b &= ~MYV_INPUT_1;
-            break;
-        }
-        case 0x40: {
-            if (input_device[0]->button[15]) b &= ~MYV_INPUT_B;
-            if (input_device[0]->button[11]) b &= ~MYV_INPUT_12;
-            if (input_device[0]->button[7]) b &= ~MYV_INPUT_8;
-            if (input_device[0]->button[3]) b &= ~MYV_INPUT_4;
-            break;
-        }
-        case 0x20: {
-            if (input_device[0]->button[13]) b &= ~MYV_INPUT_14;
-            if (input_device[0]->button[17]) b &= ~MYV_INPUT_D;
-            if (input_device[0]->button[9]) b &= ~MYV_INPUT_10;
-            if (input_device[0]->button[5]) b &= ~MYV_INPUT_6;
-            if (input_device[0]->button[1]) b &= ~MYV_INPUT_2;
-            break;
-        }
-        case 0x10: {
-            if (input_device[0]->button[14]) b &= ~MYV_INPUT_A;
-            if (input_device[0]->button[18]) b &= ~MYV_INPUT_E;
-            if (input_device[0]->button[10]) b &= ~MYV_INPUT_11;
-            if (input_device[0]->button[6]) b &= ~MYV_INPUT_7;
-            if (input_device[0]->button[2]) b &= ~MYV_INPUT_3;
-            break;
-        }
-    }
-
+static unsigned jcv_myvision_input_poll(const void *udata) {
+    (void)udata;
+    unsigned b = 0;
+    for (unsigned i = 0; i < NDEFS_MYVISION; ++i)
+        if (input_device[0]->button[i]) b |= (1 << i);
     return b;
 }
 
@@ -503,7 +470,7 @@ void jg_set_cb_rumble(jg_cb_rumble_t func) {
 int jg_init(void) {
     jcv_input_set_callback_coleco(&jcv_coleco_input_poll, NULL);
     jcv_crvision_input_set_callback(&jcv_crvision_input_poll);
-    jcv_myvision_input_set_callback(&jcv_myvision_input_poll);
+    jcv_input_set_callback_myvision(&jcv_myvision_input_poll, NULL);
 
     jcv_audio_set_callback(jcv_cb_audio, NULL);
     jcv_audio_set_rate(SAMPLERATE);

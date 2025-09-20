@@ -35,27 +35,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define SIZE_MYVRAM     SIZE_2K
 
-#define MYV_INPUT_1     0x80
-#define MYV_INPUT_2     0x80
-#define MYV_INPUT_3     0x80
-#define MYV_INPUT_4     0x80
-#define MYV_INPUT_5     0x40
-#define MYV_INPUT_6     0x40
-#define MYV_INPUT_7     0x40
-#define MYV_INPUT_8     0x40
-#define MYV_INPUT_9     0x20
-#define MYV_INPUT_10    0x20
-#define MYV_INPUT_11    0x20
-#define MYV_INPUT_12    0x20
-#define MYV_INPUT_13    0x08
-#define MYV_INPUT_14    0x08
-#define MYV_INPUT_A     0x08
-#define MYV_INPUT_B     0x08
-#define MYV_INPUT_C     0x10
-#define MYV_INPUT_D     0x10
-#define MYV_INPUT_E     0x10
-
-void jcv_myvision_input_set_callback(uint8_t (*)(int));
+void jcv_myvision_input_set_callback(unsigned (*)(const void*), void*);
 
 void* jcv_myvision_get_ram_data(void);
 

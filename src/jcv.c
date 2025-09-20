@@ -125,6 +125,10 @@ void jcv_input_set_callback_coleco(unsigned (*cb)(const void*, int), void *u) {
     jcv_coleco_input_set_callback(cb, u);
 }
 
+void jcv_input_set_callback_myvision(unsigned (*cb)(const void*), void *u) {
+    jcv_myvision_input_set_callback(cb, u);
+}
+
 void jcv_exec(void) {
     jcv_exec_fn();
 }

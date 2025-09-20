@@ -60,7 +60,64 @@ static size_t romsize = 0;          // Size of the ROM in bytes
 // Frame execution related variables
 static size_t psgcycs = 0;
 
-static uint8_t (*jcv_myvision_input_cb)(int); // Input poll callback
+static unsigned (*jcv_myvision_input_cb)(const void*); // Input callback
+static void *udata_input = NULL; // Input callback userdata
+
+void jcv_myvision_input_set_callback(unsigned (*cb)(const void*), void *u) {
+    jcv_myvision_input_cb = cb;
+    udata_input = u;
+}
+
+// My Vision strobes in columns
+static unsigned myv_input_map[5] = {
+          // 0x80  0x40   0x20  0x10
+    0x80, //    1,    4,    2,    3
+    0x40, //    5,    8,    6,    7
+    0x20, //    9,    12,   10,   11
+    0x08, //   13,    B,    14,   A
+    0x10, //    C,           D,   E
+};
+
+static unsigned jcv_myvision_input_rd(int column) {
+    unsigned pstate = jcv_myvision_input_cb(udata_input);
+    unsigned bits = 0xff; // Active Low
+
+    switch (column) {
+        case 0x80: {
+            if (pstate & MYV_INPUT_1) bits &= ~myv_input_map[0];
+            if (pstate & MYV_INPUT_5) bits &= ~myv_input_map[1];
+            if (pstate & MYV_INPUT_9) bits &= ~myv_input_map[2];
+            if (pstate & MYV_INPUT_13) bits &= ~myv_input_map[3];
+            if (pstate & MYV_INPUT_C) bits &= ~myv_input_map[4];
+            break;
+        }
+        case 0x40: {
+            if (pstate & MYV_INPUT_4) bits &= ~myv_input_map[0];
+            if (pstate & MYV_INPUT_8) bits &= ~myv_input_map[1];
+            if (pstate & MYV_INPUT_12) bits &= ~myv_input_map[2];
+            if (pstate & MYV_INPUT_B) bits &= ~myv_input_map[3];
+            break;
+        }
+        case 0x20: {
+            if (pstate & MYV_INPUT_2) bits &= ~myv_input_map[0];
+            if (pstate & MYV_INPUT_6) bits &= ~myv_input_map[1];
+            if (pstate & MYV_INPUT_10) bits &= ~myv_input_map[2];
+            if (pstate & MYV_INPUT_14) bits &= ~myv_input_map[3];
+            if (pstate & MYV_INPUT_D) bits &= ~myv_input_map[4];
+            break;
+        }
+        case 0x10: {
+            if (pstate & MYV_INPUT_3) bits &= ~myv_input_map[0];
+            if (pstate & MYV_INPUT_7) bits &= ~myv_input_map[1];
+            if (pstate & MYV_INPUT_11) bits &= ~myv_input_map[2];
+            if (pstate & MYV_INPUT_A) bits &= ~myv_input_map[3];
+            if (pstate & MYV_INPUT_E) bits &= ~myv_input_map[4];
+            break;
+        }
+    }
+
+    return bits;
+}
 
 void* jcv_myvision_get_ram_data(void) {
     return &ram[0];
@@ -94,10 +151,6 @@ const void* jcv_myvision_state_save_raw(void) {
     return (const void*)state;
 }
 
-void jcv_myvision_input_set_callback(uint8_t (*cb)(int)) {
-    jcv_myvision_input_cb = cb;
-}
-
 /* My Vision IO Map
    0x00 - PSG Register Select
    0x01 - PSG Register Write
@@ -112,7 +165,7 @@ static uint8_t jcv_myvision_io_rd(uint16_t port) {
            called here for simplicity's sake.
         */
         if (psg.rlatch == 14) // Hijack the read in this case
-            return jcv_myvision_input_cb(~psg.reg[15] & 0xf0);
+            return jcv_myvision_input_rd(~psg.reg[15] & 0xf0);
         return ay38910_rd(&psg);
     }
     return 0xff;

@@ -97,6 +97,28 @@ uint32_t jcv_get_dbflags(const char *md5);
 
 void jcv_input_set_callback_coleco(unsigned (*)(const void*, int), void*);
 
+#define MYV_INPUT_1                 0x000001
+#define MYV_INPUT_2                 0x000002
+#define MYV_INPUT_3                 0x000004
+#define MYV_INPUT_4                 0x000008
+#define MYV_INPUT_5                 0x000010
+#define MYV_INPUT_6                 0x000020
+#define MYV_INPUT_7                 0x000040
+#define MYV_INPUT_8                 0x000080
+#define MYV_INPUT_9                 0x000100
+#define MYV_INPUT_10                0x000200
+#define MYV_INPUT_11                0x000400
+#define MYV_INPUT_12                0x000800
+#define MYV_INPUT_13                0x001000
+#define MYV_INPUT_14                0x002000
+#define MYV_INPUT_A                 0x004000
+#define MYV_INPUT_B                 0x008000
+#define MYV_INPUT_C                 0x010000
+#define MYV_INPUT_D                 0x020000
+#define MYV_INPUT_E                 0x040000
+
+void jcv_input_set_callback_myvision(unsigned (*)(const void*), void*);
+
 void jcv_audio_set_buffer(void *buf);
 void jcv_audio_set_callback(void (*cb)(const void*, size_t), void *udata);
 void jcv_audio_set_rate(size_t rate);
