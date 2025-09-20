@@ -69,53 +69,53 @@ void jcv_set_system(unsigned s);
 
 uint32_t jcv_get_dbflags(const char *md5);
 
-#define JCV_COLECO_INPUT_U          0x00000001
-#define JCV_COLECO_INPUT_D          0x00000002
-#define JCV_COLECO_INPUT_L          0x00000004
-#define JCV_COLECO_INPUT_R          0x00000008
-#define JCV_COLECO_INPUT_FL         0x00000010
-#define JCV_COLECO_INPUT_FR         0x00000020
-#define JCV_COLECO_INPUT_1          0x00000040
-#define JCV_COLECO_INPUT_2          0x00000080
-#define JCV_COLECO_INPUT_3          0x00000100
-#define JCV_COLECO_INPUT_4          0x00000200
-#define JCV_COLECO_INPUT_5          0x00000400
-#define JCV_COLECO_INPUT_6          0x00000800
-#define JCV_COLECO_INPUT_7          0x00001000
-#define JCV_COLECO_INPUT_8          0x00002000
-#define JCV_COLECO_INPUT_9          0x00004000
-#define JCV_COLECO_INPUT_0          0x00008000
-#define JCV_COLECO_INPUT_STAR       0x00010000
-#define JCV_COLECO_INPUT_POUND      0x00020000
-#define JCV_COLECO_INPUT_Y          0x00040000
-#define JCV_COLECO_INPUT_O          0x00080000
-#define JCV_COLECO_INPUT_P          0x00100000
-#define JCV_COLECO_INPUT_B          0x00200000
-#define JCV_COLECO_INPUT_SP_PLUS    0x00400000
-#define JCV_COLECO_INPUT_SP_MINUS   0x00800000
-#define JCV_COLECO_INPUT_IRQ        0x01000000
+#define JCV_COLECO_INPUT_U          (1 << 0)
+#define JCV_COLECO_INPUT_D          (1 << 1)
+#define JCV_COLECO_INPUT_L          (1 << 2)
+#define JCV_COLECO_INPUT_R          (1 << 3)
+#define JCV_COLECO_INPUT_FL         (1 << 4)
+#define JCV_COLECO_INPUT_FR         (1 << 5)
+#define JCV_COLECO_INPUT_1          (1 << 6)
+#define JCV_COLECO_INPUT_2          (1 << 7)
+#define JCV_COLECO_INPUT_3          (1 << 8)
+#define JCV_COLECO_INPUT_4          (1 << 9)
+#define JCV_COLECO_INPUT_5          (1 << 10)
+#define JCV_COLECO_INPUT_6          (1 << 11)
+#define JCV_COLECO_INPUT_7          (1 << 12)
+#define JCV_COLECO_INPUT_8          (1 << 13)
+#define JCV_COLECO_INPUT_9          (1 << 14)
+#define JCV_COLECO_INPUT_0          (1 << 15)
+#define JCV_COLECO_INPUT_STAR       (1 << 16)
+#define JCV_COLECO_INPUT_POUND      (1 << 17)
+#define JCV_COLECO_INPUT_Y          (1 << 18)
+#define JCV_COLECO_INPUT_O          (1 << 19)
+#define JCV_COLECO_INPUT_P          (1 << 20)
+#define JCV_COLECO_INPUT_B          (1 << 22)
+#define JCV_COLECO_INPUT_SP_PLUS    (1 << 22)
+#define JCV_COLECO_INPUT_SP_MINUS   (1 << 23)
+#define JCV_COLECO_INPUT_IRQ        (1 << 24)
 
 void jcv_input_set_callback_coleco(unsigned (*)(const void*, int), void*);
 
-#define MYV_INPUT_1                 0x000001
-#define MYV_INPUT_2                 0x000002
-#define MYV_INPUT_3                 0x000004
-#define MYV_INPUT_4                 0x000008
-#define MYV_INPUT_5                 0x000010
-#define MYV_INPUT_6                 0x000020
-#define MYV_INPUT_7                 0x000040
-#define MYV_INPUT_8                 0x000080
-#define MYV_INPUT_9                 0x000100
-#define MYV_INPUT_10                0x000200
-#define MYV_INPUT_11                0x000400
-#define MYV_INPUT_12                0x000800
-#define MYV_INPUT_13                0x001000
-#define MYV_INPUT_14                0x002000
-#define MYV_INPUT_A                 0x004000
-#define MYV_INPUT_B                 0x008000
-#define MYV_INPUT_C                 0x010000
-#define MYV_INPUT_D                 0x020000
-#define MYV_INPUT_E                 0x040000
+#define MYV_INPUT_1                 (1 << 0)
+#define MYV_INPUT_2                 (1 << 1)
+#define MYV_INPUT_3                 (1 << 2)
+#define MYV_INPUT_4                 (1 << 3)
+#define MYV_INPUT_5                 (1 << 4)
+#define MYV_INPUT_6                 (1 << 5)
+#define MYV_INPUT_7                 (1 << 6)
+#define MYV_INPUT_8                 (1 << 7)
+#define MYV_INPUT_9                 (1 << 8)
+#define MYV_INPUT_10                (1 << 9)
+#define MYV_INPUT_11                (1 << 10)
+#define MYV_INPUT_12                (1 << 11)
+#define MYV_INPUT_13                (1 << 12)
+#define MYV_INPUT_14                (1 << 13)
+#define MYV_INPUT_A                 (1 << 14)
+#define MYV_INPUT_B                 (1 << 15)
+#define MYV_INPUT_C                 (1 << 16)
+#define MYV_INPUT_D                 (1 << 17)
+#define MYV_INPUT_E                 (1 << 18)
 
 void jcv_input_set_callback_myvision(unsigned (*)(const void*), void*);
 
