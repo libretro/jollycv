@@ -45,8 +45,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "jcv.h"
 
-#include "jcv_crvision.h"
-
 #include "version.h"
 
 #define SAMPLERATE 48000
@@ -262,126 +260,11 @@ static unsigned jcv_coleco_input_poll_wheel(const void *udata, int port) {
     return b;
 }
 
-static uint8_t jcv_crvision_input_poll(int keylatch) {
-    uint8_t b = 0xff;
-
-    // Check joystick directional inputs to handle special diagonal bits
-    int p1_u = input_device[0]->button[0];
-    int p1_d = input_device[0]->button[1];
-    int p1_l = input_device[0]->button[2];
-    int p1_r = input_device[0]->button[3];
-    int p2_u = input_device[1]->button[0];
-    int p2_d = input_device[1]->button[1];
-    int p2_l = input_device[1]->button[2];
-    int p2_r = input_device[1]->button[3];
-
-    switch (keylatch) {
-        case 0x01: { // PA0 - Left Joystick
-            // Check for diagonal combinations
-            if (p1_d && p1_r)
-                b &= ~CRV_INPUT_DOWNRIGHT;
-            else if (p1_u && p1_r)
-                b &= ~CRV_INPUT_UPRIGHT;
-            else if (p1_u && p1_l)
-                b &= ~CRV_INPUT_UPLEFT;
-            else if (p1_d && p1_l)
-                b &= ~CRV_INPUT_DOWNLEFT;
-            else {
-                if (p1_u) b &= ~CRV_INPUT_UP;
-                if (p1_d) b &= ~CRV_INPUT_DOWN;
-                if (p1_l) b &= ~CRV_INPUT_LEFT;
-                if (p1_r) b &= ~CRV_INPUT_RIGHT;
-            }
-            // Cntl and Fire 2 are the same
-            if (input_device[0]->button[12]) b &= ~CRV_INPUT_CNTL;
-            if (input_device[0]->button[5]) b &= ~CRV_INPUT_FIRE; // Fire 2
-            if (input_device[0]->button[6]) b &= ~CRV_INPUT_1;
-            break;
-        }
-        case 0x02: { // PA1 - Left Keyboard
-            if (input_device[0]->button[7]) b &= ~CRV_INPUT_2;
-            if (input_device[0]->button[8]) b &= ~CRV_INPUT_3;
-            if (input_device[0]->button[9]) b &= ~CRV_INPUT_4;
-            if (input_device[0]->button[10]) b &= ~CRV_INPUT_5;
-            if (input_device[0]->button[11]) b &= ~CRV_INPUT_6;
-            if (input_device[0]->button[13]) b &= ~CRV_INPUT_Q;
-            if (input_device[0]->button[14]) b &= ~CRV_INPUT_W;
-            if (input_device[0]->button[15]) b &= ~CRV_INPUT_E;
-            if (input_device[0]->button[16]) b &= ~CRV_INPUT_R;
-            if (input_device[0]->button[17]) b &= ~CRV_INPUT_T;
-            if (input_device[0]->button[18]) b &= ~CRV_INPUT_BACKSPACE;
-            if (input_device[0]->button[19]) b &= ~CRV_INPUT_A;
-            if (input_device[0]->button[20]) b &= ~CRV_INPUT_S;
-            if (input_device[0]->button[21]) b &= ~CRV_INPUT_D;
-            if (input_device[0]->button[22]) b &= ~CRV_INPUT_F;
-            if (input_device[0]->button[23]) b &= ~CRV_INPUT_G;
-            if (input_device[0]->button[24]) b &= ~CRV_INPUT_SHIFT;
-            if (input_device[0]->button[25]) b &= ~CRV_INPUT_Z;
-            if (input_device[0]->button[26]) b &= ~CRV_INPUT_X;
-            if (input_device[0]->button[27]) b &= ~CRV_INPUT_C;
-            if (input_device[0]->button[28]) b &= ~CRV_INPUT_V;
-            if (input_device[0]->button[29]) b &= ~CRV_INPUT_B;
-
-            if (input_device[0]->button[4]) b &= ~CRV_INPUT_FIRE; // Fire 1
-            break;
-        }
-        case 0x04: { // PA2 - Right Joystick
-            // Check for diagonal combinations
-            if (p2_d && p2_r)
-                b &= ~CRV_INPUT_DOWNRIGHT;
-            else if (p2_u && p2_r)
-                b &= ~CRV_INPUT_UPRIGHT;
-            else if (p2_u && p2_l)
-                b &= ~CRV_INPUT_UPLEFT;
-            else if (p2_d && p2_l)
-                b &= ~CRV_INPUT_DOWNLEFT;
-            else {
-                if (p2_u) b &= ~CRV_INPUT_UP;
-                if (p2_d) b &= ~CRV_INPUT_DOWN;
-                if (p2_l) b &= ~CRV_INPUT_LEFT;
-                if (p2_r) b &= ~CRV_INPUT_RIGHT;
-            }
-            if (input_device[1]->button[5]) b &= ~CRV_INPUT_FIRE; // Fire 2
-            if (input_device[1]->button[23]) b &= ~CRV_INPUT_TAB;
-            if (input_device[1]->button[29]) b &= ~CRV_INPUT_SPACE;
-            break;
-        }
-        case 0x08: { // PA3 - Right Keyboard
-            if (input_device[1]->button[6]) b &= ~CRV_INPUT_7;
-            if (input_device[1]->button[7]) b &= ~CRV_INPUT_8;
-            if (input_device[1]->button[8]) b &= ~CRV_INPUT_9;
-            if (input_device[1]->button[9]) b &= ~CRV_INPUT_0;
-            if (input_device[1]->button[10]) b &= ~CRV_INPUT_COLON;
-            if (input_device[1]->button[11]) b &= ~CRV_INPUT_MINUS;
-            if (input_device[1]->button[12]) b &= ~CRV_INPUT_Y;
-            if (input_device[1]->button[13]) b &= ~CRV_INPUT_U;
-            if (input_device[1]->button[14]) b &= ~CRV_INPUT_I;
-            if (input_device[1]->button[15]) b &= ~CRV_INPUT_O;
-            if (input_device[1]->button[16]) b &= ~CRV_INPUT_P;
-            if (input_device[1]->button[17]) b &= ~CRV_INPUT_RETN;
-            if (input_device[1]->button[18]) b &= ~CRV_INPUT_H;
-            if (input_device[1]->button[19]) b &= ~CRV_INPUT_J;
-            if (input_device[1]->button[20]) b &= ~CRV_INPUT_K;
-            if (input_device[1]->button[21]) b &= ~CRV_INPUT_L;
-            if (input_device[1]->button[22]) b &= ~CRV_INPUT_SEMICOLON;
-            if (input_device[1]->button[24]) b &= ~CRV_INPUT_N;
-            if (input_device[1]->button[25]) b &= ~CRV_INPUT_M;
-            if (input_device[1]->button[26]) b &= ~CRV_INPUT_COMMA;
-            if (input_device[1]->button[27]) b &= ~CRV_INPUT_PERIOD;
-            if (input_device[1]->button[28]) b &= ~CRV_INPUT_SLASH;
-
-            if (input_device[1]->button[4]) b &= ~CRV_INPUT_FIRE; // Fire 1
-            break;
-        }
-        case 0x0f: {
-            break;
-        }
-        default: {
-            // Multiple PA lines low - special scanning mode
-            break;
-        }
-    }
-
+static unsigned jcv_crvision_input_poll(const void *udata, int port) {
+    (void)udata;
+    unsigned b = 0;
+    for (unsigned i = 0; i < NDEFS_CRVISIONPAD; ++i)
+        if (input_device[port]->button[i]) b |= (1 << i);
     return b;
 }
 
@@ -469,7 +352,7 @@ void jg_set_cb_rumble(jg_cb_rumble_t func) {
 
 int jg_init(void) {
     jcv_input_set_callback_coleco(&jcv_coleco_input_poll, NULL);
-    jcv_crvision_input_set_callback(&jcv_crvision_input_poll);
+    jcv_input_set_callback_crvision(&jcv_crvision_input_poll, NULL);
     jcv_input_set_callback_myvision(&jcv_myvision_input_poll, NULL);
 
     jcv_audio_set_callback(jcv_cb_audio, NULL);

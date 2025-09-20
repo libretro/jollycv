@@ -69,8 +69,6 @@ typedef struct _pia_t {
 } pia_t;
 static pia_t pia;
 
-static uint8_t (*jcv_crvision_input_cb)(int); // Input poll callback
-
 // Mapper callbacks
 static uint8_t (*jcv_crvision_rom_rd40)(uint16_t);
 static uint8_t (*jcv_crvision_rom_rd80)(uint16_t);
@@ -79,6 +77,163 @@ static uint8_t (*jcv_crvision_rom_rd80)(uint16_t);
 static uint8_t *rombank1_8k = NULL; // First 8K bank
 static uint8_t *rombank2_8k = NULL; // Second 8K bank
 static uint8_t *rombank_2k = NULL;  // 2K bank
+
+// Input callback
+static unsigned (*jcv_crvision_input_cb)(const void*, int); // Input callback
+static void *udata_input = NULL; // Input callback userdata
+
+static unsigned crv_input_map[] = {
+    // Common: Up, Down, Left, Right, Fire1, Fire2
+    0x08, 0x02, 0x20, 0x04, 0x80, 0x80,
+
+    // Left Pad: 1, 2, 3, 4, 5, 6
+    0x0c, 0x30, 0x60, 0x28, 0x48, 0x50,
+    // Left Pad: Cntl, Q, W, E, R, T
+    0x80, 0x18, 0x0c, 0x14, 0x24, 0x44,
+    // Left Pad: Backspace, A, S, D, F, G
+    0x09, 0x11, 0x21, 0x41, 0x03, 0x05,
+    // Left Pad: Shift, Z, X, C, V, B
+    0x80, 0x0a, 0x12, 0x22, 0x42, 0x06,
+
+    // Right Pad: 7, 8, 9, 0, :, -
+    0x06, 0x42, 0x22, 0x12, 0x0a, 0x80,
+    // Right Pad: Y, U, I, O, P, Retn
+    0x05, 0x03, 0x41, 0x21, 0x11, 0x09,
+    // Right Pad: H, J, K, L, ;, Tab (->)
+    0x44, 0x24, 0x14, 0x0c, 0x18, 0x80,
+    // Right Pad: N, M, Comma, Period, Slash, Space
+    0x50, 0x48, 0x28, 0x60, 0x30, 0x0c
+};
+
+static uint8_t jcv_crvision_input_rd(int keylatch) {
+    /* There is simply no getting around this function being ugly while still
+       being somewhat understandable to anyone who wishes to modify it in the
+       future. Whoever designed the CreatiVision input system did the world
+       a disservice.
+    */
+    int port = keylatch > 2 ? 1 : 0;
+    unsigned pstate = jcv_crvision_input_cb(udata_input, port);
+    uint8_t bits = 0xff; // Active Low
+
+    unsigned u = (pstate & CRV_INPUT_UP);
+    unsigned d = (pstate & CRV_INPUT_DOWN);
+    unsigned l = (pstate & CRV_INPUT_LEFT);
+    unsigned r = (pstate & CRV_INPUT_RIGHT);
+
+    switch (keylatch) {
+        case 0x01: { // PA0 - Left Joystick
+            // Check for diagonal combinations
+            if (d && r)
+                bits &= ~0x03;
+            else if (u && r)
+                bits &= ~0x44;
+            else if (u && l)
+                bits &= ~0x30;
+            else if (d && l)
+                bits &= ~0x42;
+            else {
+                if (u) bits &= ~crv_input_map[0];
+                if (d) bits &= ~crv_input_map[1];
+                if (l) bits &= ~crv_input_map[2];
+                if (r) bits &= ~crv_input_map[3];
+            }
+
+            if (pstate & CRV_INPUT_FIRE2) bits &= ~crv_input_map[5];
+            if (pstate & CRV_INPUT_1) bits &= ~crv_input_map[6];
+            if (pstate & CRV_INPUT_CNTL) bits &= ~crv_input_map[12];
+            break;
+        }
+        case 0x02: { // PA1 - Left Keyboard
+            if (pstate & CRV_INPUT_FIRE1) bits &= ~crv_input_map[4];
+
+            if (pstate & CRV_INPUT_2) bits &= ~crv_input_map[7];
+            if (pstate & CRV_INPUT_3) bits &= ~crv_input_map[8];
+            if (pstate & CRV_INPUT_4) bits &= ~crv_input_map[9];
+            if (pstate & CRV_INPUT_5) bits &= ~crv_input_map[10];
+            if (pstate & CRV_INPUT_6) bits &= ~crv_input_map[11];
+            if (pstate & CRV_INPUT_Q) bits &= ~crv_input_map[13];
+            if (pstate & CRV_INPUT_W) bits &= ~crv_input_map[14];
+            if (pstate & CRV_INPUT_E) bits &= ~crv_input_map[15];
+            if (pstate & CRV_INPUT_R) bits &= ~crv_input_map[16];
+            if (pstate & CRV_INPUT_T) bits &= ~crv_input_map[17];
+            if (pstate & CRV_INPUT_BACKSPACE) bits &= ~crv_input_map[18];
+            if (pstate & CRV_INPUT_A) bits &= ~crv_input_map[19];
+            if (pstate & CRV_INPUT_S) bits &= ~crv_input_map[20];
+            if (pstate & CRV_INPUT_D) bits &= ~crv_input_map[21];
+            if (pstate & CRV_INPUT_F) bits &= ~crv_input_map[22];
+            if (pstate & CRV_INPUT_G) bits &= ~crv_input_map[23];
+            if (pstate & CRV_INPUT_SHIFT) bits &= ~crv_input_map[24];
+            if (pstate & CRV_INPUT_Z) bits &= ~crv_input_map[25];
+            if (pstate & CRV_INPUT_X) bits &= ~crv_input_map[26];
+            if (pstate & CRV_INPUT_C) bits &= ~crv_input_map[27];
+            if (pstate & CRV_INPUT_V) bits &= ~crv_input_map[28];
+            if (pstate & CRV_INPUT_B) bits &= ~crv_input_map[29];
+            break;
+        }
+        case 0x04: { // PA2 - Right Joystick
+            // Check for diagonal combinations
+            if (d && r)
+                bits &= ~0x03;
+            else if (u && r)
+                bits &= ~0x44;
+            else if (u && l)
+                bits &= ~0x30;
+            else if (d && l)
+                bits &= ~0x42;
+            else {
+                if (u) bits &= ~crv_input_map[0];
+                if (d) bits &= ~crv_input_map[1];
+                if (l) bits &= ~crv_input_map[2];
+                if (r) bits &= ~crv_input_map[3];
+            }
+
+            if (pstate & CRV_INPUT_FIRE2) bits &= ~crv_input_map[5];
+            if (pstate & CRV_INPUT_TAB) bits &= ~crv_input_map[47];
+            if (pstate & CRV_INPUT_SPACE) bits &= ~crv_input_map[53];
+            break;
+        }
+        case 0x08: { // PA3 - Right Keyboard
+            if (pstate & CRV_INPUT_FIRE1) bits &= ~crv_input_map[4];
+
+            if (pstate & CRV_INPUT_7) bits &= ~crv_input_map[30];
+            if (pstate & CRV_INPUT_8) bits &= ~crv_input_map[31];
+            if (pstate & CRV_INPUT_9) bits &= ~crv_input_map[32];
+            if (pstate & CRV_INPUT_0) bits &= ~crv_input_map[33];
+            if (pstate & CRV_INPUT_COLON) bits &= ~crv_input_map[34];
+            if (pstate & CRV_INPUT_MINUS) bits &= ~crv_input_map[35];
+            if (pstate & CRV_INPUT_Y) bits &= ~crv_input_map[36];
+            if (pstate & CRV_INPUT_U) bits &= ~crv_input_map[37];
+            if (pstate & CRV_INPUT_I) bits &= ~crv_input_map[38];
+            if (pstate & CRV_INPUT_O) bits &= ~crv_input_map[39];
+            if (pstate & CRV_INPUT_P) bits &= ~crv_input_map[40];
+            if (pstate & CRV_INPUT_RETN) bits &= ~crv_input_map[41];
+            if (pstate & CRV_INPUT_H) bits &= ~crv_input_map[42];
+            if (pstate & CRV_INPUT_J) bits &= ~crv_input_map[43];
+            if (pstate & CRV_INPUT_K) bits &= ~crv_input_map[44];
+            if (pstate & CRV_INPUT_L) bits &= ~crv_input_map[45];
+            if (pstate & CRV_INPUT_SEMICOLON) bits &= ~crv_input_map[46];
+            if (pstate & CRV_INPUT_N) bits &= ~crv_input_map[48];
+            if (pstate & CRV_INPUT_M) bits &= ~crv_input_map[49];
+            if (pstate & CRV_INPUT_COMMA) bits &= ~crv_input_map[50];
+            if (pstate & CRV_INPUT_PERIOD) bits &= ~crv_input_map[51];
+            if (pstate & CRV_INPUT_SLASH) bits &= ~crv_input_map[52];
+            break;
+        }
+        case 0x0f: {
+            break;
+        }
+        default: {
+            // Multiple PA lines low - special scanning mode
+            break;
+        }
+    }
+    return bits;
+}
+
+void jcv_crvision_input_set_callback(unsigned (*cb)(const void*,int), void *u) {
+    jcv_crvision_input_cb = cb;
+    udata_input = u;
+}
 
 void* jcv_crvision_get_ram_data(void) {
     return &ram[0];
@@ -155,10 +310,6 @@ static uint8_t jcv_crvision_rom_18k_rd80(uint16_t addr) {
 
 static uint8_t jcv_crvision_rom_18k_rd40(uint16_t addr) {
     return rombank_2k[addr & 0x7ff];
-}
-
-void jcv_crvision_input_set_callback(uint8_t (*cb)(int)) {
-    jcv_crvision_input_cb = cb;
 }
 
 // Load the CreatiVision BIOS from a memory buffer
@@ -264,7 +415,7 @@ uint8_t jcv_crvision_mem_rd(uint16_t addr) {
                 }
                 else {
                     int keylatch = (~pia.or[0]) & 0x0f;
-                    return jcv_crvision_input_cb(keylatch);
+                    return jcv_crvision_input_rd(keylatch);
                 }
             }
         }
