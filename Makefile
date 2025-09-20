@@ -21,15 +21,17 @@ LIBS_REQUIRES := speexdsp
 
 DOCS := ChangeLog LICENSE README
 
-# TODO: add public API header
-HEADERS :=
+HEADERS := src/jcv.h
 
 # Object dirs
 MKDIRS := m6502 z80
 
+SYMBOLS := _jcv_*
+SYMBOLS_MAP := jcv_*;
+
 override INSTALL_DATA := 0
 override INSTALL_EXAMPLE := 0
-override INSTALL_SHARED := 0
+override INSTALL_SHARED := 1
 
 include $(SOURCEDIR)/version.h
 include $(SOURCEDIR)/mk/jg.mk
