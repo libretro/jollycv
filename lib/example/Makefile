@@ -18,8 +18,8 @@ LIBS_LIBJOLLYCV = `$(PKG_CONFIG) --libs libjollycv`
 CFLAGS_SDL2 = `$(PKG_CONFIG) --cflags sdl2`
 LIBS_SDL2 = `$(PKG_CONFIG) --libs sdl2`
 
-#CFLAGS_SPEEXDSP = `$(PKG_CONFIG) --cflags speexdsp`
-#LIBS_SPEEXDSP = `$(PKG_CONFIG) --libs speexdsp`
+CFLAGS_SPEEXDSP = `$(PKG_CONFIG) --cflags speexdsp`
+LIBS_SPEEXDSP = `$(PKG_CONFIG) --libs speexdsp`
 
 INCLUDES = $(CFLAGS_LIBJOLLYCV) $(CFLAGS_SDL2) $(CFLAGS_SPEEXDSP)
 LIBS = $(LIBS_LIBJOLLYCV) $(LIBS_SDL2) $(LIBS_SPEEXDSP)

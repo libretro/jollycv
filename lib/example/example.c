@@ -19,7 +19,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <stdbool.h>
 
 #include <SDL.h>
-//#include <speex/speex_resampler.h>
+#include <speex/speex_resampler.h>
 
 #include <jcv.h>
 
@@ -30,8 +30,8 @@ PERFORMANCE OF THIS SOFTWARE.
 #define CHANNELS 1
 
 // Speex Resampler
-/*static SpeexResamplerState *resampler = NULL;
-static int err;*/
+static SpeexResamplerState *resampler = NULL;
+static int err;
 
 // SDL Audio
 static SDL_AudioSpec spec, obtained;
@@ -51,7 +51,8 @@ static uint32_t *vbuf = NULL;
 static unsigned scale = 4;
 
 // Audio buffer
-static uint32_t abuf[6400];
+static int16_t abuf[1600];
+static int16_t rsbuf[1600];
 
 // Button state
 unsigned buttons[18] = {0};
@@ -166,7 +167,31 @@ static unsigned jcv_coleco_input_poll(const void *udata, int port) {
 
 static void jcv_cb_audio(const void *udata, size_t samps) {
     (void)udata;
-    SDL_QueueAudio(dev, abuf, samps << 1); // Sample number must be in bytes
+    if (!samps)
+        return;
+
+    // Manage audio output queue size by resampling
+    uint32_t qsamps = SDL_GetQueuedAudioSize(dev);
+    unsigned esamps = 4; // Up to 4 extra samples
+
+    if (qsamps > SAMPLERATE)
+        SDL_ClearQueuedAudio(dev);
+    else if (qsamps < 3200)
+        esamps = (qsamps / 800);
+
+    esamps = 4 - esamps;
+
+    err = speex_resampler_set_rate_frac(resampler,
+        SAMPLERATE, SAMPLERATE + (esamps * FRAMERATE),
+        SAMPLERATE, SAMPLERATE + (esamps * FRAMERATE));
+
+    uint32_t insamps = samps;
+    uint32_t outsamps = samps + esamps;
+    err = speex_resampler_process_int(resampler, 0,
+        abuf, &insamps,
+        rsbuf, &outsamps);
+
+    SDL_QueueAudio(dev, rsbuf, outsamps << 1); // Sample number is in bytes
 }
 
 int main (int argc, char *argv[]) {
@@ -261,8 +286,8 @@ int main (int argc, char *argv[]) {
         SDL_AUDIO_ALLOW_ANY_CHANGE);
 
     // Set up resampling
-    /*resampler = speex_resampler_init(CHANNELS, SAMPLERATE, SAMPLERATE,
-        0, &err);*/
+    resampler = speex_resampler_init(CHANNELS, SAMPLERATE, SAMPLERATE,
+        0, &err);
 
     // Allow audio playback
     SDL_PauseAudioDevice(dev, 0);
@@ -309,7 +334,7 @@ int main (int argc, char *argv[]) {
     }
 
     // Bring down audio and video
-    //speex_resampler_destroy(resampler);
+    speex_resampler_destroy(resampler);
 
     if (vbuf)
         free(vbuf);
