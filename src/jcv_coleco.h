@@ -40,7 +40,8 @@ typedef enum _cv_cart {
     CART_NORMAL,
     CART_MEGA,
     CART_ACTIVISION,
-    CART_SRAM
+    CART_SRAM,
+    CART_OPCODE
 } cv_cart;
 
 typedef struct _cv_sys_t {

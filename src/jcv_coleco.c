@@ -298,6 +298,22 @@ static uint8_t jcv_coleco_mem_rd(uint16_t addr) {
         else if (carttype == CART_SRAM && addr > 0xdfff) {
             return savedata[addr & 0x7ff];
         }
+        else if (carttype == CART_OPCODE) {
+            // Opcode mapper uses non-linear bank mapping
+            uint32_t offset;
+            if (addr >= 0x8000 && addr < 0xa000)
+                offset = rompage[3] + (addr & 0x1fff);
+            else if (addr >= 0xa000 && addr < 0xc000)
+                offset = rompage[0] + (addr & 0x1fff);
+            else if (addr >= 0xc000 && addr < 0xe000)
+                offset = rompage[1] + (addr & 0x1fff);
+            else // addr >= 0xe000
+                offset = rompage[2] + (addr & 0x1fff);
+
+            if (offset < romsize)
+                return romdata[offset];
+            return 0xff;
+        }
 
         // If there are read attempts beyond the ROM's true size, return padding
         if (addr >= (romsize + SIZE_32K))
@@ -364,6 +380,13 @@ static void jcv_coleco_mem_wr(uint16_t addr, uint8_t data) {
     else if (carttype == CART_SRAM && addr >= 0xdfff) {
         savedata[addr & 0x7ff] = data;
     }
+    else if (carttype == CART_OPCODE && addr >= 0xfffc) {
+        /* The bottom two bits of the address select the 8K slot to map, while
+           the bottom four bits of the data select the 8K bank of ROM data.
+        */
+        rompage[addr & 0x03] = (data & 0x0f) * SIZE_8K;
+        return;
+    }
 }
 
 // Load the ColecoVision BIOS from a memory buffer
@@ -388,15 +411,26 @@ int jcv_coleco_rom_load(void *data, size_t size) {
     uint16_t hword = romdata[1] | (romdata[0] << 8); // Header Word
 
     if (romsize > 0x8000) { // ROM is possibly a Mega Cart or Activision PCB
-        uint16_t mchword = // First, check if this is a Mega Cart
+        // Could be Opcode, search for 'OP' signature (0x4f == O, 0x50 == P)
+        uint16_t opchword = romdata[3] | (romdata[2] << 8);
+        uint16_t mchword = // Could be a Mega Cart
             romdata[romsize - SIZE_16K] | (romdata[romsize - SIZE_16K+1] << 8);
 
-        if (mchword == 0xaa55 || mchword == 0x55aa) {
-            carttype = CART_MEGA; // Mark the Mega Cart bit true
+        if (opchword == 0x4f50) { // Definitely Opcode
+            carttype = CART_OPCODE;
+        }
+        else if (mchword == 0xaa55 || mchword == 0x55aa) {
+            carttype = CART_MEGA;
             hword = mchword;
         }
         else {
-            carttype = CART_ACTIVISION; // It is most likely an Activision PCB
+            /* In this case it is either an Opcode cart or an Activision cart.
+               Since Activision carts typically have an EEPROM of an unknown
+               size and will need to be added to the database anyway, default
+               to Opcode.
+            */
+            jcv_log(JCV_LOG_DBG, "Unknown cart type, assuming Opcode cart\n");
+            carttype = CART_OPCODE;
         }
     }
 
@@ -423,6 +457,12 @@ int jcv_coleco_rom_load(void *data, size_t size) {
         for (int i = 0; i < 4; ++i)
             rompage[i] = i * SIZE_8K;
         eep24cxx_init(&eep24cxx, savedata, savesize);
+    }
+    else if (carttype == CART_OPCODE) {
+        rompage[0] = 1 * SIZE_8K; // 0x8000-0x9fff: Bank 1
+        rompage[1] = 2 * SIZE_8K; // 0xa000-0xbfff: Bank 2
+        rompage[2] = 3 * SIZE_8K; // 0xc000-0xbfff: Bank 3
+        rompage[3] = 0 * SIZE_8K; // 0xe000-0xbfff: Bank 0
     }
     else {
         /* Assign ROM page offsets to locations in ROM data
