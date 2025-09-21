@@ -77,7 +77,7 @@ html: $(HTML_OUT)/doxyfile.tag
 install-html: html
 	@mkdir -p $(DESTDIR)$(HTMLDIR)
 	for i in $(HTML_OUT)/html/*; do \
-		cp $$i $(DESTDIR)/$(HTMLDIR); \
+		cp -r $$i $(DESTDIR)/$(HTMLDIR); \
 	done
 
 uninstall::
