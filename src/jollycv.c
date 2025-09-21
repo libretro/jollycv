@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdlib.h>
 #include <stdarg.h>
 
-#include "jcv.h"
+#include "jollycv.h"
 
 #include "jcv_coleco.h"
 #include "jcv_crvision.h"

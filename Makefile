@@ -24,7 +24,7 @@ DOCS_EXAMPLE := README
 
 EXAMPLE := lib/example
 
-HEADERS := src/jcv.h
+HEADERS := src/jollycv.h
 
 # Object dirs
 MKDIRS := m6502 z80
@@ -51,7 +51,6 @@ FLAGS := -std=c11 $(WARNINGS_DEF_C)
 
 CSRCS := m6502/m6502.c \
 	z80/z80.c \
-	jcv.c \
 	jcv_coleco.c \
 	jcv_crvision.c \
 	jcv_db.c \
@@ -60,6 +59,7 @@ CSRCS := m6502/m6502.c \
 	jcv_myvision.c \
 	jcv_serial.c \
 	jcv_z80.c \
+	jollycv.c \
 	ay38910.c \
 	sn76489.c \
 	tms9918.c \

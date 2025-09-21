@@ -33,7 +33,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include <stddef.h>
 
-#include "jcv.h"
+#include "jollycv.h"
 
 #include "jcv_myvision.h"
 #include "jcv_mixer.h"

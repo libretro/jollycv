@@ -32,7 +32,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stddef.h>
 #include <string.h>
 
-#include "jcv.h"
+#include "jollycv.h"
 
 #include "jcv_db.h"
 

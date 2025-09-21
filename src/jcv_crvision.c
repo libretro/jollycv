@@ -34,7 +34,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <stdint.h>
 #include <string.h>
 
-#include "jcv.h"
+#include "jollycv.h"
 
 #include "jcv_crvision.h"
 #include "jcv_mixer.h"

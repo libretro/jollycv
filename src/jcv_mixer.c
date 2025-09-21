@@ -33,7 +33,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <speex/speex_resampler.h>
 
-#include "jcv.h"
+#include "jollycv.h"
+
 #include "jcv_mixer.h"
 
 #define SAMPLERATE_COLECO 224009 // PSG sample rate (ColecoVision)

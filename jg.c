@@ -43,7 +43,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "jg_myvision_jcv.h"
 #endif
 
-#include "jcv.h"
+#include "jollycv.h"
 
 #include "version.h"
 

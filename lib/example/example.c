@@ -21,7 +21,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <SDL.h>
 #include <speex/speex_resampler.h>
 
-#include <jcv.h>
+#include <jollycv.h>
 
 #define SCREEN_WIDTH JCV_VIDEO_WIDTH_MAX
 #define SCREEN_HEIGHT JCV_VIDEO_HEIGHT_MAX

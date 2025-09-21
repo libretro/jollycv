@@ -30,8 +30,8 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 // An idiot admires complexity, a genius admires simplicity - Terry A. Davis
 
-#ifndef JCV_H
-#define JCV_H
+#ifndef JOLLYCV_H
+#define JOLLYCV_H
 
 #ifdef __cplusplus
 extern "C" {
