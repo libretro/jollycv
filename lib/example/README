@@ -1,0 +1,14 @@
+Example libjollycv implementation
+-------------------------------
+This is a very basic example of how to use libjollycv. To build, you will
+require libjollycv, speexdsp, and SDL2 to be installed in your environment.
+
+Building
+--------
+  make
+
+Usage:
+  ./jollycv-example game.rom
+
+Controls
+--------

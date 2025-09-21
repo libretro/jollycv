@@ -20,6 +20,7 @@ not install them, you will be required to include their path in CFLAGS.
 
 Options:
   DISABLE_MODULE - Set to a non-zero value to disable building the module.
+  ENABLE_EXAMPLE - Set to a non-zero value to build an example frontend.
   ENABLE_SHARED - Set to a non-zero value to build a shared library.
   ENABLE_STATIC - Set to a non-zero value to build a static archive.
   ENABLE_STATIC_JG - Set to a non-zero value to build a static JG archive.
