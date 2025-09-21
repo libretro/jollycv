@@ -5,7 +5,7 @@ NAME := jollycv
 JGNAME := $(NAME)
 
 DESCRIPTION := JollyCV is a highly accurate emulator for the ColecoVision \
-	(with Super Game Module), CreatiVision (experimental) and My Vision.
+	(including Super Game Module), CreatiVision (experimental) and My Vision.
 
 SRCDIR := $(SOURCEDIR)/src
 

@@ -1,7 +1,7 @@
 JollyCV
 -------
-JollyCV is a highly accurate emulator for the ColecoVision (with Super Game
-Module), CreatiVision (experimental) and My Vision.
+JollyCV is a highly accurate emulator for the ColecoVision (including Super
+Game Module), CreatiVision (experimental) and My Vision.
 
 JollyCV was the first emulator written specifically for The Jolly Good API.
 It is designed to document the ColecoVision for educational purposes through
@@ -65,19 +65,6 @@ CreatiVision
 My Vision
   My Vision System
 
-Input Notes
------------
-- The Roller Controller is implemented using a mouse. It is recommended to
-  assign the Fire buttons to mouse buttons.
-- The Steering Wheel is implemented using the X axis of a mouse. Buttons may
-  be assigned as usual.
-- The Super Action Controller's rollers are implemented using buttons which
-  may be held down to simulate a continuous roll. It is recommended to assign
-  the RollerL and RollerR input definitions to shoulder buttons on a gamepad.
-- CreatiVision games typically require a reset, and then pressing one of the
-  start buttons. By convention, those buttons are 6 and B on the left paddle,
-  or 7 and N on the right paddle.
-
 Settings
 --------
 input_coleco = 0
@@ -96,6 +83,25 @@ N = Resampler Quality (0-10)
 region = 0
 0 = NTSC, 1 = PAL
 
+Notes
+-----
+- The Roller Controller is implemented using a mouse. It is recommended to
+  assign the Fire buttons to mouse buttons.
+
+- The Steering Wheel is implemented using the X axis of a mouse. Buttons may
+  be assigned as usual.
+
+- The Super Action Controller's rollers are implemented using buttons which
+  may be held down to simulate a continuous roll. It is recommended to assign
+  the RollerL and RollerR input definitions to shoulder buttons on a gamepad.
+
+- CreatiVision games typically require a reset, and then pressing one of the
+  start buttons. By convention, those buttons are 6 and B on the left paddle,
+  or 7 and N on the right paddle.
+
+- In order to load CreatiVision ROMs, the system type must be specified as
+  "crvision" manually, as detecting heuristically is difficult for frontends.
+
 Compatibility
 -------------
  ColecoVision
@@ -107,6 +113,8 @@ Compatibility
 
  CreatiVision
   100% Compatibility with the commercially released library
+
+  Tape drive support for CreatiVision Basic is not yet implemented.
 
  My Vision
   100% Compatibility with all dumped games
@@ -120,6 +128,8 @@ standalone binaries for many potential platforms. If a fork is created with
 significant modifications, it is requested that a clear indication of fork
 status is made. Please be an honest person and respect the licenses that
 apply to the software.
+
+Notes
 
 Documentation
 -------------
