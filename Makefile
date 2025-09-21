@@ -74,6 +74,10 @@ OBJS := $(patsubst %,$(OBJDIR)/%,$(CSRCS:.c=.o)) $(OBJS_SPEEXDSP)
 OBJS_BIN := $(patsubst %,$(OBJDIR)/%,$(BINSRCS:.c=.o))
 OBJS_JG := $(patsubst %,$(OBJDIR)/%,$(JGSRCS:.c=.o))
 
+ifneq ($(ENABLE_SHARED), 0)
+	OBJS_BIN += $(OBJS_SPEEXDSP)
+endif
+
 # Example commands
 BUILD_EXAMPLE = $(call COMPILE_C, $(FLAGS) $(WARNINGS) $(INCLUDES_BIN))
 
