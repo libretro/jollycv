@@ -3,8 +3,8 @@
 PREFIX = /usr/local
 BINDIR = $(PREFIX)/bin
 
-CXX = cc
-CXXFLAGS = -O2
+CC = cc
+CFLAGS = -O2
 
 PKG_CONFIG = pkg-config
 
@@ -24,12 +24,12 @@ LIBS_SPEEXDSP = `$(PKG_CONFIG) --libs speexdsp`
 INCLUDES = $(CFLAGS_LIBJOLLYCV) $(CFLAGS_SDL2) $(CFLAGS_SPEEXDSP)
 LIBS = $(LIBS_LIBJOLLYCV) $(LIBS_SDL2) $(LIBS_SPEEXDSP)
 
-BUILD_FLAGS = $(CXXFLAGS) $(FLAGS) $(CPPFLAGS) $(INCLUDES)
+BUILD_FLAGS = $(CFLAGS) $(FLAGS) $(CPPFLAGS) $(INCLUDES)
 
 all: $(NAME)
 
 $(NAME): example.c
-	$(CXX) $(BUILD_FLAGS) -o $@ $? $(LDFLAGS) $(LIBS)
+	$(CC) $(BUILD_FLAGS) -o $@ $? $(LDFLAGS) $(LIBS)
 
 install: all
 	mkdir -p $(DESTDIR)$(BINDIR)
