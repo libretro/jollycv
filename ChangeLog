@@ -4,6 +4,8 @@ Version x.x.x
  - Gamma Corrected Datasheet palette added
  - Basic support for the CreatiVision
  - Basic support for the Nichibutsu My Vision
+ - Support for ColecoVision Opcode style cartridges
+ - First release of libjollycv with a public API
 
 Version 1.1.0
 -------------
