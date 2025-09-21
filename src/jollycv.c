@@ -233,8 +233,8 @@ void jcv_audio_set_buffer(void *buf) {
     jcv_mixer_set_buffer((int16_t*)buf);
 }
 
-void jcv_audio_set_callback(void (*cb)(const void*, size_t), void *udata) {
-    jcv_mixer_set_callback(cb, udata);
+void jcv_audio_set_callback(void (*cb)(const void*, size_t), void *u) {
+    jcv_mixer_set_callback(cb, u);
 }
 
 void jcv_audio_set_rate(size_t rate) {

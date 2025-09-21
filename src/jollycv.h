@@ -215,21 +215,21 @@ uint32_t jcv_get_dbflags(const char *md5);
  * @param cb Callback returning the input state to the emulator
  * @param u User data passed to callback
  */
-void jcv_input_set_callback_coleco(unsigned (*cb)(const void*, int), void*);
+void jcv_input_set_callback_coleco(unsigned (*cb)(const void*, int), void *u);
 
 /**
  * Set the CreatiVision input callback
  * @param cb Callback returning the input state to the emulator
  * @param u User data passed to callback
  */
-void jcv_input_set_callback_crvision(unsigned (*cb)(const void*, int), void*);
+void jcv_input_set_callback_crvision(unsigned (*cb)(const void*, int), void *u);
 
 /**
  * Set the My Vision input callback
  * @param cb Callback returning the input state to the emulator
  * @param u User data passed to callback
  */
-void jcv_input_set_callback_myvision(unsigned (*cb)(const void*), void*);
+void jcv_input_set_callback_myvision(unsigned (*cb)(const void*), void *u);
 
 /**
  * Set the audio sample buffer
@@ -242,7 +242,7 @@ void jcv_audio_set_buffer(void *buf);
  * @param cb Callback which handles emulated sample data
  * @param u User data passed to callback
  */
-void jcv_audio_set_callback(void (*cb)(const void*, size_t), void *udata);
+void jcv_audio_set_callback(void (*cb)(const void*, size_t), void *u);
 
 /**
  * Set the audio sample rate
@@ -352,8 +352,7 @@ int jcv_bios_load(void *data, size_t size);
 
 /**
  * Load a BIOS image from a memory block
- * @param data Pointer to the memory block containing the BIOS image
- * @param size Size of the memory block containing the BIOS image
+ * @param biospath Filename of the BIOS image
  * @return Result of the operation
  */
 int jcv_bios_load_file(const char *biospath);
