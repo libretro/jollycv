@@ -504,8 +504,8 @@ void jcv_coleco_init(void) {
     jcv_z80_mem_rd = jcv_coleco_mem_rd;
     jcv_z80_mem_wr = jcv_coleco_mem_wr;
 
-    // Set SGM RAM to disabled state
-    sgm_upper = 0;
+    // Set SGM RAM to default state
+    sgm_upper = carttype == CART_OPCODE;
     sgm_lower = 0;
 
     // Initialize sound chips
