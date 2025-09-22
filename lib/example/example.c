@@ -200,7 +200,7 @@ int main (int argc, char *argv[]) {
         exit(1);
     }
 
-    jcv_input_set_callback_coleco(&jcv_coleco_input_poll, NULL);
+    jcv_input_set_callback_coleco(jcv_coleco_input_poll, NULL);
     jcv_audio_set_callback(jcv_cb_audio, NULL);
     jcv_audio_set_rate(SAMPLERATE);
     jcv_audio_set_rsqual(2);
