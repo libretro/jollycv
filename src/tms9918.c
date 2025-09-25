@@ -269,7 +269,7 @@ void tms9918_wr_ctrl(uint8_t data) {
                 tms9918_addr_inc(); // Increment address
                 break;
             }
-            case 0x80: { // Write the data latch value into the register
+            case 0x80: case 0xc0: { // Write data latch value into the register
                 tms9918_wr_reg(data & 0x07, vdp.dlatch); // 3 bits for register
                 break;
             }
