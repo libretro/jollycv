@@ -2,7 +2,10 @@ Example libjollycv implementation
 -------------------------------
 This is a very basic example of how to use libjollycv. To build, you will
 require libjollycv, speexdsp, and SDL2 to be installed in your environment.
-You will also need "coleco.rom" in directory the program is run from.
+You will also need "coleco.rom" in directory the program is run from. For
+CreatiVision you will need "bioscv.rom" in the directory the program is run
+from. This example assumes .col is ColecoVision, .rom is CreatiVision, and
+.myv is My Vision.
 
 Building
 --------
@@ -11,8 +14,9 @@ Building
 Usage:
   ./jollycv-example game.rom
 
-Controls
---------
+Controls (ColecoVision)
+-----------------------
+F1      - Reset
 Up      - Up
 Down    - Down
 Left    - Left
@@ -31,3 +35,37 @@ FireR   - Z
 0       - 0
 *       - Backspace
 #       - Enter
+
+Controls (CreatiVision)
+-----------------------
+F1      - Reset
+Up      - Up
+Down    - Down
+Left    - Left
+Right   - Right
+Fire1   - A
+Fire2   - Z
+Start/6 - 6
+
+Controls (My Vision)
+--------------------
+F1      - Reset
+1       - 1
+2       - 2
+3       - 3
+4       - 4
+5       - 5
+6       - 6
+7       - 7
+8       - 8
+9       - 9
+10      - 10
+11      - 11
+12      - 12
+13      - 13
+14      - 14
+A       - Left
+B       - Up
+C       - Down
+D       - Right
+E       - Delete
