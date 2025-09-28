@@ -56,8 +56,14 @@ $(HTML_OUT)/.tag:
 	@mkdir -p $(HTML_OUT)
 	@touch $@
 
-$(TARGET_HTML): $(HEADERS) $(HTML_OUT)/.tag
-	@cp $(HEADERS:%=$(SOURCEDIR)/%) $(HTML_OUT)/
+define HEADERS_RULE
+$(1): $(2) $(HTML_OUT)/.tag
+	@cp $(2) $(1)
+endef
+
+$(foreach _header,$(HEADERS),$(eval $(call HEADERS_RULE, \
+	$(addprefix $(HTML_OUT)/,$(notdir $(_header))), \
+	$(_header:%=$(SOURCEDIR)/%))))
 
 $(HTML_OUT)/Doxyfile: $(DOXYFILE) $(TARGET_HTML)
 	@sed -e 's|@NAME@|$(NAME)|' \
