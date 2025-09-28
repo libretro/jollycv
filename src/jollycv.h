@@ -106,11 +106,16 @@ void jcv_set_system(unsigned s);
                                                     Wheel */
 
 /**
- * Check the database for any special flags pertaining to a ROM
- * @param md5 MD5 checksum of the ROM to look up
+ * Retrieve any special flags pertaining to a ROM
  * @return Flags for this game found in the internal database
  */
-uint32_t jcv_get_dbflags(const char *md5);
+uint32_t jcv_get_dbflags(void);
+
+/**
+ * Check the database for a match -- set flags and perform internal operations
+ * @param md5 MD5 checksum of the ROM to look up
+ */
+void jcv_process_hash(const char *md5);
 
 #define COLECO_INPUT_U              (1 << 0)    /**< ColecoVision Up */
 #define COLECO_INPUT_D              (1 << 1)    /**< ColecoVision Down */

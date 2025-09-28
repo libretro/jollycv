@@ -106,14 +106,21 @@ static dbentry_t db_coleco[] = {
             CART_ACTIVISION, 0x100 }, // 256B
 };
 
-uint32_t jcv_db_process_coleco(const char *md5) {
+static uint32_t flags = 0;
+
+uint32_t jcv_db_get_flags(void) {
+    return flags;
+}
+
+void jcv_db_process_coleco(const char *md5) {
     // Loop through the database and compare the MD5 checksum
+    flags = 0;
     for (size_t i = 0; i < (sizeof(db_coleco) / sizeof(dbentry_t)); ++i) {
         if (!strcmp(md5, db_coleco[i].md5)) {
-            // Match found - return the flags
+            // Match found - set the cart type and flags
             jcv_coleco_set_carttype(db_coleco[i].cart, db_coleco[i].special);
-            return db_coleco[i].flags;
+            flags = db_coleco[i].flags;
+            return;
         }
     }
-    return 0;
 }

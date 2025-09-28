@@ -31,6 +31,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef JCV_DB_H
 #define JCV_DB_H
 
-uint32_t jcv_db_process_coleco(const char*);
+uint32_t jcv_db_get_flags(void);
+void jcv_db_process_coleco(const char*);
 
 #endif

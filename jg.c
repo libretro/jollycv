@@ -406,7 +406,8 @@ int jg_game_load(void) {
 
     // Load the ROM
     if (sys == JCV_SYS_COLECO) {
-        dbflags = jcv_get_dbflags(gameinfo.md5);
+        jcv_process_hash(gameinfo.md5);
+        dbflags = jcv_get_dbflags();
         if (!jcv_media_load(gameinfo.data, gameinfo.size))
             return 0;
 

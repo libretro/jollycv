@@ -115,9 +115,16 @@ void jcv_set_system(unsigned s) {
 }
 
 // Get database flags
-uint32_t jcv_get_dbflags(const char *md5) {
+uint32_t jcv_get_dbflags(void) {
     switch (sys) {
-        default: case JCV_SYS_COLECO: return jcv_db_process_coleco(md5);
+        default: case JCV_SYS_COLECO: return jcv_db_get_flags();
+    }
+}
+
+// Get database flags
+void jcv_process_hash(const char *md5) {
+    switch (sys) {
+        default: case JCV_SYS_COLECO: jcv_db_process_coleco(md5); break;
     }
 }
 
