@@ -102,7 +102,7 @@ static unsigned jcv_coleco_input_rd(int port) {
     for (unsigned i = 0; i < NUMINPUTDEFS; ++i)
         if (pstate & (1 << i)) bits |= cv_input_map[i];
 
-    if (pstate & JCV_COLECO_INPUT_IRQ)
+    if (pstate & COLECO_INPUT_IRQ)
         jcv_z80_irq(0);
 
     return bits;

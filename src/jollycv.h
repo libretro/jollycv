@@ -112,31 +112,31 @@ void jcv_set_system(unsigned s);
  */
 uint32_t jcv_get_dbflags(const char *md5);
 
-#define JCV_COLECO_INPUT_U          (1 << 0)    /**< ColecoVision Up */
-#define JCV_COLECO_INPUT_D          (1 << 1)    /**< ColecoVision Down */
-#define JCV_COLECO_INPUT_L          (1 << 2)    /**< ColecoVision Left */
-#define JCV_COLECO_INPUT_R          (1 << 3)    /**< ColecoVision Right */
-#define JCV_COLECO_INPUT_FL         (1 << 4)    /**< ColecoVision Fire (L) */
-#define JCV_COLECO_INPUT_FR         (1 << 5)    /**< ColecoVision Fire (R) */
-#define JCV_COLECO_INPUT_1          (1 << 6)    /**< ColecoVision Numpad 1 */
-#define JCV_COLECO_INPUT_2          (1 << 7)    /**< ColecoVision Numpad 2 */
-#define JCV_COLECO_INPUT_3          (1 << 8)    /**< ColecoVision Numpad 3 */
-#define JCV_COLECO_INPUT_4          (1 << 9)    /**< ColecoVision Numpad 4 */
-#define JCV_COLECO_INPUT_5          (1 << 10)   /**< ColecoVision Numpad 5 */
-#define JCV_COLECO_INPUT_6          (1 << 11)   /**< ColecoVision Numpad 6 */
-#define JCV_COLECO_INPUT_7          (1 << 12)   /**< ColecoVision Numpad 7 */
-#define JCV_COLECO_INPUT_8          (1 << 13)   /**< ColecoVision Numpad 8 */
-#define JCV_COLECO_INPUT_9          (1 << 14)   /**< ColecoVision Numpad 9 */
-#define JCV_COLECO_INPUT_0          (1 << 15)   /**< ColecoVision Numpad 0 */
-#define JCV_COLECO_INPUT_STAR       (1 << 16)   /**< ColecoVision Numpad * */
-#define JCV_COLECO_INPUT_POUND      (1 << 17)   /**< ColecoVision Numpad # */
-#define JCV_COLECO_INPUT_Y          (1 << 18)   /**< ColecoVision SAC Yellow */
-#define JCV_COLECO_INPUT_O          (1 << 19)   /**< ColecoVision SAC Orange */
-#define JCV_COLECO_INPUT_P          (1 << 20)   /**< ColecoVision SAC Purple */
-#define JCV_COLECO_INPUT_B          (1 << 22)   /**< ColecoVision SAC Blue */
-#define JCV_COLECO_INPUT_SP_PLUS    (1 << 22)   /**< ColecoVision Spinner+ */
-#define JCV_COLECO_INPUT_SP_MINUS   (1 << 23)   /**< ColecoVision Spinner- */
-#define JCV_COLECO_INPUT_IRQ        (1 << 24)   /**< IRQ should be fired */
+#define COLECO_INPUT_U              (1 << 0)    /**< ColecoVision Up */
+#define COLECO_INPUT_D              (1 << 1)    /**< ColecoVision Down */
+#define COLECO_INPUT_L              (1 << 2)    /**< ColecoVision Left */
+#define COLECO_INPUT_R              (1 << 3)    /**< ColecoVision Right */
+#define COLECO_INPUT_FL             (1 << 4)    /**< ColecoVision Fire (L) */
+#define COLECO_INPUT_FR             (1 << 5)    /**< ColecoVision Fire (R) */
+#define COLECO_INPUT_1              (1 << 6)    /**< ColecoVision Numpad 1 */
+#define COLECO_INPUT_2              (1 << 7)    /**< ColecoVision Numpad 2 */
+#define COLECO_INPUT_3              (1 << 8)    /**< ColecoVision Numpad 3 */
+#define COLECO_INPUT_4              (1 << 9)    /**< ColecoVision Numpad 4 */
+#define COLECO_INPUT_5              (1 << 10)   /**< ColecoVision Numpad 5 */
+#define COLECO_INPUT_6              (1 << 11)   /**< ColecoVision Numpad 6 */
+#define COLECO_INPUT_7              (1 << 12)   /**< ColecoVision Numpad 7 */
+#define COLECO_INPUT_8              (1 << 13)   /**< ColecoVision Numpad 8 */
+#define COLECO_INPUT_9              (1 << 14)   /**< ColecoVision Numpad 9 */
+#define COLECO_INPUT_0              (1 << 15)   /**< ColecoVision Numpad 0 */
+#define COLECO_INPUT_STAR           (1 << 16)   /**< ColecoVision Numpad * */
+#define COLECO_INPUT_POUND          (1 << 17)   /**< ColecoVision Numpad # */
+#define COLECO_INPUT_Y              (1 << 18)   /**< ColecoVision SAC Yellow */
+#define COLECO_INPUT_O              (1 << 19)   /**< ColecoVision SAC Orange */
+#define COLECO_INPUT_P              (1 << 20)   /**< ColecoVision SAC Purple */
+#define COLECO_INPUT_B              (1 << 22)   /**< ColecoVision SAC Blue */
+#define COLECO_INPUT_SP_PLUS        (1 << 22)   /**< ColecoVision Spinner+ */
+#define COLECO_INPUT_SP_MINUS       (1 << 23)   /**< ColecoVision Spinner- */
+#define COLECO_INPUT_IRQ            (1 << 24)   /**< IRQ should be fired */
 
 #define CRV_INPUT_UP                (1 << 0)    /**< CreatiVision Up */
 #define CRV_INPUT_DOWN              (1 << 1)    /**< CreatiVision Down */
