@@ -200,6 +200,11 @@ int main (int argc, char *argv[]) {
         exit(1);
     }
 
+    // Force DirectSound audio driver on Windows
+#if defined(_WIN32) || defined(__MINGW32__) || defined(__MINGW64__)
+    putenv("SDL_AUDIODRIVER=directsound");
+#endif
+
     jcv_input_set_callback_coleco(jcv_coleco_input_poll, NULL);
     jcv_audio_set_callback(jcv_cb_audio, NULL);
     jcv_audio_set_rate(SAMPLERATE);
