@@ -59,6 +59,7 @@ static uint32_t rompage[4]; // Offsets to the start of 8K ROM pages
 
 // Cartridge Types
 static unsigned carttype = 0; // Cartridge Type
+static unsigned cartset = 0; // Cartridge Type has been set
 
 // Super Game Module RAM
 static uint8_t sgm_upper = 0; // Enable upper 24K SGM RAM
@@ -410,7 +411,8 @@ int jcv_coleco_rom_load(void *data, size_t size) {
     */
     uint16_t hword = romdata[1] | (romdata[0] << 8); // Header Word
 
-    if (romsize > 0x8000) { // ROM is possibly a Mega Cart or Activision PCB
+    // If the cartridge type has not already been set, detect heuristically
+    if (!cartset && romsize > 0x8000) {
         // Could be Opcode, search for 'OP' signature (0x4f == O, 0x50 == P)
         uint16_t opchword = romdata[3] | (romdata[2] << 8);
         uint16_t mchword = // Could be a Mega Cart
@@ -477,6 +479,7 @@ int jcv_coleco_rom_load(void *data, size_t size) {
 
 void jcv_coleco_set_carttype(unsigned ctype, unsigned special) {
     carttype = ctype;
+    cartset = 1;
     if (carttype == CART_SRAM)
         savesize = SIZE_2K;
     else if (carttype == CART_ACTIVISION)
