@@ -28,6 +28,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #define SCREEN_HEIGHT JCV_VIDEO_HEIGHT_MAX
 #define SAMPLERATE 48000
 #define FRAMERATE 60 // Approximately 60Hz
+#define FRAMERATE_PAL 50 // Approximately 50Hz
 #define CHANNELS 1
 
 // Speex Resampler
@@ -56,10 +57,11 @@ static int16_t abuf[1600];
 static int16_t rsbuf[1600];
 
 // Button state
-static unsigned buttons[19] = {0};
+static unsigned buttons[60] = {0};
 
 // Emulated System
 static unsigned sys = JCV_SYS_COLECO;
+static unsigned framerate = FRAMERATE;
 
 // Keep track of whether the emulator should be running or not
 static int running = 1;
@@ -71,6 +73,9 @@ static void jcv_input_handler(SDL_Event event) {
             switch (event.key.keysym.scancode) {
                 case SDL_SCANCODE_ESCAPE:
                     running = 0;
+                    break;
+                case SDL_SCANCODE_F1:
+                    jcv_reset(0);
                     break;
 
                 case SDL_SCANCODE_UP:
@@ -132,10 +137,48 @@ static void jcv_input_handler(SDL_Event event) {
                 default: break;
             }
         }
+        else if (sys == JCV_SYS_CRVISION) {
+            switch (event.key.keysym.scancode) {
+                case SDL_SCANCODE_ESCAPE:
+                    running = 0;
+                    break;
+                case SDL_SCANCODE_F1:
+                    jcv_reset(0);
+                    break;
+
+                case SDL_SCANCODE_UP:
+                    buttons[0] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_DOWN:
+                    buttons[1] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_LEFT:
+                    buttons[2] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_RIGHT:
+                    buttons[3] = event.type == SDL_KEYDOWN;
+                    break;
+
+                case SDL_SCANCODE_A:
+                    buttons[4] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_Z:
+                    buttons[5] = event.type == SDL_KEYDOWN;
+                    break;
+
+                case SDL_SCANCODE_6:
+                    buttons[11] = event.type == SDL_KEYDOWN;
+                    break;
+                default: break;
+                }
+        }
         else if (sys == JCV_SYS_MYVISION) {
             switch (event.key.keysym.scancode) {
                 case SDL_SCANCODE_ESCAPE:
                     running = 0;
+                    break;
+                case SDL_SCANCODE_F1:
+                    jcv_reset(0);
                     break;
                 case SDL_SCANCODE_1:
                     buttons[0] = event.type == SDL_KEYDOWN;
@@ -236,6 +279,14 @@ static unsigned jcv_coleco_input_poll(const void *udata, int port) {
     return b;
 }
 
+static unsigned jcv_crvision_input_poll(const void *udata, int port) {
+    (void)udata;
+    unsigned b = 0;
+    for (unsigned i = 0; i < 30; ++i)
+        if (buttons[i + (port * 30)]) b |= (1 << i);
+    return b;
+}
+
 static unsigned jcv_myvision_input_poll(const void *udata) {
     (void)udata;
     unsigned b = 0;
@@ -261,8 +312,8 @@ static void jcv_cb_audio(const void *udata, size_t samps) {
     esamps = 4 - esamps;
 
     err = speex_resampler_set_rate_frac(resampler,
-        SAMPLERATE, SAMPLERATE + (esamps * FRAMERATE),
-        SAMPLERATE, SAMPLERATE + (esamps * FRAMERATE));
+        SAMPLERATE, SAMPLERATE + (esamps * framerate),
+        SAMPLERATE, SAMPLERATE + (esamps * framerate));
 
     uint32_t insamps = samps;
     uint32_t outsamps = samps + esamps;
@@ -296,17 +347,20 @@ int main (int argc, char *argv[]) {
     for (size_t i = 0; i < strlen(extptr); ++i)
         ext[i] = tolower(ext[i]);
 
+    if (!strcmp(ext, "rom"))
+        sys = JCV_SYS_CRVISION;
     if (!strcmp(ext, "myv"))
         sys = JCV_SYS_MYVISION;
 
     jcv_input_set_callback_coleco(jcv_coleco_input_poll, NULL);
+    jcv_input_set_callback_crvision(jcv_crvision_input_poll, NULL);
     jcv_input_set_callback_myvision(jcv_myvision_input_poll, NULL);
     jcv_audio_set_callback(jcv_cb_audio, NULL);
     jcv_audio_set_rate(SAMPLERATE);
     jcv_audio_set_rsqual(2);
     jcv_audio_set_buffer(abuf);
     jcv_set_system(sys);
-    jcv_set_region(JCV_REGION_NTSC);
+    jcv_set_region(sys == JCV_SYS_CRVISION ? JCV_REGION_PAL : JCV_REGION_NTSC);
 
     jcv_init();
 
@@ -315,6 +369,13 @@ int main (int argc, char *argv[]) {
             fprintf(stderr, "Failed to load BIOS at: coleco.rom\n");
             return 1;
         }
+    }
+    else if (sys == JCV_SYS_CRVISION) {
+        if (!jcv_bios_load_file("bioscv.rom")) {
+            fprintf(stderr, "Failed to load BIOS at: bioscv.rom\n");
+            return 1;
+        }
+        framerate = FRAMERATE_PAL;
     }
 
     if (jcv_rom_load_file(argv[argc - 1])) {
@@ -399,8 +460,8 @@ int main (int argc, char *argv[]) {
 
     while (running) {
         // Divide core framerate by screen framerate and collect remainders
-        runframes = FRAMERATE / dm.refresh_rate;
-        collector += FRAMERATE % dm.refresh_rate;
+        runframes = framerate / dm.refresh_rate;
+        collector += framerate % dm.refresh_rate;
 
         if (collector >= dm.refresh_rate) {
             ++runframes;
