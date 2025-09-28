@@ -17,6 +17,7 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <stdlib.h>
 #include <stdint.h>
 #include <stdbool.h>
+#include <string.h>
 
 #include <SDL.h>
 #include <speex/speex_resampler.h>
@@ -55,7 +56,10 @@ static int16_t abuf[1600];
 static int16_t rsbuf[1600];
 
 // Button state
-unsigned buttons[18] = {0};
+static unsigned buttons[19] = {0};
+
+// Emulated System
+static unsigned sys = JCV_SYS_COLECO;
 
 // Keep track of whether the emulator should be running or not
 static int running = 1;
@@ -63,68 +67,135 @@ static int running = 1;
 // Handle SDL input events
 static void jcv_input_handler(SDL_Event event) {
     if (event.type == SDL_KEYUP || event.type == SDL_KEYDOWN) {
-        switch (event.key.keysym.scancode) {
-            case SDL_SCANCODE_ESCAPE:
-                running = 0;
-                break;
+        if (sys == JCV_SYS_COLECO) {
+            switch (event.key.keysym.scancode) {
+                case SDL_SCANCODE_ESCAPE:
+                    running = 0;
+                    break;
 
-            case SDL_SCANCODE_UP:
-                buttons[0] = event.type == SDL_KEYDOWN;
-                break;
-            case SDL_SCANCODE_DOWN:
-                buttons[1] = event.type == SDL_KEYDOWN;
-                break;
-            case SDL_SCANCODE_LEFT:
-                buttons[2] = event.type == SDL_KEYDOWN;
-                break;
-            case SDL_SCANCODE_RIGHT:
-                buttons[3] = event.type == SDL_KEYDOWN;
-                break;
+                case SDL_SCANCODE_UP:
+                    buttons[0] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_DOWN:
+                    buttons[1] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_LEFT:
+                    buttons[2] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_RIGHT:
+                    buttons[3] = event.type == SDL_KEYDOWN;
+                    break;
 
-            case SDL_SCANCODE_A:
-                buttons[4] = event.type == SDL_KEYDOWN;
-                break;
-            case SDL_SCANCODE_Z:
-                buttons[5] = event.type == SDL_KEYDOWN;
-                break;
+                case SDL_SCANCODE_A:
+                    buttons[4] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_Z:
+                    buttons[5] = event.type == SDL_KEYDOWN;
+                    break;
 
-            case SDL_SCANCODE_1:
-                buttons[6] = event.type == SDL_KEYDOWN;
-                break;
-            case SDL_SCANCODE_2:
-                buttons[7] = event.type == SDL_KEYDOWN;
-                break;
-            case SDL_SCANCODE_3:
-                buttons[8] = event.type == SDL_KEYDOWN;
-                break;
-            case SDL_SCANCODE_4:
-                buttons[9] = event.type == SDL_KEYDOWN;
-                break;
-            case SDL_SCANCODE_5:
-                buttons[10] = event.type == SDL_KEYDOWN;
-                break;
-            case SDL_SCANCODE_6:
-                buttons[11] = event.type == SDL_KEYDOWN;
-                break;
-            case SDL_SCANCODE_7:
-                buttons[12] = event.type == SDL_KEYDOWN;
-                break;
-            case SDL_SCANCODE_8:
-                buttons[13] = event.type == SDL_KEYDOWN;
-                break;
-            case SDL_SCANCODE_9:
-                buttons[14] = event.type == SDL_KEYDOWN;
-                break;
-            case SDL_SCANCODE_0:
-                buttons[15] = event.type == SDL_KEYDOWN;
-                break;
-            case SDL_SCANCODE_BACKSPACE:
-                buttons[16] = event.type == SDL_KEYDOWN;
-                break;
-            case SDL_SCANCODE_RETURN:
-                buttons[17] = event.type == SDL_KEYDOWN;
-                break;
-            default: break;
+                case SDL_SCANCODE_1:
+                    buttons[6] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_2:
+                    buttons[7] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_3:
+                    buttons[8] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_4:
+                    buttons[9] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_5:
+                    buttons[10] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_6:
+                    buttons[11] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_7:
+                    buttons[12] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_8:
+                    buttons[13] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_9:
+                    buttons[14] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_0:
+                    buttons[15] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_BACKSPACE:
+                    buttons[16] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_RETURN:
+                    buttons[17] = event.type == SDL_KEYDOWN;
+                    break;
+                default: break;
+            }
+        }
+        else if (sys == JCV_SYS_MYVISION) {
+            switch (event.key.keysym.scancode) {
+                case SDL_SCANCODE_ESCAPE:
+                    running = 0;
+                    break;
+                case SDL_SCANCODE_1:
+                    buttons[0] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_2:
+                    buttons[1] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_3:
+                    buttons[2] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_4:
+                    buttons[3] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_5:
+                    buttons[4] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_6:
+                    buttons[5] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_7:
+                    buttons[6] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_8:
+                    buttons[7] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_9:
+                    buttons[8] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_0:
+                    buttons[9] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_MINUS:
+                    buttons[10] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_EQUALS:
+                    buttons[11] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_BACKSPACE:
+                    buttons[12] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_RETURN:
+                    buttons[13] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_LEFT:
+                    buttons[14] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_UP:
+                    buttons[15] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_DOWN:
+                    buttons[16] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_RIGHT:
+                    buttons[17] = event.type == SDL_KEYDOWN;
+                    break;
+                case SDL_SCANCODE_DELETE:
+                    buttons[18] = event.type == SDL_KEYDOWN;
+                    break;
+                default: break;
+            }
         }
     }
 }
@@ -162,6 +233,14 @@ static unsigned jcv_coleco_input_poll(const void *udata, int port) {
         for (unsigned i = 0; i < 18; ++i)
             if (buttons[i]) b |= (1 << i);
     }
+    return b;
+}
+
+static unsigned jcv_myvision_input_poll(const void *udata) {
+    (void)udata;
+    unsigned b = 0;
+    for (unsigned i = 0; i < 19; ++i)
+        if (buttons[i]) b |= (1 << i);
     return b;
 }
 
@@ -205,21 +284,37 @@ int main (int argc, char *argv[]) {
     putenv("SDL_AUDIODRIVER=directsound");
 #endif
 
+    const char *extptr = strrchr(argv[argc - 1], '.');
+    if (extptr != NULL)
+        extptr++;
+    else
+        return 0;
+
+    // Convert extension to lower case
+    char ext[4];
+    snprintf(ext, sizeof(ext), "%s", extptr);
+    for (size_t i = 0; i < strlen(extptr); ++i)
+        ext[i] = tolower(ext[i]);
+
+    if (!strcmp(ext, "myv"))
+        sys = JCV_SYS_MYVISION;
+
     jcv_input_set_callback_coleco(jcv_coleco_input_poll, NULL);
+    jcv_input_set_callback_myvision(jcv_myvision_input_poll, NULL);
     jcv_audio_set_callback(jcv_cb_audio, NULL);
     jcv_audio_set_rate(SAMPLERATE);
     jcv_audio_set_rsqual(2);
     jcv_audio_set_buffer(abuf);
-    jcv_set_system(JCV_SYS_COLECO);
+    jcv_set_system(sys);
     jcv_set_region(JCV_REGION_NTSC);
 
     jcv_init();
 
-    jcv_audio_set_rate(SAMPLERATE);
-
-    if (!jcv_bios_load_file("coleco.rom")) {
-        fprintf(stderr, "Failed to load BIOS at: coleco.rom\n");
-        return 1;
+    if (sys == JCV_SYS_COLECO) {
+        if (!jcv_bios_load_file("coleco.rom")) {
+            fprintf(stderr, "Failed to load BIOS at: coleco.rom\n");
+            return 1;
+        }
     }
 
     if (jcv_rom_load_file(argv[argc - 1])) {
@@ -251,7 +346,7 @@ int main (int argc, char *argv[]) {
     int windowwidth = SCREEN_WIDTH * scale;
     int windowheight = SCREEN_HEIGHT * scale;
 
-    window = SDL_CreateWindow("libjollycv-example",
+    window = SDL_CreateWindow("jollycv-example",
         SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
         windowwidth, windowheight, windowflags);
 
