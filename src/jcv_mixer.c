@@ -55,6 +55,7 @@ static unsigned framerate = 60; // Default to 60 for NTSC
 static unsigned rsq = 3; // Default resampler quality is 3
 
 static int sys = JCV_SYS_COLECO;
+static int raw = 0;
 
 // Speex
 static SpeexResamplerState *resampler = NULL;
@@ -69,6 +70,13 @@ static void jcv_mixer_resamp_coleco(size_t in_psg) {
     // Reset buffer position for both chips
     sn76489->bufpos = 0;
     ay38910->bufpos = 0;
+
+    if (raw) {
+        for (size_t i = 0; i < in_psg; ++i)
+            abuf[i] = sn76489buf[i] + ay38910buf[i];
+        jcv_mixer_cb(udata_mixer, in_psg);
+        return;
+    }
 
     spx_uint32_t in_len = in_psg;
 
@@ -87,6 +95,13 @@ static void jcv_mixer_resamp_crvision(size_t in_psg) {
     // Reset buffer position
     sn76489->bufpos = 0;
 
+    if (raw) {
+        for (size_t i = 0; i < in_psg; ++i)
+            abuf[i] = sn76489buf[i];
+        jcv_mixer_cb(udata_mixer, in_psg);
+        return;
+    }
+
     spx_uint32_t in_len = in_psg;
 
     spx_uint32_t outsamps = samplerate / framerate;
@@ -99,6 +114,13 @@ static void jcv_mixer_resamp_crvision(size_t in_psg) {
 static void jcv_mixer_resamp_myvision(size_t in_psg) {
     // Reset buffer position
     ay38910->bufpos = 0;
+
+    if (raw) {
+        for (size_t i = 0; i < in_psg; ++i)
+            abuf[i] = ay38910buf[i];
+        jcv_mixer_cb(udata_mixer, in_psg);
+        return;
+    }
 
     spx_uint32_t in_len = in_psg;
 
@@ -117,6 +139,10 @@ void jcv_mixer_set_rate(size_t rate) {
         default:
             break;
     }
+}
+
+void jcv_mixer_set_raw(int r) {
+    raw = r;
 }
 
 // Set the region

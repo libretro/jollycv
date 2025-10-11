@@ -248,6 +248,10 @@ void jcv_audio_set_rate(size_t rate) {
     jcv_mixer_set_rate(rate);
 }
 
+void jcv_audio_set_raw(int raw) {
+    jcv_mixer_set_raw(raw);
+}
+
 void jcv_audio_set_rsqual(unsigned rsqual) {
     jcv_mixer_set_rsqual(rsqual);
 }

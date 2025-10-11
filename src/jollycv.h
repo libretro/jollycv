@@ -259,6 +259,12 @@ void jcv_audio_set_callback(void (*cb)(const void*, size_t), void *u);
 void jcv_audio_set_rate(size_t rate);
 
 /**
+ * Set the internal mixer to use raw samples (bypass resampling)
+ * @param raw Enable or disable raw sample mode
+ */
+void jcv_audio_set_raw(int raw);
+
+/**
  * Set the internal resampler quality level
  * @param rsqual Internal resampler quality level (0-10)
  */

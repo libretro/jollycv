@@ -40,6 +40,7 @@ void jcv_mixer_init(unsigned);
 void jcv_mixer_set_buffer(int16_t*);
 void jcv_mixer_set_callback(void (*)(const void*, size_t), void*);
 void jcv_mixer_set_rate(size_t);
+void jcv_mixer_set_raw(int);
 void jcv_mixer_set_region(unsigned);
 void jcv_mixer_set_rsqual(unsigned);
 void jcv_mixer_resamp(void);
