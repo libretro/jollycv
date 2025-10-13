@@ -107,8 +107,9 @@ Notes
 Compatibility
 -------------
  ColecoVision
-  100% Compatibility with the commercially released library, and all known and
-  freely available homebrew.
+  100% Compatibility with the original commercially released library, and all
+  known and freely available homebrew. Some recently released commercial
+  homebrew may or may not be compatible.
 
   Super Sketch boots, but is not usable due to a lack of documentation on the
   Super Sketch Pad.

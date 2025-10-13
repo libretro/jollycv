@@ -40,6 +40,20 @@ extern "C" {
 #include <stddef.h>
 #include <stdint.h>
 
+// Semantic Versioning
+#define JCV_VERSION_MAJOR   2
+#define JCV_VERSION_MINOR   0
+#define JCV_VERSION_PATCH   0
+
+/**
+ * The JollyCV Version number is made up of the patch version, added to
+ * 100 times the minor version, added to 10000 times the major version. For
+ * example, the JCV_VERSION_NUMBER for 2.6.3 would be 20603.
+ */
+#define JCV_VERSION_NUMBER  (JCV_VERSION_PATCH + (JCV_VERSION_MINOR * 100) + \
+                            (JCV_VERSION_MAJOR * 10000))
+#define JCV_VERSION_NAME    "JollyCV 2.0.0"
+
 /**
  * Log levels
  */

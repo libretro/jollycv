@@ -1,10 +1,10 @@
-Version x.x.x
+Version 2.0.0
 -------------
  - VDP modified to allow connection to various interrupt functions
  - Gamma Corrected Datasheet palette added
  - Basic support for the CreatiVision
  - Basic support for the Nichibutsu My Vision
- - Support for ColecoVision Opcode style cartridges
+ - Partial support for ColecoVision Opcode style cartridges
  - First release of libjollycv with a public API
 
 Version 1.1.0
