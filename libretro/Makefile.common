@@ -1,0 +1,26 @@
+INCFLAGS := -I$(CORE_DIR)/deps -I$(CORE_DIR)/src -I$(CORE_DIR)/libretro \
+	-I$(CORE_DIR)/src/m6502 -I$(CORE_DIR)/src/z80
+
+ifeq ($(platform),unix)
+LIBS += -lm
+endif
+
+SOURCES_C := \
+	$(CORE_DIR)/libretro/libretro.c \
+	$(CORE_DIR)/libretro/md5.c \
+	$(CORE_DIR)/deps/speex/resample.c \
+	$(CORE_DIR)/src/m6502/m6502.c \
+	$(CORE_DIR)/src/z80/z80.c \
+	$(CORE_DIR)/src/jcv_coleco.c \
+	$(CORE_DIR)/src/jcv_crvision.c \
+	$(CORE_DIR)/src/jcv_db.c \
+	$(CORE_DIR)/src/jcv_m6502.c \
+	$(CORE_DIR)/src/jcv_mixer.c \
+	$(CORE_DIR)/src/jcv_myvision.c \
+	$(CORE_DIR)/src/jcv_serial.c \
+	$(CORE_DIR)/src/jcv_z80.c \
+	$(CORE_DIR)/src/jollycv.c \
+	$(CORE_DIR)/src/ay38910.c \
+	$(CORE_DIR)/src/sn76489.c \
+	$(CORE_DIR)/src/tms9918.c \
+	$(CORE_DIR)/src/eep24cxx.c
