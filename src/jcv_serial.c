@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020-2022 Rupert Carmichael
+Copyright (c) 2020-2025 Rupert Carmichael
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -122,6 +122,16 @@ uint64_t jcv_serial_pop64(uint8_t *mem) {
     ret |= (uint64_t)(mem[pos++]);
     return ret;
 }
+
+// Peek at a 32-bit integer
+uint32_t jcv_serial_peek32(uint8_t *mem) {
+    uint32_t ret = mem[pos] << 24;
+    ret |= mem[pos + 1] << 16;
+    ret |= mem[pos + 2] << 8;
+    ret |= mem[pos + 3];
+    return ret;
+}
+
 
 // Return the size of the serialized data
 size_t jcv_serial_size(void) {

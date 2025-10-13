@@ -50,6 +50,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #define SIZE_STATE 50392
 static uint8_t state[SIZE_STATE + SIZE_32K];
+static uint32_t state_version = ('J' << 24) | ('C' << 16) | ('V' << 8) | 0x01;
 
 static uint8_t *cvbios = NULL; // BIOS ROM
 static uint8_t *romdata = NULL; // Game ROM
@@ -122,6 +123,12 @@ size_t jcv_coleco_state_size(void) {
 void jcv_coleco_state_load_raw(const void *sstate) {
     uint8_t *st = (uint8_t*)sstate;
     jcv_serial_begin();
+
+    uint32_t stver = 0;
+    (void)stver; // This variable remains unused for now
+    if ((jcv_serial_peek32(st) & 0xffffff00) == 0x4a435600) // J C V '0'
+        stver = jcv_serial_pop32(st);
+
     jcv_serial_popblk(cvsys.ram, st, SIZE_CVRAM);
     jcv_serial_popblk(cvsys.sgmram, st, SIZE_32K);
     cvsys.cseg = jcv_serial_pop8(st);
@@ -154,6 +161,7 @@ void jcv_coleco_state_load_raw(const void *sstate) {
 // Snapshot the running state and return the address of the raw data
 const void* jcv_coleco_state_save_raw(void) {
     jcv_serial_begin();
+    jcv_serial_push32(state, state_version);
     jcv_serial_pushblk(state, cvsys.ram, SIZE_CVRAM);
     jcv_serial_pushblk(state, cvsys.sgmram, SIZE_32K);
     jcv_serial_push8(state, cvsys.cseg);

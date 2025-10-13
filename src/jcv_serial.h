@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2020-2022 Rupert Carmichael
+Copyright (c) 2020-2025 Rupert Carmichael
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without
@@ -42,6 +42,7 @@ uint8_t jcv_serial_pop8(uint8_t*);
 uint16_t jcv_serial_pop16(uint8_t*);
 uint32_t jcv_serial_pop32(uint8_t*);
 uint64_t jcv_serial_pop64(uint8_t*);
+uint32_t jcv_serial_peek32(uint8_t*);
 size_t jcv_serial_size(void);
 
 #endif
