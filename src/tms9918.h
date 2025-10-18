@@ -65,6 +65,7 @@ void tms9918_set_buffer(uint32_t*);
 void tms9918_set_vblint(void (*)(void));
 void tms9918_set_palette(unsigned);
 void tms9918_set_region(unsigned);
+void tms9918_set_nosprlimit(unsigned);
 
 void tms9918_intchk(void);
 

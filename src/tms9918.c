@@ -69,6 +69,8 @@ static uint32_t *vbuf = NULL;
 
 static uint16_t numscanlines = TMS9918_SCANLINES;
 
+static unsigned nosprlimit = 0;
+
 static void (*tms9918_vblint)(void);
 
 // Increment address with wrap
@@ -140,6 +142,11 @@ void tms9918_set_palette(unsigned p) {
 void tms9918_set_region(unsigned region) {
     // 313 scanlines for PAL, 262 scanlines for NTSC (192 visible for both)
     numscanlines = region ? TMS9918_SCANLINES_PAL : TMS9918_SCANLINES;
+}
+
+// Set the "No Sprite Limit" hack on or off
+void tms9918_set_nosprlimit(unsigned l) {
+    nosprlimit = l;
 }
 
 // Set initial VDP values - also could be called reset
@@ -523,7 +530,8 @@ static void tms9918_sprline(void) {
 
         if (++numspr == 5) { // There can only be 4 sprites per scanline
             vdp.stat |= 0x40; // Set the 5S bit (Fifth Sprite detected)
-            break; // We're done here, so break the loop
+            if (!nosprlimit)
+                break; // We're done here, so break the loop
         }
 
         // In the case of 16x16, to calculate the address in the Sprite

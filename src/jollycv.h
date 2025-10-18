@@ -300,6 +300,12 @@ void jcv_video_set_buffer(uint32_t *buf);
 void jcv_video_set_palette_tms9918(unsigned p);
 
 /**
+ * Allow unlimited sprites per scanline
+ * @param l Limit (0 = limit to hardware maximum of 5, 1 = remove limit)
+ */
+void jcv_video_set_nosprlimit_tms9918(unsigned l);
+
+/**
  * Initialize the emulator
  */
 void jcv_init(void);
