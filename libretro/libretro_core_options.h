@@ -138,6 +138,17 @@ struct retro_core_option_definition option_defs_us[] = {
       },
       "6"
    },
+   {
+      "jollycv_nosprlimit",
+      "No Sprite per Line Limit (Hack)",
+      "Remove the sprites per line limit - can cause glitches",
+      {
+         { "off", "OFF (Default)" },
+         { "on", "ON" },
+         { NULL, NULL },
+      },
+      "off"
+   },
    { NULL, NULL, NULL, {{0}}, NULL },
 };
 

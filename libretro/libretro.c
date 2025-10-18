@@ -476,7 +476,7 @@ static void check_variables(bool first_run) {
     video_width_visible = JCV_VIDEO_WIDTH_MAX - (video_crop_l + video_crop_r);
     video_height_visible = JCV_VIDEO_HEIGHT_MAX - (video_crop_t + video_crop_b);
 
-    // Aspect Ratio
+    // Aspect Ratio -- this MUST stay below the overscan settings
     var.key   = "jollycv_aspect";
     var.value = NULL;
 
@@ -490,6 +490,12 @@ static void check_variables(bool first_run) {
         else
             video_aspect = jcv_aspect_ratio(0);
     }
+
+    var.key   = "jollycv_nosprlimit";
+    var.value = NULL;
+
+    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
+        jcv_video_set_nosprlimit_tms9918(strcmp(var.value, "off"));
 }
 
 void retro_init(void) {
