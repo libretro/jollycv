@@ -264,6 +264,10 @@ void jcv_video_set_palette_tms9918(unsigned p) {
     tms9918_set_palette(p);
 }
 
+void jcv_video_set_nosprlimit_tms9918(unsigned l) {
+    tms9918_set_nosprlimit(l);
+}
+
 // Load a state from a file
 int jcv_state_load(const char *filename) {
     FILE *file;
