@@ -1,9 +1,6 @@
--include $(SOURCEDIR)/mk/core.mk
--include $(SOURCEDIR)/mk/miniz.mk
--include $(SOURCEDIR)/mk/samplerate.mk
--include $(SOURCEDIR)/mk/speexdsp.mk
-
 CFLAGS_JG = $(shell $(PKG_CONFIG) --cflags jg)
+
+CFLAGS_PTHREAD := -pthread
 
 PKGCONF_EPOXY := epoxy
 CFLAGS_EPOXY = $(shell $(PKG_CONFIG) --cflags $(PKGCONF_EPOXY))
@@ -28,3 +25,8 @@ LIBS_ZLIB = $(shell $(PKG_CONFIG) --libs $(PKGCONF_ZLIB))
 PKGCONF_ZSTD := libzstd
 CFLAGS_ZSTD = $(shell $(PKG_CONFIG) --cflags $(PKGCONF_ZSTD))
 LIBS_ZSTD = $(shell $(PKG_CONFIG) --libs $(PKGCONF_ZSTD))
+
+-include $(SOURCEDIR)/mk/core.mk
+-include $(SOURCEDIR)/mk/miniz.mk
+-include $(SOURCEDIR)/mk/samplerate.mk
+-include $(SOURCEDIR)/mk/speexdsp.mk
