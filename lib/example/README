@@ -1,7 +1,7 @@
 Example libjollycv implementation
 -------------------------------
 This is a very basic example of how to use libjollycv. To build, you will
-require libjollycv, speexdsp, and SDL2 to be installed in your environment.
+require libjollycv, speexdsp, and SDL3 to be installed in your environment.
 You will also need "coleco.rom" in directory the program is run from. For
 CreatiVision you will need "bioscv.rom" in the directory the program is run
 from. This example assumes .col is ColecoVision, .rom is CreatiVision, and
