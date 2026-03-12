@@ -67,6 +67,9 @@ static const char *savedir;
 static int systype = JCV_SYS_COLECO;
 static int region = JCV_REGION_NTSC;
 
+static int crvision_autoreset = 0;
+static int crvision_reset_counter = 0;
+
 static int video_crop_t = 0;
 static int video_crop_b = 0;
 static int video_crop_l = 0;
@@ -303,18 +306,10 @@ static unsigned jcv_input_poll_crvision(const void *udata, int port) {
     if (input_state_cb(port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_RIGHT))
         b |= CRV_INPUT_RIGHT;
 
-    if (input_state_cb(port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2)) {
-        if (input_state_cb(port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT))
-            jcv_reset(0);
-        if (input_state_cb(port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START))
-            jcv_reset(0);
-    }
-    else {
-        if (input_state_cb(port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT))
-            b |= (port ? CRV_INPUT_7 : CRV_INPUT_B);
-        if (input_state_cb(port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START))
-            b |= (port ? CRV_INPUT_N : CRV_INPUT_6);
-    }
+    if (input_state_cb(port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT))
+        b |= (port ? CRV_INPUT_7 : CRV_INPUT_B);
+    if (input_state_cb(port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START))
+        b |= (port ? CRV_INPUT_N : CRV_INPUT_6);
 
     if (input_state_cb(port, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_B))
         b |= CRV_INPUT_FIRE1;
@@ -324,8 +319,23 @@ static unsigned jcv_input_poll_crvision(const void *udata, int port) {
     return b;
 }
 
+static void jcv_input_poll_crvision_reset(void) {
+    if (crvision_reset_counter > 0 && --crvision_reset_counter == 0) {
+        jcv_reset(0);
+        return;
+    }
+
+    if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_L2)) {
+        if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_SELECT))
+            jcv_reset(0);
+        if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_START))
+            jcv_reset(0);
+    }
+}
+
 static unsigned jcv_input_poll_myvision(const void *udata) {
     (void)udata;
+    input_poll_cb();
     unsigned b = 0;
 
     if (input_state_cb(0, RETRO_DEVICE_JOYPAD, 0, RETRO_DEVICE_ID_JOYPAD_UP))
@@ -424,7 +434,6 @@ static float jcv_aspect_ratio(int aspect_ratio_mode) {
 
 static void check_variables(bool first_run) {
     struct retro_variable var = {0};
-    (void)first_run;
 
     // Palette
     var.key   = "jollycv_tmspalette";
@@ -491,11 +500,22 @@ static void check_variables(bool first_run) {
             video_aspect = jcv_aspect_ratio(0);
     }
 
+    // No sprite limit
     var.key   = "jollycv_nosprlimit";
     var.value = NULL;
 
     if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value)
         jcv_video_set_nosprlimit_tms9918(strcmp(var.value, "off"));
+
+    // CreatiVision Auto-Reset
+    var.key   = "jollycv_autoreset";
+    var.value = NULL;
+
+    if (environ_cb(RETRO_ENVIRONMENT_GET_VARIABLE, &var) && var.value) {
+        crvision_autoreset = !strcmp(var.value, "on");
+        if (first_run && crvision_autoreset)
+            crvision_reset_counter = 60;
+    }
 }
 
 void retro_init(void) {
@@ -604,6 +624,10 @@ void retro_reset(void) {
 }
 
 void retro_run(void) {
+    input_poll_cb();
+    if (systype == JCV_SYS_CRVISION)
+        jcv_input_poll_crvision_reset();
+
     jcv_exec();
 
     bool update = false;

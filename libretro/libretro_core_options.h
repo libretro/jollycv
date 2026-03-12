@@ -149,6 +149,18 @@ struct retro_core_option_definition option_defs_us[] = {
       },
       "off"
    },
+   {
+      "jollycv_autoreset",
+      "CreatiVision Auto-Reset (Hack)",
+      "Automatically reset CreatiVision games after starting to immediately "
+      "gain control without having to manually reset",
+      {
+         { "off", "OFF (Default)" },
+         { "on", "ON" },
+         { NULL, NULL },
+      },
+      "off"
+   },
    { NULL, NULL, NULL, {{0}}, NULL },
 };
 
