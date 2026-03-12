@@ -1,5 +1,5 @@
 /*
-Copyright (c) 2025 Rupert Carmichael
+Copyright (c) 2025-2026 Rupert Carmichael
 
 Permission to use, copy, modify, and/or distribute this software for any
 purpose with or without fee is hereby granted.
@@ -18,8 +18,9 @@ PERFORMANCE OF THIS SOFTWARE.
 #include <stdint.h>
 #include <stdbool.h>
 #include <string.h>
+#include <ctype.h>
 
-#include <SDL.h>
+#include <SDL3/SDL.h>
 #include <speex/speex_resampler.h>
 
 #include <jollycv.h>
@@ -36,8 +37,7 @@ static SpeexResamplerState *resampler = NULL;
 static int err;
 
 // SDL Audio
-static SDL_AudioSpec spec, obtained;
-static SDL_AudioDeviceID dev;
+static SDL_AudioStream *audiostream = NULL;
 
 // SDL Video
 static SDL_Window *window;
@@ -68,9 +68,9 @@ static int running = 1;
 
 // Handle SDL input events
 static void jcv_input_handler(SDL_Event event) {
-    if (event.type == SDL_KEYUP || event.type == SDL_KEYDOWN) {
+    if (event.type == SDL_EVENT_KEY_UP || event.type == SDL_EVENT_KEY_DOWN) {
         if (sys == JCV_SYS_COLECO) {
-            switch (event.key.keysym.scancode) {
+            switch (event.key.scancode) {
                 case SDL_SCANCODE_ESCAPE:
                     running = 0;
                     break;
@@ -79,66 +79,66 @@ static void jcv_input_handler(SDL_Event event) {
                     break;
 
                 case SDL_SCANCODE_UP:
-                    buttons[0] = event.type == SDL_KEYDOWN;
+                    buttons[0] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_DOWN:
-                    buttons[1] = event.type == SDL_KEYDOWN;
+                    buttons[1] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_LEFT:
-                    buttons[2] = event.type == SDL_KEYDOWN;
+                    buttons[2] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_RIGHT:
-                    buttons[3] = event.type == SDL_KEYDOWN;
+                    buttons[3] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
 
                 case SDL_SCANCODE_A:
-                    buttons[4] = event.type == SDL_KEYDOWN;
+                    buttons[4] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_Z:
-                    buttons[5] = event.type == SDL_KEYDOWN;
+                    buttons[5] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
 
                 case SDL_SCANCODE_1:
-                    buttons[6] = event.type == SDL_KEYDOWN;
+                    buttons[6] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_2:
-                    buttons[7] = event.type == SDL_KEYDOWN;
+                    buttons[7] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_3:
-                    buttons[8] = event.type == SDL_KEYDOWN;
+                    buttons[8] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_4:
-                    buttons[9] = event.type == SDL_KEYDOWN;
+                    buttons[9] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_5:
-                    buttons[10] = event.type == SDL_KEYDOWN;
+                    buttons[10] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_6:
-                    buttons[11] = event.type == SDL_KEYDOWN;
+                    buttons[11] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_7:
-                    buttons[12] = event.type == SDL_KEYDOWN;
+                    buttons[12] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_8:
-                    buttons[13] = event.type == SDL_KEYDOWN;
+                    buttons[13] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_9:
-                    buttons[14] = event.type == SDL_KEYDOWN;
+                    buttons[14] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_0:
-                    buttons[15] = event.type == SDL_KEYDOWN;
+                    buttons[15] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_BACKSPACE:
-                    buttons[16] = event.type == SDL_KEYDOWN;
+                    buttons[16] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_RETURN:
-                    buttons[17] = event.type == SDL_KEYDOWN;
+                    buttons[17] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 default: break;
             }
         }
         else if (sys == JCV_SYS_CRVISION) {
-            switch (event.key.keysym.scancode) {
+            switch (event.key.scancode) {
                 case SDL_SCANCODE_ESCAPE:
                     running = 0;
                     break;
@@ -147,33 +147,33 @@ static void jcv_input_handler(SDL_Event event) {
                     break;
 
                 case SDL_SCANCODE_UP:
-                    buttons[0] = event.type == SDL_KEYDOWN;
+                    buttons[0] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_DOWN:
-                    buttons[1] = event.type == SDL_KEYDOWN;
+                    buttons[1] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_LEFT:
-                    buttons[2] = event.type == SDL_KEYDOWN;
+                    buttons[2] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_RIGHT:
-                    buttons[3] = event.type == SDL_KEYDOWN;
+                    buttons[3] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
 
                 case SDL_SCANCODE_A:
-                    buttons[4] = event.type == SDL_KEYDOWN;
+                    buttons[4] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_Z:
-                    buttons[5] = event.type == SDL_KEYDOWN;
+                    buttons[5] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
 
                 case SDL_SCANCODE_6:
-                    buttons[11] = event.type == SDL_KEYDOWN;
+                    buttons[11] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 default: break;
                 }
         }
         else if (sys == JCV_SYS_MYVISION) {
-            switch (event.key.keysym.scancode) {
+            switch (event.key.scancode) {
                 case SDL_SCANCODE_ESCAPE:
                     running = 0;
                     break;
@@ -181,61 +181,61 @@ static void jcv_input_handler(SDL_Event event) {
                     jcv_reset(0);
                     break;
                 case SDL_SCANCODE_1:
-                    buttons[0] = event.type == SDL_KEYDOWN;
+                    buttons[0] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_2:
-                    buttons[1] = event.type == SDL_KEYDOWN;
+                    buttons[1] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_3:
-                    buttons[2] = event.type == SDL_KEYDOWN;
+                    buttons[2] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_4:
-                    buttons[3] = event.type == SDL_KEYDOWN;
+                    buttons[3] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_5:
-                    buttons[4] = event.type == SDL_KEYDOWN;
+                    buttons[4] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_6:
-                    buttons[5] = event.type == SDL_KEYDOWN;
+                    buttons[5] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_7:
-                    buttons[6] = event.type == SDL_KEYDOWN;
+                    buttons[6] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_8:
-                    buttons[7] = event.type == SDL_KEYDOWN;
+                    buttons[7] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_9:
-                    buttons[8] = event.type == SDL_KEYDOWN;
+                    buttons[8] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_0:
-                    buttons[9] = event.type == SDL_KEYDOWN;
+                    buttons[9] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_MINUS:
-                    buttons[10] = event.type == SDL_KEYDOWN;
+                    buttons[10] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_EQUALS:
-                    buttons[11] = event.type == SDL_KEYDOWN;
+                    buttons[11] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_BACKSPACE:
-                    buttons[12] = event.type == SDL_KEYDOWN;
+                    buttons[12] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_RETURN:
-                    buttons[13] = event.type == SDL_KEYDOWN;
+                    buttons[13] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_LEFT:
-                    buttons[14] = event.type == SDL_KEYDOWN;
+                    buttons[14] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_UP:
-                    buttons[15] = event.type == SDL_KEYDOWN;
+                    buttons[15] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_DOWN:
-                    buttons[16] = event.type == SDL_KEYDOWN;
+                    buttons[16] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_RIGHT:
-                    buttons[17] = event.type == SDL_KEYDOWN;
+                    buttons[17] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 case SDL_SCANCODE_DELETE:
-                    buttons[18] = event.type == SDL_KEYDOWN;
+                    buttons[18] = event.type == SDL_EVENT_KEY_DOWN;
                     break;
                 default: break;
             }
@@ -301,13 +301,13 @@ static void jcv_cb_audio(const void *udata, size_t samps) {
         return;
 
     // Manage audio output queue size by resampling
-    uint32_t qsamps = SDL_GetQueuedAudioSize(dev);
+    int qbytes = SDL_GetAudioStreamAvailable(audiostream);
     unsigned esamps = 4; // Up to 4 extra samples
 
-    if (qsamps > SAMPLERATE)
-        SDL_ClearQueuedAudio(dev);
-    else if (qsamps < 3200)
-        esamps = (qsamps / 800);
+    if (qbytes > (int)(SAMPLERATE * sizeof(int16_t) * CHANNELS))
+        SDL_ClearAudioStream(audiostream);
+    else if (qbytes < 3200)
+        esamps = (qbytes / 800);
 
     esamps = 4 - esamps;
 
@@ -321,7 +321,8 @@ static void jcv_cb_audio(const void *udata, size_t samps) {
         abuf, &insamps,
         rsbuf, &outsamps);
 
-    SDL_QueueAudio(dev, rsbuf, outsamps << 1); // Sample number is in bytes
+    // Sample number is in bytes
+    SDL_PutAudioStreamData(audiostream, rsbuf, outsamps << 1);
 }
 
 int main (int argc, char *argv[]) {
@@ -329,11 +330,6 @@ int main (int argc, char *argv[]) {
         fprintf(stderr, "Usage: ./%s [FILE]\n", argv[0]);
         exit(1);
     }
-
-    // Force DirectSound audio driver on Windows
-#if defined(_WIN32) || defined(__MINGW32__) || defined(__MINGW64__)
-    putenv("SDL_AUDIODRIVER=directsound");
-#endif
 
     const char *extptr = strrchr(argv[argc - 1], '.');
     if (extptr != NULL)
@@ -395,77 +391,70 @@ int main (int argc, char *argv[]) {
     SDL_SetHint(SDL_HINT_VIDEO_MINIMIZE_ON_FOCUS_LOSS, "0");
 
     // Initialize SDL
-    if (SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK) < 0) {
+    if (!SDL_Init(SDL_INIT_VIDEO | SDL_INIT_AUDIO | SDL_INIT_JOYSTICK)) {
         fprintf(stderr, "Failed to initialize SDL: %s\n", SDL_GetError());
         return EXIT_FAILURE;
     }
 
     // Set up the window
-    Uint32 windowflags = SDL_WINDOW_SHOWN | SDL_WINDOW_RESIZABLE |
-        SDL_WINDOW_ALLOW_HIGHDPI;
+    SDL_WindowFlags windowflags = SDL_WINDOW_RESIZABLE |
+        SDL_WINDOW_HIGH_PIXEL_DENSITY;
 
     int windowwidth = SCREEN_WIDTH * scale;
     int windowheight = SCREEN_HEIGHT * scale;
 
     window = SDL_CreateWindow("jollycv-example",
-        SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED,
         windowwidth, windowheight, windowflags);
 
-    renderer = SDL_CreateRenderer(window, -1,
-        SDL_RENDERER_ACCELERATED | SDL_RENDERER_PRESENTVSYNC);
+    renderer = SDL_CreateRenderer(window, NULL);
     SDL_SetRenderDrawColor(renderer, 0x0, 0x0, 0x0, 0xff);
-    SDL_RenderSetLogicalSize(renderer, windowwidth, windowheight);
+    SDL_SetRenderLogicalPresentation(renderer,
+        windowwidth, windowheight, SDL_LOGICAL_PRESENTATION_LETTERBOX);
+    SDL_SetRenderVSync(renderer, 1);
 
     texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_ARGB8888,
         SDL_TEXTUREACCESS_STREAMING, SCREEN_WIDTH, SCREEN_HEIGHT);
+    SDL_SetTextureBlendMode(texture, SDL_BLENDMODE_NONE);
+    SDL_SetTextureScaleMode(texture, SDL_SCALEMODE_NEAREST);
 
-    SDL_ShowCursor(false);
+    SDL_HideCursor();
 
     // Get current display mode
-    SDL_DisplayMode dm;
-    SDL_GetCurrentDisplayMode(SDL_GetWindowDisplayIndex(window), &dm);
+    const SDL_DisplayMode *dm =
+        SDL_GetCurrentDisplayMode(SDL_GetDisplayForWindow(window));
 
     // Allocate video buffer
     vbuf =
         (uint32_t*)calloc(SCREEN_WIDTH * SCREEN_HEIGHT * sizeof(uint32_t), 1);
     jcv_video_set_buffer(vbuf);
 
-    // Set up SDL Audio
-    spec.channels = CHANNELS;
-    spec.freq = SAMPLERATE;
-    spec.silence = 0;
-    spec.samples = 512;
-    spec.userdata = 0;
-    #if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    spec.format = AUDIO_S16MSB;
-    #else
-    spec.format = AUDIO_S16LSB;
-    #endif
-
-    // Open the Audio Device
-    dev = SDL_OpenAudioDevice(NULL, 0, &spec, &obtained,
-        SDL_AUDIO_ALLOW_ANY_CHANGE);
+    // Set up SDL Audio using AudioStream API
+    const SDL_AudioSpec audiospec = { SDL_AUDIO_S16, CHANNELS, SAMPLERATE };
+    audiostream = SDL_OpenAudioDeviceStream(
+        SDL_AUDIO_DEVICE_DEFAULT_PLAYBACK, &audiospec, NULL, NULL);
 
     // Set up resampling
     resampler = speex_resampler_init(CHANNELS, SAMPLERATE, SAMPLERATE,
         0, &err);
 
     // Allow audio playback
-    SDL_PauseAudioDevice(dev, 0);
+    SDL_ResumeAudioDevice(SDL_GetAudioStreamDevice(audiostream));
 
     int runframes = 0;
     int collector = 0;
+
+    int refresh_rate = dm->refresh_rate + 0.5;
 
     SDL_Event event;
 
     while (running) {
         // Divide core framerate by screen framerate and collect remainders
-        runframes = framerate / dm.refresh_rate;
-        collector += framerate % dm.refresh_rate;
+        runframes = framerate / refresh_rate;
+        collector += framerate % refresh_rate;
 
-        if (collector >= dm.refresh_rate) {
+        if (collector >= refresh_rate) {
             ++runframes;
-            collector -= dm.refresh_rate;
+            collector -= refresh_rate;
         }
 
         for (int i = 0; i < runframes; ++i)
@@ -475,13 +464,13 @@ int main (int argc, char *argv[]) {
         SDL_RenderClear(renderer);
         SDL_UpdateTexture(texture, NULL, vbuf,
             SCREEN_WIDTH * sizeof(uint32_t));
-        SDL_RenderCopy(renderer, texture, NULL, NULL);
+        SDL_RenderTexture(renderer, texture, NULL, NULL);
         SDL_RenderPresent(renderer);
 
         // Poll for events
         while (SDL_PollEvent(&event)) {
             switch (event.type) {
-                case SDL_QUIT: {
+                case SDL_EVENT_QUIT: {
                     running = 0;
                     break;
                 }
@@ -496,6 +485,9 @@ int main (int argc, char *argv[]) {
 
     // Bring down audio and video
     speex_resampler_destroy(resampler);
+
+    if (audiostream)
+        SDL_DestroyAudioStream(audiostream);
 
     if (vbuf)
         free(vbuf);
