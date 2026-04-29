@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #else
 #include "jg_crvision_jcv.h"
 #include "jg_myvision_jcv.h"
+jg_inputinfo_t* jg_get_inputlist(size_t *num);
 #endif
 
 #include "jollycv.h"
@@ -54,6 +55,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ASPECT_PAL 1.4257812
 #define CHANNELS 1
 #define NUMINPUTS 2
+#define TOTALINPUTS 10 // 7 ColecoVision, 2 CreatiVision, 1 My Vision
 
 static jg_cb_audio_t jg_cb_audio;
 static jg_cb_frametime_t jg_cb_frametime;
@@ -97,6 +99,7 @@ static jg_pathinfo_t pathinfo;
 static jg_fileinfo_t biosinfo;
 static jg_fileinfo_t gameinfo;
 static jg_inputinfo_t inputinfo[NUMINPUTS];
+static jg_inputinfo_t inputlist[TOTALINPUTS];
 static jg_inputstate_t *input_device[NUMINPUTS];
 
 // Emulator settings
@@ -138,6 +141,9 @@ enum {
     RSQUAL,
     REGION,
 };
+
+// Keep track of whether the input list has been built or not
+static int inputlist_built = 0;
 
 // System being emulated
 static int sys = JCV_SYS_COLECO;
@@ -536,6 +542,35 @@ jg_audioinfo_t* jg_get_audioinfo(void) {
 jg_inputinfo_t* jg_get_inputinfo(int port) {
     return &inputinfo[port];
 }
+
+jg_inputinfo_t* jg_get_inputlist(size_t *num) {
+    if (!inputlist_built) {
+        unsigned listnum = 0;
+
+        // ColecoVision
+        inputlist[listnum++] = jg_coleco_inputinfo(0, JG_COLECO_PAD);
+        inputlist[listnum++] = jg_coleco_inputinfo(1, JG_COLECO_PAD);
+        inputlist[listnum++] = jg_coleco_inputinfo(0, JG_COLECO_ROLLER);
+        inputlist[listnum++] = jg_coleco_inputinfo(1, JG_COLECO_ROLLER);
+        inputlist[listnum++] = jg_coleco_inputinfo(0, JG_COLECO_SAC);
+        inputlist[listnum++] = jg_coleco_inputinfo(1, JG_COLECO_SAC);
+        //inputlist[listnum++] = jg_coleco_inputinfo(0, JG_COLECO_SKETCH);
+        inputlist[listnum++] = jg_coleco_inputinfo(0, JG_COLECO_WHEEL);
+
+        // CreatiVision
+        inputlist[listnum++] = jg_crvision_inputinfo(0, JG_CRVISION_LPAD);
+        inputlist[listnum++] = jg_crvision_inputinfo(0, JG_CRVISION_RPAD);
+
+        // My Vision
+        inputlist[listnum++] = jg_myvision_inputinfo(0, JG_MYVISION_SYSTEM);
+
+        inputlist_built = 1;
+    }
+    *num = TOTALINPUTS;
+    return inputlist;
+}
+
+
 
 jg_setting_t* jg_get_settings(size_t *numsettings) {
     *numsettings = sizeof(settings_jcv) / sizeof(jg_setting_t);
