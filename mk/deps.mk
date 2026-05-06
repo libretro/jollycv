@@ -2,6 +2,10 @@ CFLAGS_JG = $(shell $(PKG_CONFIG) --cflags jg)
 
 CFLAGS_PTHREAD := -pthread
 
+PKGCONF_CHDR := libchdr
+CFLAGS_CHDR = $(shell $(PKG_CONFIG) --cflags $(PKGCONF_CHDR))
+LIBS_CHDR = $(shell $(PKG_CONFIG) --libs $(PKGCONF_CHDR))
+
 PKGCONF_EPOXY := epoxy
 CFLAGS_EPOXY = $(shell $(PKG_CONFIG) --cflags $(PKGCONF_EPOXY))
 LIBS_EPOXY = $(shell $(PKG_CONFIG) --libs $(PKGCONF_EPOXY))
@@ -13,10 +17,6 @@ LIBS_FLAC = $(shell $(PKG_CONFIG) --libs $(PKGCONF_FLAC))
 PKGCONF_LZO := lzo2
 CFLAGS_LZO = $(shell $(PKG_CONFIG) --cflags $(PKGCONF_LZO))
 LIBS_LZO = $(shell $(PKG_CONFIG) --libs $(PKGCONF_LZO))
-
-PKGCONF_SDL2 := sdl2
-CFLAGS_SDL2 = $(shell $(PKG_CONFIG) --cflags $(PKGCONF_SDL2))
-LIBS_SDL2 = $(shell $(PKG_CONFIG) --libs $(PKGCONF_SDL2))
 
 PKGCONF_SDL3 := sdl3
 CFLAGS_SDL3 = $(shell $(PKG_CONFIG) --cflags $(PKGCONF_SDL3))
