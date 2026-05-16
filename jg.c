@@ -42,6 +42,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "jg_crvision_jcv.h"
 #include "jg_myvision_jcv.h"
 jg_inputinfo_t* jg_get_inputlist(size_t *num);
+jg_setting_t* jg_get_dips(size_t *num);
 #endif
 
 #include "jollycv.h"
@@ -570,11 +571,14 @@ jg_inputinfo_t* jg_get_inputlist(size_t *num) {
     return inputlist;
 }
 
-
-
 jg_setting_t* jg_get_settings(size_t *numsettings) {
     *numsettings = sizeof(settings_jcv) / sizeof(jg_setting_t);
     return settings_jcv;
+}
+
+jg_setting_t* jg_get_dips(size_t *num) {
+    *num = 0;
+    return NULL;
 }
 
 void jg_setup_video(void) {
