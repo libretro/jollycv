@@ -41,8 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #else
 #include "jg_crvision_jcv.h"
 #include "jg_myvision_jcv.h"
-jg_inputinfo_t* jg_get_inputlist(size_t *num);
-jg_setting_t* jg_get_dips(size_t *num);
+#include "jg_compat.h"
 #endif
 
 #include "jollycv.h"
@@ -141,6 +140,13 @@ enum {
     PALETTE_TMS9918,
     RSQUAL,
     REGION,
+};
+
+static jg_biosinfo_t bioslist[] = {
+    { "coleco.rom", "ColecoVision BIOS",
+      "2c66f5911e5b42b8ebe113403548eee7", 1, 0 },
+    { "bioscv.rom", "CreatiVision BIOS",
+      "3b1ef759d8e3fb4071582efd33dd05f9", 1, 0 },
 };
 
 // Keep track of whether the input list has been built or not
@@ -579,6 +585,11 @@ jg_setting_t* jg_get_settings(size_t *numsettings) {
 jg_setting_t* jg_get_dips(size_t *num) {
     *num = 0;
     return NULL;
+}
+
+jg_biosinfo_t* jg_get_bioslist(size_t *num) {
+    *num = sizeof(bioslist) / sizeof(jg_biosinfo_t);
+    return bioslist;
 }
 
 void jg_setup_video(void) {
