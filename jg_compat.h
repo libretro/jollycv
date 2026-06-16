@@ -18,13 +18,23 @@ typedef struct _jg_biosinfo_t {
     const char *fname;
     const char *desc;
     const char *md5;
-    int required;
-    int group;
+    unsigned required;
+    unsigned group;
 } jg_biosinfo_t;
+
+typedef struct _jg_mediainfo_t {
+    const char *name;
+    unsigned count;
+    unsigned index;
+    unsigned inserted;
+} jg_mediainfo_t;
 
 jg_inputinfo_t* jg_get_inputlist(size_t*);
 jg_setting_t* jg_get_dips(size_t*);
 jg_biosinfo_t* jg_get_bioslist(size_t*);
+void jg_media_set(unsigned);
+void jg_media_mount(unsigned);
+jg_mediainfo_t* jg_get_mediainfo(void);
 
 #ifdef __cplusplus
 }

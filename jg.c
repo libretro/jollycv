@@ -510,6 +510,14 @@ void jg_media_select(void) {
 void jg_media_insert(void) {
 }
 
+void jg_media_mount(unsigned mount) {
+    (void)mount;
+}
+
+void jg_media_set(unsigned id) {
+    (void)id;
+}
+
 void jg_cheat_clear(void) {
 }
 
@@ -584,6 +592,10 @@ jg_setting_t* jg_get_settings(size_t *numsettings) {
 
 jg_setting_t* jg_get_dips(size_t *num) {
     *num = 0;
+    return NULL;
+}
+
+jg_mediainfo_t* jg_get_mediainfo(void) {
     return NULL;
 }
 
