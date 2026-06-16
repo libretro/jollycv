@@ -62,6 +62,12 @@ static jg_cb_frametime_t jg_cb_frametime;
 static jg_cb_log_t jg_cb_log;
 static jg_cb_rumble_t jg_cb_rumble;
 
+#if JG_VERSION_NUMBER >= 10100
+static void *udata_audio;
+static void *udata_frametime;
+static void *udata_rumble;
+#endif
+
 static jg_coreinfo_t coreinfo_coleco = {
     "jollycv", "JollyCV", JG_VERSION, "coleco", NUMINPUTS, 0x00
 };
@@ -158,7 +164,11 @@ static uint32_t dbflags = 0;
 
 static void jcv_cb_audio(const void *udata, size_t samps) {
     (void)udata;
+#if JG_VERSION_NUMBER >= 10100
+    jg_cb_audio(udata_audio, samps);
+#else
     jg_cb_audio(samps);
+#endif
 }
 
 // Unconnected Port
@@ -346,6 +356,17 @@ static void jcv_input_setup(void) {
     }
 }
 
+#if JG_VERSION_NUMBER >= 10100
+void jg_set_cb_audio(jg_cb_audio_t func, void *ud) {
+    jg_cb_audio = func;
+    udata_audio = ud;
+}
+
+void jg_set_cb_frametime(jg_cb_frametime_t func, void *ud) {
+    jg_cb_frametime = func;
+    udata_frametime = ud;
+}
+#else
 void jg_set_cb_audio(jg_cb_audio_t func) {
     jg_cb_audio = func;
 }
@@ -353,22 +374,34 @@ void jg_set_cb_audio(jg_cb_audio_t func) {
 void jg_set_cb_frametime(jg_cb_frametime_t func) {
     jg_cb_frametime = func;
 }
+#endif
 
 void jg_set_cb_log(jg_cb_log_t func) {
     jg_cb_log = func;
     jcv_log_set_callback(func);
 }
 
+#if JG_VERSION_NUMBER >= 10100
+void jg_set_cb_rumble(jg_cb_rumble_t func, void *ud) {
+    jg_cb_rumble = func;
+    udata_rumble = ud;
+}
+#else
 void jg_set_cb_rumble(jg_cb_rumble_t func) {
     jg_cb_rumble = func;
 }
+#endif
 
 int jg_init(void) {
     jcv_input_set_callback_coleco(&jcv_coleco_input_poll, NULL);
     jcv_input_set_callback_crvision(&jcv_crvision_input_poll, NULL);
     jcv_input_set_callback_myvision(&jcv_myvision_input_poll, NULL);
 
+#if JG_VERSION_NUMBER >= 10100
+    jcv_audio_set_callback(jcv_cb_audio, udata_audio);
+#else
     jcv_audio_set_callback(jcv_cb_audio, NULL);
+#endif
     jcv_audio_set_rate(SAMPLERATE);
     jcv_audio_set_rsqual(settings_jcv[RSQUAL].val);
 
@@ -440,12 +473,20 @@ int jg_game_load(void) {
         if (settings_jcv[REGION].val) { // PAL mode
             vidinfo.aspect = ASPECT_PAL;
             audinfo.spf = (SAMPLERATE / FRAMERATE_PAL) * CHANNELS;
+#if JG_VERSION_NUMBER >= 10100
+            jg_cb_frametime(udata_frametime, FRAMERATE_PAL);
+#else
             jg_cb_frametime(FRAMERATE_PAL);
+#endif
         }
         else { // NTSC mode
             vidinfo.aspect = ASPECT_NTSC;
             audinfo.spf = (SAMPLERATE / FRAMERATE) * CHANNELS;
+#if JG_VERSION_NUMBER >= 10100
+            jg_cb_frametime(udata_frametime, FRAMERATE);
+#else
             jg_cb_frametime(FRAMERATE);
+#endif
         }
     }
     else if (sys == JCV_SYS_CRVISION) {
@@ -453,14 +494,22 @@ int jg_game_load(void) {
             return 0;
         vidinfo.aspect = ASPECT_PAL;
         audinfo.spf = (SAMPLERATE / FRAMERATE_PAL) * CHANNELS;
+#if JG_VERSION_NUMBER >= 10100
+        jg_cb_frametime(udata_frametime, FRAMERATE_PAL);
+#else
         jg_cb_frametime(FRAMERATE_PAL);
+#endif
     }
     else if (sys == JCV_SYS_MYVISION) {
         if (!jcv_media_load(gameinfo.data, gameinfo.size))
             return 0;
         vidinfo.aspect = ASPECT_NTSC;
         audinfo.spf = (SAMPLERATE / FRAMERATE) * CHANNELS;
+#if JG_VERSION_NUMBER >= 10100
+        jg_cb_frametime(udata_frametime, FRAMERATE);
+#else
         jg_cb_frametime(FRAMERATE);
+#endif
     }
 
     jcv_input_setup();
