@@ -684,3 +684,7 @@ void jg_set_auxinfo(jg_fileinfo_t info, int index) {
 void jg_set_paths(jg_pathinfo_t paths) {
     pathinfo = paths;
 }
+
+unsigned jg_api_version(void) {
+    return JG_VERSION_NUMBER;
+}

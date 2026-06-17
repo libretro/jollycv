@@ -35,6 +35,7 @@ jg_biosinfo_t* jg_get_bioslist(size_t*);
 void jg_media_set(unsigned);
 void jg_media_mount(unsigned);
 jg_mediainfo_t* jg_get_mediainfo(void);
+unsigned jg_api_version(void);
 
 #ifdef __cplusplus
 }
