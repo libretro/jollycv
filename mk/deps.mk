@@ -14,6 +14,10 @@ PKGCONF_FLAC := flac
 CFLAGS_FLAC = $(shell $(PKG_CONFIG) --cflags $(PKGCONF_FLAC))
 LIBS_FLAC = $(shell $(PKG_CONFIG) --libs $(PKGCONF_FLAC))
 
+PKGCONF_LIBCRYPTO := libcrypto
+CFLAGS_LIBCRYPTO = $(shell $(PKG_CONFIG) --cflags $(PKGCONF_LIBCRYPTO))
+LIBS_LIBCRYPTO = $(shell $(PKG_CONFIG) --libs $(PKGCONF_LIBCRYPTO))
+
 PKGCONF_LZO := lzo2
 CFLAGS_LZO = $(shell $(PKG_CONFIG) --cflags $(PKGCONF_LZO))
 LIBS_LZO = $(shell $(PKG_CONFIG) --libs $(PKGCONF_LZO))
@@ -21,6 +25,10 @@ LIBS_LZO = $(shell $(PKG_CONFIG) --libs $(PKGCONF_LZO))
 PKGCONF_SDL3 := sdl3
 CFLAGS_SDL3 = $(shell $(PKG_CONFIG) --cflags $(PKGCONF_SDL3))
 LIBS_SDL3 = $(shell $(PKG_CONFIG) --libs $(PKGCONF_SDL3))
+
+PKGCONF_VULKAN := vulkan
+CFLAGS_VULKAN = $(shell $(PKG_CONFIG) --cflags $(PKGCONF_VULKAN))
+LIBS_VULKAN = $(shell $(PKG_CONFIG) --libs $(PKGCONF_VULKAN))
 
 PKGCONF_ZLIB := zlib
 CFLAGS_ZLIB = $(shell $(PKG_CONFIG) --cflags $(PKGCONF_ZLIB))
