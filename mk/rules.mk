@@ -16,7 +16,7 @@ $(TARGET_DESKTOP): $(SOURCEDIR)/$(DESKTOP)
 
 $(TARGET_STATIC_MK): $(TARGET_STATIC_JG)
 	@printf '%s\n%s\n%s\n%s\n%s\n' 'NAME := $(JGNAME)' \
-		'$(strip ASSETS := $(DATA))' \
+		'$(strip ASSETS := $(DATA) $(notdir $(TARGET_LICENSES)))' \
 		'$(strip ICONS := $(ICONS))' \
 		'$(strip FLAGS_STATIC := $(FLAGS_STATIC))' \
 		'$(strip LIBS_STATIC := $(LIBS) $(LIBS_STATIC) $(LIBS_JG))' > $@
