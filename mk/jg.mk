@@ -78,19 +78,22 @@ override PREREQ_EXAMPLE = $(TARGET_BIN)
 # Desktop File
 override DESKTOP := $(JGNAME).desktop
 
-# HTML Docs
-override HTML_OUT := $(OBJDIR)/doc
-override DOXYFILE := $(wildcard $(SOURCEDIR)/lib/Doxyfile.in)
-
 # Example
 override BIN_OUT := $(OBJDIR)/$(EXAMPLE)
 override BIN_NAME := $(NAME)-example$(BIN_EXT)
 override BIN_EXAMPLE := $(BIN_OUT)/$(BIN_NAME)
 
+# HTML Docs
+override HTML_OUT := $(OBJDIR)/doc
+override DOXYFILE := $(wildcard $(SOURCEDIR)/lib/Doxyfile.in)
+
 # Icons
 override ICONS_BASE := $(wildcard $(SOURCEDIR)/icons/*.png \
 	$(SOURCEDIR)/icons/$(NAME).svg)
 override ICONS := $(notdir $(ICONS_BASE))
+
+# LICENSES File
+override LICENSES := $(wildcard $(SOURCEDIR)/LICENSES)
 
 # Targets
 override TARGET :=
@@ -100,6 +103,7 @@ override TARGET_BIN := $(OBJDIR)/$(BIN_NAME)
 override TARGET_DESKTOP := $(NAME)/$(DESKTOP)
 override TARGET_ICONS := $(ICONS:%=$(NAME)/icons/%)
 override TARGET_HTML := $(addprefix $(HTML_OUT)/,$(notdir $(HEADERS)))
+override TARGET_LICENSES := $(if $(LICENSES),$(NAME)/LICENSES,)
 override TARGET_MODULE := $(NAME)/$(LIBRARY)
 override TARGET_SHARED := $(OBJDIR)/$(LIB_VERSION)
 override TARGET_STATIC := $(OBJDIR)/$(LIB_STATIC)
@@ -118,6 +122,10 @@ ifeq ($(INSTALL_EXAMPLE), 0)
 	override ENABLE_EXAMPLE := 0
 else
 	override PHONY += example install-bin install-strip-bin
+endif
+
+ifneq ($(LICENSES),)
+	override PHONY += install-licenses
 endif
 
 ifeq ($(INSTALL_DATA), 0)
@@ -225,6 +233,9 @@ endif
 
 ifneq ($(TARGET_INSTALL),)
 	override TARGET_INSTALL += install-docs
+	ifneq ($(LICENSES),)
+		override TARGET_INSTALL += install-licenses
+	endif
 endif
 
 # Compiler commands
