@@ -14,6 +14,12 @@ Include this header conditionally:
 extern "C" {
 #endif
 
+typedef struct _jg_systeminfo_t {
+    const char *name;
+    const char *fname;
+    const char *ext;
+} jg_systeminfo_t;
+
 typedef struct _jg_biosinfo_t {
     const char *fname;
     const char *desc;
@@ -36,6 +42,7 @@ void jg_media_set(unsigned);
 void jg_media_mount(unsigned);
 jg_mediainfo_t* jg_get_mediainfo(void);
 unsigned jg_api_version(void);
+jg_systeminfo_t* jg_get_systemlist(size_t*);
 
 #ifdef __cplusplus
 }

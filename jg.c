@@ -155,6 +155,12 @@ static jg_biosinfo_t bioslist[] = {
       "3b1ef759d8e3fb4071582efd33dd05f9", 1, 0 },
 };
 
+static jg_systeminfo_t systemlist[] = {
+    { "coleco", "ColecoVision", "col,rom" },
+    { "crvision", "CreatiVision", "rom" },
+    { "myvision", "My Vision", "myv" },
+};
+
 // Keep track of whether the input list has been built or not
 static int inputlist_built = 0;
 
@@ -518,17 +524,19 @@ int jg_game_load(void) {
 }
 
 int jg_game_unload(void) {
-    char savename[292];
-    snprintf(savename, sizeof(savename),
-        "%s/%s.srm", pathinfo.save, gameinfo.name);
-    int srmstat = jcv_savedata_save((const char*)savename);
+    if (sys == JCV_SYS_COLECO) {
+        char savename[292];
+        snprintf(savename, sizeof(savename),
+            "%s/%s.srm", pathinfo.save, gameinfo.name);
+        int srmstat = jcv_savedata_save((const char*)savename);
 
-    if (srmstat == JCV_SAVE_SUCCESS)
-        jg_cb_log(JG_LOG_DBG, "SRAM Saved: %s\n", savename);
-    else if (srmstat == JCV_SAVE_NONE)
-        jg_cb_log(JG_LOG_DBG, "Cartridge does not contain SRAM\n");
-    else
-        jg_cb_log(JG_LOG_DBG, "SRAM Save Failed: %s\n", savename);
+        if (srmstat == JCV_SAVE_SUCCESS)
+            jg_cb_log(JG_LOG_DBG, "SRAM Saved: %s\n", savename);
+        else if (srmstat == JCV_SAVE_NONE)
+            jg_cb_log(JG_LOG_DBG, "Cartridge does not contain SRAM\n");
+        else
+            jg_cb_log(JG_LOG_DBG, "SRAM Save Failed: %s\n", savename);
+    }
 
     return 1;
 }
@@ -581,6 +589,11 @@ void jg_rehash(void) {
 
 void jg_data_push(uint32_t type, int port, const void *ptr, size_t size) {
     if (type || port || ptr || size) { }
+}
+
+jg_systeminfo_t* jg_get_systemlist(size_t *num) {
+    *num = sizeof(systemlist) / sizeof(jg_systeminfo_t);
+    return systemlist;
 }
 
 jg_coreinfo_t* jg_get_coreinfo(const char *subsys) {
