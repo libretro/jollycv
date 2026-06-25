@@ -87,6 +87,8 @@ BUILD_EXAMPLE = $(call COMPILE_C, $(FLAGS) $(WARNINGS) $(INCLUDES_BIN))
 BUILD_JG = $(call COMPILE_C, $(FLAGS) $(INCLUDES_JG) $(CFLAGS_JG))
 BUILD_MAIN = $(call COMPILE_C, $(FLAGS) $(INCLUDES))
 
+include $(SOURCEDIR)/mk/rules.mk
+
 .PHONY: $(PHONY)
 
 all: $(TARGET)
@@ -99,5 +101,3 @@ $(OBJDIR)/%.o: $(SRCDIR)/%.$(EXT) $(PREREQ)
 # Data rules
 install-docs::
 	cp $(SRCDIR)/z80/LICENSE $(DESTDIR)$(DOCDIR)/LICENSE-z80
-
-include $(SOURCEDIR)/mk/rules.mk

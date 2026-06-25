@@ -1,3 +1,18 @@
+# User set make config
+-include config.mk
+
+# Set these variables before compile
+override CFLAGS_JG := $(CFLAGS_JG)
+override INCLUDES := $(INCLUDES)
+override INCLUDES_BIN := $(INCLUDES_BIN)
+override INCLUDES_JG := $(INCLUDES_JG)
+override LIBS := $(LIBS)
+override LIBS_BIN := $(LIBS_BIN)
+override LIBS_JG := $(LIBS_JG)
+override LIBS_MODULE := $(LIBS_MODULE)
+override LIBS_PRIVATE := $(LIBS_PRIVATE)
+override LIBS_STATIC := $(LIBS_STATIC)
+
 $(OBJDIR)/%.o: $(SOURCEDIR)/%.$(EXT) $(PREREQ)
 	$(call COMPILE_INFO,$(BUILD_JG))
 	@$(BUILD_JG)
