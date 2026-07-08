@@ -66,6 +66,13 @@ ifneq ($(PLATFORM), OpenBSD)
 	override SHARED += $(UNDEFINED)
 endif
 
+# Pthreads
+ifneq ($(findstring $(CFLAGS_PTHREAD),$(LIBS)),)
+	override PTHREAD := $(CFLAGS_PTHREAD)
+else
+	override PTHREAD :=
+endif
+
 # Version Script
 override VERSION_SCRIPT_NAME = $(shell printf %s lib$(NAME) | \
 		tr '[:lower:]' '[:upper:]')_$(VERSION)
@@ -210,7 +217,7 @@ ifneq ($(ENABLE_SHARED), 0)
 	override TARGET += shared
 	override TARGET_INSTALL += install-shared
 	override TARGET_STRIP += install-strip-shared
-	override LIBS_MODULE := -L$(OBJDIR) -l$(NAME)
+	override LIBS_MODULE := $(PTHREAD) -L$(OBJDIR) -l$(NAME)
 else
 	override LIBS_MODULE = $(OBJS_SHARED) $(LIBS)
 endif
@@ -239,7 +246,7 @@ ifneq ($(TARGET_INSTALL),)
 endif
 
 # Compiler commands
-override COMPILE = $(strip $(1) $(CPPFLAGS) $(PIC) $(2) -c $< -o $@)
+override COMPILE = $(strip $(1) $(CPPFLAGS) $(PIC) $(PTHREAD) $(2) -c $< -o $@)
 override COMPILE_C = $(call COMPILE,$(CC) $(CFLAGS),$(1))
 override COMPILE_CXX = $(call COMPILE,$(CXX) $(CXXFLAGS),$(1))
 override COMPILE_C_BUILD = $(strip $(CC_FOR_BUILD) $(1) $< -o $@)
