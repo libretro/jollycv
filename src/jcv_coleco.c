@@ -402,6 +402,8 @@ static void jcv_coleco_mem_wr(uint16_t addr, uint8_t data) {
 int jcv_coleco_bios_load(void *data, size_t size) {
     if (size != SIZE_CVBIOS)
         return 0;
+    if (cvbios)
+        free(cvbios);
     cvbios = (uint8_t*)calloc(SIZE_CVBIOS, sizeof(uint8_t));
     memcpy(cvbios, data, size);
     return 1;
@@ -411,6 +413,10 @@ int jcv_coleco_bios_load(void *data, size_t size) {
 int jcv_coleco_rom_load(void *data, size_t size) {
     romdata = (uint8_t*)data; // Assign internal ROM pointer
     romsize = size; // Record the true size of the ROM data in bytes
+
+    // Clear stale ROM page offsets from any previously loaded game
+    rompages = 0;
+    memset(rompage, 0, sizeof(rompage));
 
     /* ROM data should start with one of two possible combinations of two bytes:
        0xaa, 0x55: Show the BIOS screen with game title and copyright info
@@ -478,11 +484,23 @@ int jcv_coleco_rom_load(void *data, size_t size) {
         /* Assign ROM page offsets to locations in ROM data
            Schematic shows 4 lines for 8K ROM pages: EN_80, EN_A0, EN_C0, EN_E0
         */
-        for (int i = 0; i < rompages; ++i)
+        for (int i = 0; i < rompages && i < 4; ++i)
             rompage[i] = i * SIZE_8K;
     }
 
     return 1;
+}
+
+/* Reset all cartridge-specific state to defaults. This must be done before
+   processing a new game's hash, so that a cartridge type set by a database
+   match or heuristic detection for a previously loaded game cannot leak into
+   the mapping of the next game.
+*/
+void jcv_coleco_cart_reset(void) {
+    carttype = CART_NORMAL;
+    cartset = 0;
+    savesize = 0;
+    memset(savedata, 0xff, sizeof(savedata));
 }
 
 void jcv_coleco_set_carttype(unsigned ctype, unsigned special) {
@@ -504,10 +522,16 @@ void jcv_coleco_init(void) {
     for (int i = 0; i < SIZE_CVRAM; ++i)
         cvsys.ram[i] = rand() & 0xff; // Random numbers from 0-255
 
-    memset(cvsys.sgmram, 0xff, 0x6000);
+    /* Clear the full 32K of SGM RAM: the lower 8K maps to 0x0000-0x1fff and
+       the upper 24K maps to 0x2000-0x7fff, both indexed by absolute address,
+       so the array's live span is the full 32K.
+    */
+    memset(cvsys.sgmram, 0xff, SIZE_32K);
 
     cvsys.cseg = 0; // Controller Strobe Segment
     cvsys.ctrl[0] = cvsys.ctrl[1] = 0; // Reset input states to empty
+
+    psgcycs = 0; // Reset the PSG cycle counter
 
     // Set Z80 function pointers
     jcv_z80_io_rd = jcv_coleco_io_rd;
@@ -528,8 +552,10 @@ void jcv_coleco_init(void) {
 
 // Deinitialize any allocated memory
 void jcv_coleco_deinit(void) {
-    if (cvbios)
+    if (cvbios) {
         free(cvbios);
+        cvbios = NULL;
+    }
 }
 
 void jcv_coleco_set_region(unsigned region) {

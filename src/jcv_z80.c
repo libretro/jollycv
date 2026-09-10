@@ -91,6 +91,10 @@ void jcv_z80_init(void) {
     z80ctx.write_byte = &write_byte;
     z80ctx.port_in = &port_in;
     z80ctx.port_out = &port_out;
+
+    // Clear leftover cycle counts from any previously emulated system
+    extracycs = 0;
+    delaycycs = 0;
 }
 
 // Reset the Z80

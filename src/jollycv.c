@@ -121,10 +121,17 @@ uint32_t jcv_get_dbflags(void) {
     }
 }
 
-// Get database flags
+// Process the hash of the loaded media to detect special cartridge types
 void jcv_process_hash(const char *md5) {
     switch (sys) {
-        default: case JCV_SYS_COLECO: jcv_db_process_coleco(md5); break;
+        default: case JCV_SYS_COLECO: {
+            /* Reset cartridge state before the database lookup: a database
+               miss must not inherit the cartridge type of a previous game.
+            */
+            jcv_coleco_cart_reset();
+            jcv_db_process_coleco(md5);
+            break;
+        }
     }
 }
 

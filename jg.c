@@ -417,6 +417,8 @@ int jg_init(void) {
 
     if (sys == JCV_SYS_CRVISION)
         jcv_set_region(1); // force PAL
+    else if (sys == JCV_SYS_MYVISION)
+        jcv_set_region(0); // force NTSC - My Vision was a Japan-only system
     else
         jcv_set_region(settings_jcv[REGION].val);
 
@@ -427,6 +429,11 @@ int jg_init(void) {
 
 void jg_deinit(void) {
     jcv_deinit();
+
+    // Clear per-session data so stale pointers cannot survive into the next
+    memset(&biosinfo, 0, sizeof(biosinfo));
+    memset(&gameinfo, 0, sizeof(gameinfo));
+    dbflags = 0;
 }
 
 void jg_reset(int hard) {
@@ -438,22 +445,24 @@ void jg_exec_frame(void) {
 }
 
 int jg_game_load(void) {
-    // Try to load the BIOS as an auxiliary file
-    if (biosinfo.size) {
-        jcv_bios_load(biosinfo.data, biosinfo.size);
-    }
-    else {
-        char bpath[256];
-        if (sys == JCV_SYS_COLECO) {
-            snprintf(bpath, sizeof(bpath), "%s/coleco.rom", pathinfo.bios);
-            if (!jcv_bios_load_file(bpath))
+    // Try to load the BIOS as an auxiliary file, falling back to the BIOS path
+    if (sys == JCV_SYS_COLECO || sys == JCV_SYS_CRVISION) {
+        int biosloaded = 0;
+
+        if (biosinfo.size && biosinfo.data)
+            biosloaded = jcv_bios_load(biosinfo.data, biosinfo.size);
+
+        if (!biosloaded) {
+            char bpath[256];
+            snprintf(bpath, sizeof(bpath), "%s/%s", pathinfo.bios,
+                sys == JCV_SYS_COLECO ? "coleco.rom" : "bioscv.rom");
+            biosloaded = jcv_bios_load_file(bpath);
+            if (!biosloaded)
                 jg_cb_log(JG_LOG_ERR, "Failed to load bios %s\n", bpath);
         }
-        else if (sys == JCV_SYS_CRVISION) {
-            snprintf(bpath, sizeof(bpath), "%s/bioscv.rom", pathinfo.bios);
-            if (!jcv_bios_load_file(bpath))
-                jg_cb_log(JG_LOG_ERR, "Failed to load bios %s\n", bpath);
-        }
+
+        if (!biosloaded)
+            return 0; // Emulation cannot proceed without a BIOS
     }
 
     // Load the ROM
@@ -605,6 +614,7 @@ jg_coreinfo_t* jg_get_coreinfo(const char *subsys) {
         sys = JCV_SYS_MYVISION;
         return &coreinfo_myvision;
     }
+    sys = JCV_SYS_COLECO; // Must be set explicitly, sys persists across loads
     return &coreinfo_coleco;
 }
 
