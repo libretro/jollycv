@@ -101,8 +101,9 @@ Notes
   start buttons. By convention, those buttons are 6 and B on the left paddle,
   or 7 and N on the right paddle.
 
-- In order to load CreatiVision ROMs, the system type must be specified as
-  "crvision" manually, as detecting heuristically is difficult for frontends.
+- In order to load CreatiVision ROMs that are not in the internal database, the
+  system type must be specified as "crvision" manually, as detecting
+  heuristically is difficult for frontends.
 
 Compatibility
 -------------
@@ -140,7 +141,7 @@ https://gitlab.com/carmiker/colecodocs
 Copyright
 ---------
 JollyCV (BSD-3-Clause)
-  Copyright (c) 2020-2025 Rupert Carmichael
+  Copyright (c) 2020-2026 Rupert Carmichael
   See LICENSE
 
 Jolly Good Z80 (MIT)
