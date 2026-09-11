@@ -114,6 +114,11 @@ void jcv_set_system(unsigned s) {
     sys = s;
 }
 
+// Detect which system a ROM was made for using its hash
+int jcv_detect_system(const char *md5) {
+    return jcv_db_detect_system(md5);
+}
+
 // Get database flags
 uint32_t jcv_get_dbflags(void) {
     switch (sys) {

@@ -106,10 +106,73 @@ static dbentry_t db_coleco[] = {
             CART_ACTIVISION, 0x100 }, // 256B
 };
 
+/* CreatiVision ROMs are distributed with file extensions which overlap with
+   those used for other systems, so the only reliable way to tell them apart
+   is by checksum. This list is used to detect the system a ROM was made for.
+*/
+static const char *db_crvision[] = {
+    // Air Sea Attack (Asia, Europe)
+        "2a3000132c6ae8f6712eaee387ad851c",
+    // Astro Pinball (Asia, Europe)
+        "da1efcd608ee688ec76fb806b28a8f04",
+    // Auto Chase (Asia, Europe)
+        "b6bfea8987d76872661e1dd25ba5d542",
+    // Chopper Rescue (Asia, Europe) (Alt 1)
+        "91a60dbb91668023629ae5165cbab9d5",
+    // Chopper Rescue (Asia, Europe) (Alt 2)
+        "33c422e85fcd342e722503e776726dd7",
+    // Chopper Rescue (Asia, Europe)
+        "6c3abd51286ee689d3576cd6f50269ff",
+    // Crazy Chicky (Asia, Europe)
+        "46831e263fdd536a7740861d28f24cc2",
+    // Crazy Pucker (Asia, Europe)
+        "93a92da8d9c40e0f53c8e0f681021f18",
+    // CreatiVision Basic (Asia, Europe)
+        "0e43eb5caf9c0128998d04e033016556",
+    // Deep Sea Adventure (Asia, Europe)
+        "11ad7d0a0caead0e6d22f055dc0aba6e",
+    // Hapmon (Asia, Europe)
+        "3d3dc6cb1374cca0b2a7fb4e898c98c8",
+    // Locomotive (Asia, Europe)
+        "f86dc1a3df3e1f25ebd60c0f1de4fdb5",
+    // Mouse Puzzle (Asia, Europe)
+        "136caa24d077372d94594cc722a00cf8",
+    // Music Maker (Asia, Europe)
+        "c19cbb873193f6441ff793b82a5ec19c",
+    // Planet Defender (Asia, Europe) (Alt 1)
+        "02cd5364ee077e02b3d0e1c0a6d2adef",
+    // Planet Defender (Asia, Europe)
+        "8aecbd20173bf4af56a1eb641cba492e",
+    // Police Jump (Asia, Europe)
+        "9cb73c1ca4853ba299a97ed55b17727e",
+    // Soccer (Asia, Europe)
+        "facb2b5308502f8acec4d77eaed6ea3a",
+    // Sonic Invader (Asia, Europe)
+        "fa49471a2d8d3482fddd77a35655aa26",
+    // Stone Age (Asia, Europe)
+        "3b4d8c419fb1bbbd2324ed29dae77c7b",
+    // Tank Attack (Asia, Europe)
+        "68fc7cf9039568e8be17d2175d1e342c",
+    // Tennis (Asia, Europe) (DSE)
+        "1bda4ee02466b98c6c4cf8c962838d3f",
+    // Tennis (Asia, Europe) (VTL)
+        "1a60104942ef675d6d34c0c3361025de",
+};
+
 static uint32_t flags = 0;
 
 uint32_t jcv_db_get_flags(void) {
     return flags;
+}
+
+int jcv_db_detect_system(const char *md5) {
+    // Loop through the system specific databases and compare the MD5 checksum
+    for (size_t i = 0; i < (sizeof(db_crvision) / sizeof(const char*)); ++i) {
+        if (!strcmp(md5, db_crvision[i]))
+            return JCV_SYS_CRVISION;
+    }
+
+    return -1; // No match - the caller decides what to do with an unknown ROM
 }
 
 void jcv_db_process_coleco(const char *md5) {
