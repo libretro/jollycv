@@ -231,6 +231,8 @@ void jcv_myvision_init(void) {
     jcv_z80_io_wr = jcv_myvision_io_wr;
     jcv_z80_mem_rd = jcv_myvision_mem_rd;
     jcv_z80_mem_wr = jcv_myvision_mem_wr;
+
+    psgcycs = 0; // Reset the PSG cycle counter
 }
 
 // Deinitialize any allocated memory

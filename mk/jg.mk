@@ -66,6 +66,13 @@ ifneq ($(PLATFORM), OpenBSD)
 	override SHARED += $(UNDEFINED)
 endif
 
+# Pthreads
+ifneq ($(findstring $(CFLAGS_PTHREAD),$(LIBS)),)
+	override PTHREAD := $(CFLAGS_PTHREAD)
+else
+	override PTHREAD :=
+endif
+
 # Version Script
 override VERSION_SCRIPT_NAME = $(shell printf %s lib$(NAME) | \
 		tr '[:lower:]' '[:upper:]')_$(VERSION)
@@ -78,19 +85,22 @@ override PREREQ_EXAMPLE = $(TARGET_BIN)
 # Desktop File
 override DESKTOP := $(JGNAME).desktop
 
-# HTML Docs
-override HTML_OUT := $(OBJDIR)/doc
-override DOXYFILE := $(wildcard $(SOURCEDIR)/lib/Doxyfile.in)
-
 # Example
 override BIN_OUT := $(OBJDIR)/$(EXAMPLE)
 override BIN_NAME := $(NAME)-example$(BIN_EXT)
 override BIN_EXAMPLE := $(BIN_OUT)/$(BIN_NAME)
 
+# HTML Docs
+override HTML_OUT := $(OBJDIR)/doc
+override DOXYFILE := $(wildcard $(SOURCEDIR)/lib/Doxyfile.in)
+
 # Icons
 override ICONS_BASE := $(wildcard $(SOURCEDIR)/icons/*.png \
 	$(SOURCEDIR)/icons/$(NAME).svg)
 override ICONS := $(notdir $(ICONS_BASE))
+
+# LICENSES File
+override LICENSES := $(wildcard $(SOURCEDIR)/LICENSES)
 
 # Targets
 override TARGET :=
@@ -100,6 +110,7 @@ override TARGET_BIN := $(OBJDIR)/$(BIN_NAME)
 override TARGET_DESKTOP := $(NAME)/$(DESKTOP)
 override TARGET_ICONS := $(ICONS:%=$(NAME)/icons/%)
 override TARGET_HTML := $(addprefix $(HTML_OUT)/,$(notdir $(HEADERS)))
+override TARGET_LICENSES := $(if $(LICENSES),$(NAME)/LICENSES,)
 override TARGET_MODULE := $(NAME)/$(LIBRARY)
 override TARGET_SHARED := $(OBJDIR)/$(LIB_VERSION)
 override TARGET_STATIC := $(OBJDIR)/$(LIB_STATIC)
@@ -118,6 +129,10 @@ ifeq ($(INSTALL_EXAMPLE), 0)
 	override ENABLE_EXAMPLE := 0
 else
 	override PHONY += example install-bin install-strip-bin
+endif
+
+ifneq ($(LICENSES),)
+	override PHONY += install-licenses
 endif
 
 ifeq ($(INSTALL_DATA), 0)
@@ -202,7 +217,7 @@ ifneq ($(ENABLE_SHARED), 0)
 	override TARGET += shared
 	override TARGET_INSTALL += install-shared
 	override TARGET_STRIP += install-strip-shared
-	override LIBS_MODULE := -L$(OBJDIR) -l$(NAME)
+	override LIBS_MODULE := $(PTHREAD) -L$(OBJDIR) -l$(NAME)
 else
 	override LIBS_MODULE = $(OBJS_SHARED) $(LIBS)
 endif
@@ -225,10 +240,13 @@ endif
 
 ifneq ($(TARGET_INSTALL),)
 	override TARGET_INSTALL += install-docs
+	ifneq ($(LICENSES),)
+		override TARGET_INSTALL += install-licenses
+	endif
 endif
 
 # Compiler commands
-override COMPILE = $(strip $(1) $(CPPFLAGS) $(PIC) $(2) -c $< -o $@)
+override COMPILE = $(strip $(1) $(CPPFLAGS) $(PIC) $(PTHREAD) $(2) -c $< -o $@)
 override COMPILE_C = $(call COMPILE,$(CC) $(CFLAGS),$(1))
 override COMPILE_CXX = $(call COMPILE,$(CXX) $(CXXFLAGS),$(1))
 override COMPILE_C_BUILD = $(strip $(CC_FOR_BUILD) $(1) $< -o $@)

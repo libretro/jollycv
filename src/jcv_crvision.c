@@ -316,6 +316,8 @@ static uint8_t jcv_crvision_rom_18k_rd40(uint16_t addr) {
 int jcv_crvision_bios_load(void *data, size_t size) {
     if (size != SIZE_CRVBIOS)
         return 0;
+    if (biosdata)
+        free(biosdata);
     biosdata = (uint8_t*)calloc(size, sizeof(uint8_t));
     memcpy(biosdata, data, size);
     return 1;
@@ -513,12 +515,16 @@ void jcv_crvision_init(void) {
     // Initialize PIA registers
     pia.or[0] = pia.ddr[0] = pia.cr[0] = 0;
     pia.or[1] = pia.ddr[1] = pia.cr[1] = 0;
+
+    psgcycs = 0; // Reset the PSG cycle counter
 }
 
 // Deinitialize any allocated memory
 void jcv_crvision_deinit(void) {
-    if (biosdata)
+    if (biosdata) {
         free(biosdata);
+        biosdata = NULL;
+    }
 }
 
 /*

@@ -1,3 +1,6 @@
+# User set make config
+-include config.mk
+
 $(OBJDIR)/%.o: $(SOURCEDIR)/%.$(EXT) $(PREREQ)
 	$(call COMPILE_INFO,$(BUILD_JG))
 	@$(BUILD_JG)
@@ -15,18 +18,17 @@ $(TARGET_DESKTOP): $(SOURCEDIR)/$(DESKTOP)
 	@cp $< $@
 
 $(TARGET_STATIC_MK): $(TARGET_STATIC_JG)
-	@printf '%s\n%s\n%s\n%s\n%s\n' 'NAME := $(JGNAME)' \
-		'$(strip ASSETS := $(DATA))' \
+	@printf '%s\n%s\n%s\n%s\n' 'NAME := $(JGNAME)' \
+		'$(strip ASSETS := $(DATA) $(notdir $(TARGET_LICENSES)))' \
 		'$(strip ICONS := $(ICONS))' \
-		'$(strip FLAGS_STATIC := $(FLAGS_STATIC))' \
 		'$(strip LIBS_STATIC := $(LIBS) $(LIBS_STATIC) $(LIBS_JG))' > $@
 
-static-jg: $(TARGET_DESKTOP) $(TARGET_ICONS) $(TARGET_STATIC_MK)
+static-jg: $(TARGET_DESKTOP) $(TARGET_ICONS) $(TARGET_LICENSES) $(TARGET_STATIC_MK)
 
 clean::
 	rm -rf $(OBJDIR) $(NAME)
 
-module: $(TARGET_MODULE)
+module: $(TARGET_LICENSES) $(TARGET_MODULE)
 
 install-module: module
 	@mkdir -p $(DESTDIR)$(LIBPATH)
@@ -89,6 +91,16 @@ install-html: html
 
 uninstall::
 	rm -rf $(DESTDIR)$(HTMLDIR)
+endif
+
+ifneq ($(LICENSES),)
+$(TARGET_LICENSES): $(LICENSES)
+	@mkdir -p $(NAME)
+	@cp $< $@
+
+install-licenses: all
+	@mkdir -p $(DESTDIR)$(DATADIR)/jollygood/$(NAME)
+	cp $(LICENSES) $(DESTDIR)$(DATADIR)/jollygood/$(NAME)/
 endif
 
 ifneq ($(ICONS),)

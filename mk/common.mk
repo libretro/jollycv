@@ -4,6 +4,7 @@ CXX ?= c++
 CC_FOR_BUILD ?= $(CC)
 CXX_FOR_BUILD ?= $(CXX)
 DOXYGEN ?= doxygen
+GLSLANG ?= glslangValidator
 PKG_CONFIG ?= pkg-config
 STRIP ?= strip
 

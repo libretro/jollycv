@@ -72,6 +72,10 @@ void jcv_m6502_init(void) {
     m6502_init(&m65ctx);
     m65ctx.read_byte = &read_byte;
     m65ctx.write_byte = &write_byte;
+
+    // Clear leftover cycle counts from any previously emulated system
+    extracycs = 0;
+    delaycycs = 0;
 }
 
 // Reset the 6502

@@ -41,6 +41,7 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #else
 #include "jg_crvision_jcv.h"
 #include "jg_myvision_jcv.h"
+#include "jg_compat.h"
 #endif
 
 #include "jollycv.h"
@@ -54,11 +55,18 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ASPECT_PAL 1.4257812
 #define CHANNELS 1
 #define NUMINPUTS 2
+#define TOTALINPUTS 10 // 7 ColecoVision, 2 CreatiVision, 1 My Vision
 
 static jg_cb_audio_t jg_cb_audio;
 static jg_cb_frametime_t jg_cb_frametime;
 static jg_cb_log_t jg_cb_log;
 static jg_cb_rumble_t jg_cb_rumble;
+
+#if JG_VERSION_NUMBER >= 10100
+static void *udata_audio;
+static void *udata_frametime;
+static void *udata_rumble;
+#endif
 
 static jg_coreinfo_t coreinfo_coleco = {
     "jollycv", "JollyCV", JG_VERSION, "coleco", NUMINPUTS, 0x00
@@ -97,6 +105,7 @@ static jg_pathinfo_t pathinfo;
 static jg_fileinfo_t biosinfo;
 static jg_fileinfo_t gameinfo;
 static jg_inputinfo_t inputinfo[NUMINPUTS];
+static jg_inputinfo_t inputlist[TOTALINPUTS];
 static jg_inputstate_t *input_device[NUMINPUTS];
 
 // Emulator settings
@@ -139,13 +148,33 @@ enum {
     REGION,
 };
 
+static jg_biosinfo_t bioslist[] = {
+    { "coleco.rom", "ColecoVision BIOS",
+      "2c66f5911e5b42b8ebe113403548eee7", 1, 0 },
+    { "bioscv.rom", "CreatiVision BIOS",
+      "3b1ef759d8e3fb4071582efd33dd05f9", 1, 0 },
+};
+
+static jg_systeminfo_t systemlist[] = {
+    { "coleco", "ColecoVision", "col,rom" },
+    { "crvision", "CreatiVision", "rom" },
+    { "myvision", "My Vision", "myv" },
+};
+
+// Keep track of whether the input list has been built or not
+static int inputlist_built = 0;
+
 // System being emulated
 static int sys = JCV_SYS_COLECO;
 static uint32_t dbflags = 0;
 
 static void jcv_cb_audio(const void *udata, size_t samps) {
     (void)udata;
+#if JG_VERSION_NUMBER >= 10100
+    jg_cb_audio(udata_audio, samps);
+#else
     jg_cb_audio(samps);
+#endif
 }
 
 // Unconnected Port
@@ -333,6 +362,17 @@ static void jcv_input_setup(void) {
     }
 }
 
+#if JG_VERSION_NUMBER >= 10100
+void jg_set_cb_audio(jg_cb_audio_t func, void *ud) {
+    jg_cb_audio = func;
+    udata_audio = ud;
+}
+
+void jg_set_cb_frametime(jg_cb_frametime_t func, void *ud) {
+    jg_cb_frametime = func;
+    udata_frametime = ud;
+}
+#else
 void jg_set_cb_audio(jg_cb_audio_t func) {
     jg_cb_audio = func;
 }
@@ -340,41 +380,49 @@ void jg_set_cb_audio(jg_cb_audio_t func) {
 void jg_set_cb_frametime(jg_cb_frametime_t func) {
     jg_cb_frametime = func;
 }
+#endif
 
 void jg_set_cb_log(jg_cb_log_t func) {
     jg_cb_log = func;
     jcv_log_set_callback(func);
 }
 
+#if JG_VERSION_NUMBER >= 10100
+void jg_set_cb_rumble(jg_cb_rumble_t func, void *ud) {
+    jg_cb_rumble = func;
+    udata_rumble = ud;
+}
+#else
 void jg_set_cb_rumble(jg_cb_rumble_t func) {
     jg_cb_rumble = func;
 }
+#endif
 
 int jg_init(void) {
     jcv_input_set_callback_coleco(&jcv_coleco_input_poll, NULL);
     jcv_input_set_callback_crvision(&jcv_crvision_input_poll, NULL);
     jcv_input_set_callback_myvision(&jcv_myvision_input_poll, NULL);
 
+#if JG_VERSION_NUMBER >= 10100
+    jcv_audio_set_callback(jcv_cb_audio, udata_audio);
+#else
     jcv_audio_set_callback(jcv_cb_audio, NULL);
+#endif
     jcv_audio_set_rate(SAMPLERATE);
     jcv_audio_set_rsqual(settings_jcv[RSQUAL].val);
 
     jcv_video_set_palette_tms9918(settings_jcv[PALETTE_TMS9918].val);
-
-    jcv_set_system(sys);
-
-    if (sys == JCV_SYS_CRVISION)
-        jcv_set_region(1); // force PAL
-    else
-        jcv_set_region(settings_jcv[REGION].val);
-
-    jcv_init();
 
     return 1;
 }
 
 void jg_deinit(void) {
     jcv_deinit();
+
+    // Clear per-session data so stale pointers cannot survive into the next
+    memset(&biosinfo, 0, sizeof(biosinfo));
+    memset(&gameinfo, 0, sizeof(gameinfo));
+    dbflags = 0;
 }
 
 void jg_reset(int hard) {
@@ -386,22 +434,50 @@ void jg_exec_frame(void) {
 }
 
 int jg_game_load(void) {
-    // Try to load the BIOS as an auxiliary file
-    if (biosinfo.size) {
-        jcv_bios_load(biosinfo.data, biosinfo.size);
+    /* ColecoVision and CreatiVision ROMs share the .rom extension, so the
+       frontend cannot tell them apart and asks for ColecoVision either way.
+       The ROM's hash settles it. Asking for any other system is an explicit
+       choice, and is always honoured.
+    */
+    if (sys == JCV_SYS_COLECO && gameinfo.md5 != NULL) {
+        int detected = jcv_detect_system(gameinfo.md5);
+
+        if (detected >= 0)
+            sys = detected;
     }
-    else {
-        char bpath[256];
-        if (sys == JCV_SYS_COLECO) {
-            snprintf(bpath, sizeof(bpath), "%s/coleco.rom", pathinfo.bios);
-            if (!jcv_bios_load_file(bpath))
+
+    /* The hash is only known once the game has been handed over, so this is
+       the earliest the system can be set up.
+    */
+    jcv_set_system(sys);
+
+    if (sys == JCV_SYS_CRVISION)
+        jcv_set_region(1); // force PAL
+    else if (sys == JCV_SYS_MYVISION)
+        jcv_set_region(0); // force NTSC - My Vision was a Japan-only system
+    else
+        jcv_set_region(settings_jcv[REGION].val);
+
+    jcv_init();
+
+    // Try to load the BIOS as an auxiliary file, falling back to the BIOS path
+    if (sys == JCV_SYS_COLECO || sys == JCV_SYS_CRVISION) {
+        int biosloaded = 0;
+
+        if (biosinfo.size && biosinfo.data)
+            biosloaded = jcv_bios_load(biosinfo.data, biosinfo.size);
+
+        if (!biosloaded) {
+            char bpath[256];
+            snprintf(bpath, sizeof(bpath), "%s/%s", pathinfo.bios,
+                sys == JCV_SYS_COLECO ? "coleco.rom" : "bioscv.rom");
+            biosloaded = jcv_bios_load_file(bpath);
+            if (!biosloaded)
                 jg_cb_log(JG_LOG_ERR, "Failed to load bios %s\n", bpath);
         }
-        else if (sys == JCV_SYS_CRVISION) {
-            snprintf(bpath, sizeof(bpath), "%s/bioscv.rom", pathinfo.bios);
-            if (!jcv_bios_load_file(bpath))
-                jg_cb_log(JG_LOG_ERR, "Failed to load bios %s\n", bpath);
-        }
+
+        if (!biosloaded)
+            return 0; // Emulation cannot proceed without a BIOS
     }
 
     // Load the ROM
@@ -427,12 +503,20 @@ int jg_game_load(void) {
         if (settings_jcv[REGION].val) { // PAL mode
             vidinfo.aspect = ASPECT_PAL;
             audinfo.spf = (SAMPLERATE / FRAMERATE_PAL) * CHANNELS;
+#if JG_VERSION_NUMBER >= 10100
+            jg_cb_frametime(udata_frametime, FRAMERATE_PAL);
+#else
             jg_cb_frametime(FRAMERATE_PAL);
+#endif
         }
         else { // NTSC mode
             vidinfo.aspect = ASPECT_NTSC;
             audinfo.spf = (SAMPLERATE / FRAMERATE) * CHANNELS;
+#if JG_VERSION_NUMBER >= 10100
+            jg_cb_frametime(udata_frametime, FRAMERATE);
+#else
             jg_cb_frametime(FRAMERATE);
+#endif
         }
     }
     else if (sys == JCV_SYS_CRVISION) {
@@ -440,14 +524,22 @@ int jg_game_load(void) {
             return 0;
         vidinfo.aspect = ASPECT_PAL;
         audinfo.spf = (SAMPLERATE / FRAMERATE_PAL) * CHANNELS;
+#if JG_VERSION_NUMBER >= 10100
+        jg_cb_frametime(udata_frametime, FRAMERATE_PAL);
+#else
         jg_cb_frametime(FRAMERATE_PAL);
+#endif
     }
     else if (sys == JCV_SYS_MYVISION) {
         if (!jcv_media_load(gameinfo.data, gameinfo.size))
             return 0;
         vidinfo.aspect = ASPECT_NTSC;
         audinfo.spf = (SAMPLERATE / FRAMERATE) * CHANNELS;
+#if JG_VERSION_NUMBER >= 10100
+        jg_cb_frametime(udata_frametime, FRAMERATE);
+#else
         jg_cb_frametime(FRAMERATE);
+#endif
     }
 
     jcv_input_setup();
@@ -456,17 +548,19 @@ int jg_game_load(void) {
 }
 
 int jg_game_unload(void) {
-    char savename[292];
-    snprintf(savename, sizeof(savename),
-        "%s/%s.srm", pathinfo.save, gameinfo.name);
-    int srmstat = jcv_savedata_save((const char*)savename);
+    if (sys == JCV_SYS_COLECO) {
+        char savename[292];
+        snprintf(savename, sizeof(savename),
+            "%s/%s.srm", pathinfo.save, gameinfo.name);
+        int srmstat = jcv_savedata_save((const char*)savename);
 
-    if (srmstat == JCV_SAVE_SUCCESS)
-        jg_cb_log(JG_LOG_DBG, "SRAM Saved: %s\n", savename);
-    else if (srmstat == JCV_SAVE_NONE)
-        jg_cb_log(JG_LOG_DBG, "Cartridge does not contain SRAM\n");
-    else
-        jg_cb_log(JG_LOG_DBG, "SRAM Save Failed: %s\n", savename);
+        if (srmstat == JCV_SAVE_SUCCESS)
+            jg_cb_log(JG_LOG_DBG, "SRAM Saved: %s\n", savename);
+        else if (srmstat == JCV_SAVE_NONE)
+            jg_cb_log(JG_LOG_DBG, "Cartridge does not contain SRAM\n");
+        else
+            jg_cb_log(JG_LOG_DBG, "SRAM Save Failed: %s\n", savename);
+    }
 
     return 1;
 }
@@ -497,6 +591,14 @@ void jg_media_select(void) {
 void jg_media_insert(void) {
 }
 
+void jg_media_mount(unsigned mount) {
+    (void)mount;
+}
+
+void jg_media_set(unsigned id) {
+    (void)id;
+}
+
 void jg_cheat_clear(void) {
 }
 
@@ -513,6 +615,11 @@ void jg_data_push(uint32_t type, int port, const void *ptr, size_t size) {
     if (type || port || ptr || size) { }
 }
 
+jg_systeminfo_t* jg_get_systemlist(size_t *num) {
+    *num = sizeof(systemlist) / sizeof(jg_systeminfo_t);
+    return systemlist;
+}
+
 jg_coreinfo_t* jg_get_coreinfo(const char *subsys) {
     if (!strcmp(subsys, "crvision")) {
         sys = JCV_SYS_CRVISION;
@@ -522,6 +629,7 @@ jg_coreinfo_t* jg_get_coreinfo(const char *subsys) {
         sys = JCV_SYS_MYVISION;
         return &coreinfo_myvision;
     }
+    sys = JCV_SYS_COLECO; // Must be set explicitly, sys persists across loads
     return &coreinfo_coleco;
 }
 
@@ -537,9 +645,50 @@ jg_inputinfo_t* jg_get_inputinfo(int port) {
     return &inputinfo[port];
 }
 
+jg_inputinfo_t* jg_get_inputlist(size_t *num) {
+    if (!inputlist_built) {
+        unsigned listnum = 0;
+
+        // ColecoVision
+        inputlist[listnum++] = jg_coleco_inputinfo(0, JG_COLECO_PAD);
+        inputlist[listnum++] = jg_coleco_inputinfo(1, JG_COLECO_PAD);
+        inputlist[listnum++] = jg_coleco_inputinfo(0, JG_COLECO_ROLLER);
+        inputlist[listnum++] = jg_coleco_inputinfo(1, JG_COLECO_ROLLER);
+        inputlist[listnum++] = jg_coleco_inputinfo(0, JG_COLECO_SAC);
+        inputlist[listnum++] = jg_coleco_inputinfo(1, JG_COLECO_SAC);
+        //inputlist[listnum++] = jg_coleco_inputinfo(0, JG_COLECO_SKETCH);
+        inputlist[listnum++] = jg_coleco_inputinfo(0, JG_COLECO_WHEEL);
+
+        // CreatiVision
+        inputlist[listnum++] = jg_crvision_inputinfo(0, JG_CRVISION_LPAD);
+        inputlist[listnum++] = jg_crvision_inputinfo(0, JG_CRVISION_RPAD);
+
+        // My Vision
+        inputlist[listnum++] = jg_myvision_inputinfo(0, JG_MYVISION_SYSTEM);
+
+        inputlist_built = 1;
+    }
+    *num = TOTALINPUTS;
+    return inputlist;
+}
+
 jg_setting_t* jg_get_settings(size_t *numsettings) {
     *numsettings = sizeof(settings_jcv) / sizeof(jg_setting_t);
     return settings_jcv;
+}
+
+jg_setting_t* jg_get_dips(size_t *num) {
+    *num = 0;
+    return NULL;
+}
+
+jg_mediainfo_t* jg_get_mediainfo(void) {
+    return NULL;
+}
+
+jg_biosinfo_t* jg_get_bioslist(size_t *num) {
+    *num = sizeof(bioslist) / sizeof(jg_biosinfo_t);
+    return bioslist;
 }
 
 void jg_setup_video(void) {
@@ -572,4 +721,8 @@ void jg_set_auxinfo(jg_fileinfo_t info, int index) {
 
 void jg_set_paths(jg_pathinfo_t paths) {
     pathinfo = paths;
+}
+
+unsigned jg_api_version(void) {
+    return JG_VERSION_NUMBER;
 }

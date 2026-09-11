@@ -64,6 +64,7 @@ void jcv_coleco_deinit(void);
 
 int jcv_coleco_bios_load(void*, size_t);
 int jcv_coleco_rom_load(void*, size_t);
+void jcv_coleco_cart_reset(void);
 void jcv_coleco_set_carttype(unsigned, unsigned);
 
 uint8_t* jcv_coleco_get_save_data(void);

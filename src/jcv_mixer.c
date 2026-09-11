@@ -182,11 +182,15 @@ void jcv_mixer_deinit(void) {
         resampler = NULL;
     }
 
-    if (sn76489buf)
+    if (sn76489buf) {
         free(sn76489buf);
+        sn76489buf = NULL;
+    }
 
-    if (ay38910buf)
+    if (ay38910buf) {
         free(ay38910buf);
+        ay38910buf = NULL;
+    }
 }
 
 // Bring up the Speex resampler

@@ -110,6 +110,14 @@ unsigned jcv_get_system(void);
  */
 void jcv_set_system(unsigned s);
 
+/**
+ * Detect which system a ROM was made for by looking up its MD5 checksum in
+ * the internal database. Useful when the file extension is ambiguous.
+ * @param md5 MD5 checksum of the ROM to look up
+ * @return System the ROM was made for, or -1 if the checksum is unknown
+ */
+int jcv_detect_system(const char *md5);
+
 #define JCV_DB_COLECO_PAD           0x00000001  /**< ColecoVision Paddle */
 #define JCV_DB_COLECO_ROLLER        0x00000002  /**< ColecoVision Roller
                                                     Controller */
