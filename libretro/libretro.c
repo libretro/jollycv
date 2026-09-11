@@ -39,7 +39,6 @@ OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include "libretro.h"
 #include "libretro_core_options.h"
-#include "gamedb.h"
 #include "md5.h"
 
 #define ASPECT_NTSC 4.0 / 3.0
@@ -673,12 +672,10 @@ bool retro_load_game(const struct retro_game_info *info) {
         systype = JCV_SYS_MYVISION;
     }
     else if (!strcmp(ext, "rom") || !strcmp(ext, "bin")) { // CreatiVision?
-        for (size_t i = 0; i < sizeof(gamedb_crvision) / sizeof(char*); ++i) {
-            if (!strcmp(md5, gamedb_crvision[i])) {
-                systype = JCV_SYS_CRVISION;
-                break;
-            }
-        }
+        int detected = jcv_detect_system(md5);
+
+        if (detected >= 0)
+            systype = detected;
     }
 
     // Set the region and system type
