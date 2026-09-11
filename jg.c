@@ -413,17 +413,6 @@ int jg_init(void) {
 
     jcv_video_set_palette_tms9918(settings_jcv[PALETTE_TMS9918].val);
 
-    jcv_set_system(sys);
-
-    if (sys == JCV_SYS_CRVISION)
-        jcv_set_region(1); // force PAL
-    else if (sys == JCV_SYS_MYVISION)
-        jcv_set_region(0); // force NTSC - My Vision was a Japan-only system
-    else
-        jcv_set_region(settings_jcv[REGION].val);
-
-    jcv_init();
-
     return 1;
 }
 
@@ -445,6 +434,32 @@ void jg_exec_frame(void) {
 }
 
 int jg_game_load(void) {
+    /* ColecoVision and CreatiVision ROMs share the .rom extension, so the
+       frontend cannot tell them apart and asks for ColecoVision either way.
+       The ROM's hash settles it. Asking for any other system is an explicit
+       choice, and is always honoured.
+    */
+    if (sys == JCV_SYS_COLECO && gameinfo.md5 != NULL) {
+        int detected = jcv_detect_system(gameinfo.md5);
+
+        if (detected >= 0)
+            sys = detected;
+    }
+
+    /* The hash is only known once the game has been handed over, so this is
+       the earliest the system can be set up.
+    */
+    jcv_set_system(sys);
+
+    if (sys == JCV_SYS_CRVISION)
+        jcv_set_region(1); // force PAL
+    else if (sys == JCV_SYS_MYVISION)
+        jcv_set_region(0); // force NTSC - My Vision was a Japan-only system
+    else
+        jcv_set_region(settings_jcv[REGION].val);
+
+    jcv_init();
+
     // Try to load the BIOS as an auxiliary file, falling back to the BIOS path
     if (sys == JCV_SYS_COLECO || sys == JCV_SYS_CRVISION) {
         int biosloaded = 0;
