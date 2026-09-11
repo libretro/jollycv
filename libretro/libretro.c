@@ -573,7 +573,7 @@ void retro_set_controller_port_device(unsigned port, unsigned device) {
 void retro_get_system_info(struct retro_system_info *info) {
     memset(info, 0, sizeof(*info));
     info->library_name     = "JollyCV";
-    info->library_version  = "2.0.0";
+    info->library_version  = "2.1.0";
     info->need_fullpath    = false;
     info->valid_extensions = "col|rom|myv|bin";
 }
